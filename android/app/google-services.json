@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "882441758013",
+    "project_id": "pu-connection-797f2",
+    "storage_bucket": "pu-connection-797f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882441758013:android:6e246296fc4d02cdcb9154",
+        "android_client_info": {
+          "package_name": "com.example.pu_connection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDl90uWao7_2E_z9kQyD7Uq1QoBNF9cy7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
