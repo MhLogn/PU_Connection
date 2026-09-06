@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'intro_page.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -19,10 +19,7 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(milliseconds: 2500));
 
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const IntroPage()),
-      );
+      context.go('/intro');
     }
   }
 

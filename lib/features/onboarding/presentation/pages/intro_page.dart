@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pu_connection/l10n/app_localizations.dart';
-import 'preference_page.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -21,10 +21,7 @@ class _IntroPageState extends State<IntroPage> {
 
   void _onNext() {
     if (_currentPage == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PreferencePage()),
-      );
+      context.go('/preference');
     } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
@@ -72,7 +69,6 @@ class _IntroPageState extends State<IntroPage> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(32.0),
               child: Row(

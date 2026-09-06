@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pu_connection/l10n/app_localizations.dart';
-import '../../../../core/theme/theme_viewmodel.dart';
-import '../../../../core/localization/locale_viewmodel.dart';
-import '../../../auth/presentation/pages/login_page.dart';
+import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/localization/locale_cubit.dart';
 
 class PreferencePage extends StatelessWidget {
   const PreferencePage({super.key});
@@ -10,8 +11,6 @@ class PreferencePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final themeVM = ThemeViewModel();
-    final localeVM = LocaleViewModel();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -41,9 +40,8 @@ class PreferencePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              ListenableBuilder(
-                listenable: localeVM,
-                builder: (context, child) {
+              BlocBuilder<LocaleCubit, Locale>(
+                builder: (context, locale) {
                   return Row(
                     children: [
                       Expanded(
@@ -51,8 +49,10 @@ class PreferencePage extends StatelessWidget {
                           context: context,
                           title: t.vietnamese,
                           icon: Icons.language,
-                          isSelected: localeVM.locale.languageCode == 'vi',
-                          onTap: () => localeVM.setLocale(const Locale('vi')),
+                          isSelected: locale.languageCode == 'vi',
+                          onTap: () => context.read<LocaleCubit>().setLocale(
+                            const Locale('vi'),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -61,8 +61,10 @@ class PreferencePage extends StatelessWidget {
                           context: context,
                           title: t.english,
                           icon: Icons.translate,
-                          isSelected: localeVM.locale.languageCode == 'en',
-                          onTap: () => localeVM.setLocale(const Locale('en')),
+                          isSelected: locale.languageCode == 'en',
+                          onTap: () => context.read<LocaleCubit>().setLocale(
+                            const Locale('en'),
+                          ),
                         ),
                       ),
                     ],
@@ -79,9 +81,8 @@ class PreferencePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              ListenableBuilder(
-                listenable: themeVM,
-                builder: (context, child) {
+              BlocBuilder<ThemeCubit, ThemeMode>(
+                builder: (context, themeMode) {
                   return Row(
                     children: [
                       Expanded(
@@ -89,8 +90,10 @@ class PreferencePage extends StatelessWidget {
                           context: context,
                           title: t.light,
                           icon: Icons.wb_sunny_rounded,
-                          isSelected: themeVM.themeMode == ThemeMode.light,
-                          onTap: () => themeVM.setThemeMode(ThemeMode.light),
+                          isSelected: themeMode == ThemeMode.light,
+                          onTap: () => context.read<ThemeCubit>().setThemeMode(
+                            ThemeMode.light,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -99,8 +102,10 @@ class PreferencePage extends StatelessWidget {
                           context: context,
                           title: t.dark,
                           icon: Icons.nightlight_round,
-                          isSelected: themeVM.themeMode == ThemeMode.dark,
-                          onTap: () => themeVM.setThemeMode(ThemeMode.dark),
+                          isSelected: themeMode == ThemeMode.dark,
+                          onTap: () => context.read<ThemeCubit>().setThemeMode(
+                            ThemeMode.dark,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -109,8 +114,10 @@ class PreferencePage extends StatelessWidget {
                           context: context,
                           title: t.system,
                           icon: Icons.settings_suggest_rounded,
-                          isSelected: themeVM.themeMode == ThemeMode.system,
-                          onTap: () => themeVM.setThemeMode(ThemeMode.system),
+                          isSelected: themeMode == ThemeMode.system,
+                          onTap: () => context.read<ThemeCubit>().setThemeMode(
+                            ThemeMode.system,
+                          ),
                         ),
                       ),
                     ],
@@ -120,10 +127,7 @@ class PreferencePage extends StatelessWidget {
               const Spacer(),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
+                  context.go('/login');
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
