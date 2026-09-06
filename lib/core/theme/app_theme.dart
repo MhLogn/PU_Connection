@@ -33,17 +33,7 @@ class AppTheme {
         ),
       ),
 
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: navyBlue,
-          foregroundColor: white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-      ),
+      elevatedButtonTheme: _elevatedButtonTheme,
 
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: orangeAccent,
@@ -56,4 +46,57 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+
+      colorScheme: const ColorScheme.dark(
+        primary: navyBlue,
+        secondary: orangeAccent,
+        surface: Color(0xFF1E1E1E),
+        onPrimary: white,
+        onSecondary: white,
+        onSurface: Colors.white70,
+      ),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E1E1E),
+        foregroundColor: white,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: white,
+        ),
+      ),
+
+      elevatedButtonTheme: _elevatedButtonTheme,
+
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: orangeAccent,
+        foregroundColor: white,
+        elevation: 4,
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: orangeAccent,
+      ),
+    );
+  }
+
+  static final ElevatedButtonThemeData _elevatedButtonTheme =
+      ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: navyBlue,
+          foregroundColor: white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      );
 }

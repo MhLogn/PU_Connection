@@ -1,0 +1,19 @@
+{
+  "@@locale": "vi",
+  "setup_title": "Cài đặt ban đầu",
+  "language": "Ngôn ngữ",
+  "theme": "Giao diện",
+  "light": "Sáng",
+  "dark": "Tối",
+  "system": "Hệ thống",
+  "continue_btn": "Tiếp tục",
+  "vietnamese": "Tiếng Việt",
+  "english": "Tiếng Anh",
+  "intro1_title": "Kết nối sinh viên Phenikaa",
+  "intro1_desc": "Mạng xã hội dành riêng cho sinh viên Phenikaa, giúp bạn dễ dàng kết nối và trao đổi kinh nghiệm.",
+  "intro2_title": "Chia sẻ tài liệu học tập",
+  "intro2_desc": "Chia sẻ thông tin, bài giảng, slide và tài liệu học tập một cách thông minh và tiện lợi.",
+  "intro3_title": "Cộng đồng & Nhóm học tập",
+  "intro3_desc": "Tạo nhóm riêng tư, quản lý bảng tin nhóm và được hỗ trợ bởi Chatbot Campus Assistant.",
+  "start_btn": "Bắt đầu"
+}

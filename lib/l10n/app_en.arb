@@ -1,0 +1,19 @@
+{
+  "@@locale": "en",
+  "setup_title": "Initial Setup",
+  "language": "Language",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "continue_btn": "Continue",
+  "vietnamese": "Vietnamese",
+  "english": "English",
+  "intro1_title": "Connect Phenikaa Students",
+  "intro1_desc": "A dedicated social network for Phenikaa students to easily connect and share experiences.",
+  "intro2_title": "Share Study Materials",
+  "intro2_desc": "Share information, lectures, slides, and study materials smartly and conveniently.",
+  "intro3_title": "Community & Study Groups",
+  "intro3_desc": "Create private groups, manage group feeds, and get support from Campus Assistant Chatbot.",
+  "start_btn": "Get Started"
+}

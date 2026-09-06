@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pu_connection/features/auth/presentation/pages/login_page.dart';
+import 'package:pu_connection/l10n/app_localizations.dart';
+import 'preference_page.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -22,12 +23,12 @@ class _IntroPageState extends State<IntroPage> {
     if (_currentPage == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => const PreferencePage()),
       );
     } else {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
       );
     }
   }
@@ -35,6 +36,7 @@ class _IntroPageState extends State<IntroPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final t = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -51,52 +53,65 @@ class _IntroPageState extends State<IntroPage> {
                 children: [
                   _buildIntroContent(
                     context: context,
-                    icon: Icons.people_alt_outlined,
-                    title: 'Kết nối sinh viên Phenikaa',
-                    description:
-                        'Mạng xã hội dành riêng cho sinh viên Phenikaa, giúp bạn dễ dàng kết nối và trao đổi kinh nghiệm.',
+                    icon: Icons.people_alt_rounded,
+                    title: t.intro1_title,
+                    description: t.intro1_desc,
                   ),
                   _buildIntroContent(
                     context: context,
-                    icon: Icons.menu_book_outlined,
-                    title: 'Chia sẻ tài liệu học tập',
-                    description:
-                        'Chia sẻ thông tin, bài giảng, slide và tài liệu học tập một cách thông minh và tiện lợi.',
+                    icon: Icons.menu_book_rounded,
+                    title: t.intro2_title,
+                    description: t.intro2_desc,
                   ),
                   _buildIntroContent(
                     context: context,
-                    icon: Icons.group_work_outlined,
-                    title: 'Cộng đồng & Nhóm học tập',
-                    description:
-                        'Tạo nhóm riêng tư, quản lý bảng tin nhóm và được hỗ trợ bởi Chatbot Campus Assistant.',
+                    icon: Icons.group_work_rounded,
+                    title: t.intro3_title,
+                    description: t.intro3_desc,
                   ),
                 ],
               ),
             ),
+
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(32.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: List.generate(
                       3,
-                      (index) => Container(
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
                         margin: const EdgeInsets.only(right: 8),
-                        width: _currentPage == index ? 24 : 8,
                         height: 8,
+                        width: _currentPage == index ? 28 : 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? colorScheme.secondary
-                              : Colors.grey.shade300,
+                              : colorScheme.onSurface.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: _onNext,
-                    child: Text(_currentPage == 2 ? 'Bắt đầu' : 'Tiếp tục'),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: ElevatedButton(
+                      key: ValueKey<int>(_currentPage),
+                      onPressed: _onNext,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        elevation: _currentPage == 2 ? 4 : 0,
+                      ),
+                      child: Text(
+                        _currentPage == 2 ? t.start_btn : t.continue_btn,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -116,18 +131,26 @@ class _IntroPageState extends State<IntroPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.all(40.0),
+      padding: const EdgeInsets.symmetric(horizontal: 40.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 120, color: colorScheme.primary),
-          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 96, color: colorScheme.primary),
+          ),
+          const SizedBox(height: 48),
           Text(
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
               color: colorScheme.onSurface,
             ),
           ),
@@ -135,7 +158,11 @@ class _IntroPageState extends State<IntroPage> {
           Text(
             description,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.5,
+              color: colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
       ),
