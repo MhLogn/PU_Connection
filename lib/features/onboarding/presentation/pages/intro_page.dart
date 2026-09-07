@@ -86,7 +86,7 @@ class _IntroPageState extends State<IntroPage> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? colorScheme.secondary
-                              : colorScheme.onSurface.withOpacity(0.15),
+                              : colorScheme.onSurface.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -134,7 +134,7 @@ class _IntroPageState extends State<IntroPage> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.08),
+              color: colorScheme.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 96, color: colorScheme.primary),
@@ -157,7 +157,7 @@ class _IntroPageState extends State<IntroPage> {
             style: TextStyle(
               fontSize: 16,
               height: 1.5,
-              color: colorScheme.onSurface.withOpacity(0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],

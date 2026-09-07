@@ -160,19 +160,19 @@ class PreferencePage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? colorScheme.primary.withOpacity(0.08)
+              ? colorScheme.primary.withValues(alpha: 0.08)
               : colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? colorScheme.primary
-                : colorScheme.onSurface.withOpacity(0.1),
+                : colorScheme.onSurface.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             if (!isSelected)
               BoxShadow(
-                color: colorScheme.onSurface.withOpacity(0.05),
+                color: colorScheme.onSurface.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -186,7 +186,7 @@ class PreferencePage extends StatelessWidget {
               size: 32,
               color: isSelected
                   ? colorScheme.primary
-                  : colorScheme.onSurface.withOpacity(0.5),
+                  : colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 12),
             Text(

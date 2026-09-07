@@ -1,30 +1,30 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pu_connection/core/di/injection_container.dart';
 import 'package:pu_connection/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  setUp(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    await initDI();
+  });
+
+  tearDown(() async {
+    await sl.reset();
+  });
+
+  testWidgets('App renders SplashPage and transitions to IntroPage', (WidgetTester tester) async {
     await tester.pumpWidget(const PUConnectionApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify PU Connection text is present on SplashPage
+    expect(find.text('PU Connection'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Fast-forward past splash delay (2500ms)
+    await tester.pump(const Duration(milliseconds: 2600));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify Intro page is displayed
+    expect(find.text('Kết nối sinh viên Phenikaa'), findsOneWidget);
   });
 }
