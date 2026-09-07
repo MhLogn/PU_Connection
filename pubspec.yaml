@@ -47,6 +47,29 @@ dependencies:
   go_router: ^17.0.0
   equatable: ^2.1.0
 
+  # Free Cloud Storage & Networking (Cloudinary REST upload)
+  dio: ^5.8.0+1
+
+  # Image & File Picking
+  image_picker: ^1.1.2
+  file_picker: ^8.1.7
+
+  # PDF & Document Viewer / Opener
+  flutter_pdfview: ^1.4.3
+  open_filex: ^4.5.0
+  path_provider: ^2.1.5
+
+  # AI Campus Assistant (Google Gemini 1.5 Flash Free Tier)
+  google_generative_ai: ^0.4.6
+
+  # UI Utilities & Caching
+  cached_network_image: ^3.4.1
+  timeago: ^3.7.0
+  uuid: ^4.5.1
+
+  # Push Notifications (FCM - 100% Free)
+  firebase_messaging: ^16.6.0
+
 dependency_overrides:
   firebase_core_web: 3.10.0
 

@@ -9,6 +9,7 @@ import 'core/theme/theme_cubit.dart';
 import 'core/localization/locale_cubit.dart';
 import 'core/di/injection_container.dart';
 import 'core/routes/app_router.dart';
+import 'features/auth/presentation/cubit/auth_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,7 @@ class PUConnectionApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<ThemeCubit>()),
         BlocProvider(create: (_) => sl<LocaleCubit>()),
+        BlocProvider(create: (_) => sl<AuthCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
