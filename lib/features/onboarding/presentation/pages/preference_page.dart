@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pu_connection/l10n/app_localizations.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
 
@@ -10,115 +10,119 @@ class PreferencePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 32),
-              Text(
-                t.setup_title,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.primary,
-                  height: 1.2,
-                ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.blueContainer(context),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      color: AppTheme.primaryColor(context),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Thiết Lập Cá Nhân',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.primaryColor(context),
+                        ),
+                      ),
+                      Text(
+                        'Tùy biến ngôn ngữ và giao diện hiển thị',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 48),
-              Text(
-                t.language,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 36),
+              _buildSectionTitle(context, 'Ngôn ngữ ứng dụng', Icons.language_rounded),
+              const SizedBox(height: 12),
               BlocBuilder<LocaleCubit, Locale>(
                 builder: (context, locale) {
+                  final isVi = locale.languageCode == 'vi';
                   return Row(
                     children: [
                       Expanded(
-                        child: _buildSelectionCard(
+                        child: _buildOptionCard(
                           context: context,
-                          title: t.vietnamese,
-                          icon: Icons.language,
-                          isSelected: locale.languageCode == 'vi',
-                          onTap: () => context.read<LocaleCubit>().setLocale(
-                            const Locale('vi'),
-                          ),
+                          flag: '🇻🇳',
+                          title: 'Tiếng Việt',
+                          subtitle: 'Mặc định',
+                          isSelected: isVi,
+                          onTap: () => context.read<LocaleCubit>().setLocale(const Locale('vi')),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 14),
                       Expanded(
-                        child: _buildSelectionCard(
+                        child: _buildOptionCard(
                           context: context,
-                          title: t.english,
-                          icon: Icons.translate,
-                          isSelected: locale.languageCode == 'en',
-                          onTap: () => context.read<LocaleCubit>().setLocale(
-                            const Locale('en'),
-                          ),
+                          flag: '🇬🇧',
+                          title: 'English',
+                          subtitle: 'International',
+                          isSelected: !isVi,
+                          onTap: () => context.read<LocaleCubit>().setLocale(const Locale('en')),
                         ),
                       ),
                     ],
                   );
                 },
               ),
-              const SizedBox(height: 40),
-              Text(
-                t.theme,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
+              _buildSectionTitle(context, 'Chế độ giao diện', Icons.palette_outlined),
+              const SizedBox(height: 12),
               BlocBuilder<ThemeCubit, ThemeMode>(
                 builder: (context, themeMode) {
-                  return Row(
+                  return Column(
                     children: [
-                      Expanded(
-                        child: _buildSelectionCard(
-                          context: context,
-                          title: t.light,
-                          icon: Icons.wb_sunny_rounded,
-                          isSelected: themeMode == ThemeMode.light,
-                          onTap: () => context.read<ThemeCubit>().setThemeMode(
-                            ThemeMode.light,
-                          ),
-                        ),
+                      _buildThemeTile(
+                        context: context,
+                        icon: Icons.wb_sunny_rounded,
+                        title: 'Giao diện Sáng',
+                        description: 'Tone trắng & Navy thanh lịch, dễ đọc ban ngày',
+                        isSelected: themeMode == ThemeMode.light,
+                        onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.light),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildSelectionCard(
-                          context: context,
-                          title: t.dark,
-                          icon: Icons.nightlight_round,
-                          isSelected: themeMode == ThemeMode.dark,
-                          onTap: () => context.read<ThemeCubit>().setThemeMode(
-                            ThemeMode.dark,
-                          ),
-                        ),
+                      const SizedBox(height: 10),
+                      _buildThemeTile(
+                        context: context,
+                        icon: Icons.nightlight_round,
+                        title: 'Giao diện Tối',
+                        description: 'Tone đen than dịu mắt, tiết kiệm pin ban đêm',
+                        isSelected: themeMode == ThemeMode.dark,
+                        onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.dark),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildSelectionCard(
-                          context: context,
-                          title: t.system,
-                          icon: Icons.settings_suggest_rounded,
-                          isSelected: themeMode == ThemeMode.system,
-                          onTap: () => context.read<ThemeCubit>().setThemeMode(
-                            ThemeMode.system,
-                          ),
-                        ),
+                      const SizedBox(height: 10),
+                      _buildThemeTile(
+                        context: context,
+                        icon: Icons.settings_brightness_rounded,
+                        title: 'Tự động theo hệ thống',
+                        description: 'Tự động đồng bộ theo cài đặt thiết bị',
+                        isSelected: themeMode == ThemeMode.system,
+                        onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.system),
                       ),
                     ],
                   );
@@ -126,14 +130,25 @@ class PreferencePage extends StatelessWidget {
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed: () {
-                  context.go('/login');
-                },
+                onPressed: () => context.go('/login'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  backgroundColor: AppTheme.primaryColor(context),
+                  foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 2,
                 ),
-                child: Text(t.continue_btn),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Tiếp tục đến Đăng nhập',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_rounded, size: 20),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
             ],
@@ -143,59 +158,87 @@ class PreferencePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSelectionCard({
+  Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppTheme.primaryColor(context)),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOptionCard({
     required BuildContext context,
+    required String flag,
     required String title,
-    required IconData icon,
+    required String subtitle,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? colorScheme.primary.withValues(alpha: 0.08)
+              ? AppTheme.blueContainer(context)
               : colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? colorScheme.primary
-                : colorScheme.onSurface.withValues(alpha: 0.1),
+            color: isSelected ? AppTheme.primaryColor(context) : colorScheme.outlineVariant.withValues(alpha: 0.6),
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: [
-            if (!isSelected)
-              BoxShadow(
-                color: colorScheme.onSurface.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-          ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.onSurface.withValues(alpha: 0.5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(flag, style: const TextStyle(fontSize: 28)),
+                if (isSelected)
+                  Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor(context), size: 20)
+                else
+                  Icon(
+                    Icons.circle_outlined,
+                    color: colorScheme.onSurface.withValues(alpha: 0.25),
+                    size: 20,
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? AppTheme.primaryColor(context) : colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
               ),
             ),
           ],
@@ -203,4 +246,84 @@ class PreferencePage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildThemeTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.blueContainer(context)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor(context) : colorScheme.outlineVariant.withValues(alpha: 0.6),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.primaryColor(context).withValues(alpha: 0.15)
+                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isSelected ? AppTheme.primaryColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? AppTheme.primaryColor(context) : colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.radio_button_checked_rounded, color: AppTheme.primaryColor(context), size: 20)
+            else
+              Icon(
+                Icons.radio_button_off_rounded,
+                color: colorScheme.onSurface.withValues(alpha: 0.25),
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+

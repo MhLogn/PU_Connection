@@ -7,6 +7,9 @@ import '../services/gemini_service.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/feed/domain/repositories/post_repository.dart';
+import '../../features/feed/data/repositories/post_repository_impl.dart';
+import '../../features/feed/presentation/cubit/feed_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -22,4 +25,10 @@ Future<void> initDI() async {
 
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
   sl.registerFactory(() => AuthCubit(authRepository: sl()));
+
+  sl.registerLazySingleton<PostRepository>(() => PostRepositoryImpl());
+  sl.registerFactory(() => FeedCubit(
+        postRepository: sl(),
+        cloudinaryService: sl(),
+      ));
 }

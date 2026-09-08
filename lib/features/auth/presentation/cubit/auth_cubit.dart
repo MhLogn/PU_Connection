@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/phenikaa_student_entity.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -18,11 +19,16 @@ class AuthCubit extends Cubit<AuthState> {
       if (user != null) {
         emit(Authenticated(user));
       } else {
-        emit(Unauthenticated());
+        if (state is! AuthInitial &&
+            state is! StudentVerifiedForActivation &&
+            state is! ActivationVerificationEmailSent) {
+          emit(Unauthenticated());
+        }
       }
     });
   }
 
+  /// Đăng nhập bằng Email hoặc Mã sinh viên
   Future<void> signIn({
     required String email,
     required String password,
@@ -35,34 +41,87 @@ class AuthCubit extends Cubit<AuthState> {
       );
       emit(Authenticated(user));
     } catch (e) {
-      emit(AuthError(e.toString().replaceAll('Exception: ', '')));
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      if (errorMsg.contains('EMAIL_NOT_VERIFIED:')) {
+        final cleanMsg = errorMsg.replaceAll('EMAIL_NOT_VERIFIED:', '').trim();
+        emit(EmailNotVerified(email: email, message: cleanMsg));
+      } else {
+        emit(AuthError(errorMsg));
+      }
     }
   }
 
-  Future<void> signUp({
-    required String email,
-    required String password,
-    required String studentId,
-    required String displayName,
-    required String faculty,
-    required String major,
-  }) async {
+  /// Phương án 2: Đăng nhập 1 chạm bằng Google tài khoản trường Phenikaa (@st.phenikaa-uni.edu.vn)
+  Future<void> signInWithGoogle() async {
     emit(AuthLoading());
     try {
-      final user = await _authRepository.signUpWithPhenikaaEmail(
-        email: email,
-        password: password,
-        studentId: studentId,
-        displayName: displayName,
-        faculty: faculty,
-        major: major,
-      );
+      final user = await _authRepository.signInWithGoogle();
       emit(Authenticated(user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
+  /// Bước 1: Tra cứu và xác minh sinh viên trong danh sách Phenikaa
+  Future<void> verifyStudent(String identifier) async {
+    emit(AuthLoading());
+    try {
+      final student = await _authRepository.verifyStudentIdentifier(identifier);
+      emit(StudentVerifiedForActivation(student));
+    } catch (e) {
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      if (errorMsg.contains('ALREADY_ACTIVATED:')) {
+        final cleanMsg = errorMsg.replaceAll('ALREADY_ACTIVATED:', '').trim();
+        final cleanId = identifier.contains('@') ? identifier.split('@').first : identifier;
+        emit(StudentAlreadyActivated(
+          studentId: cleanId,
+          email: identifier,
+          message: cleanMsg,
+        ));
+      } else {
+        emit(AuthError(errorMsg));
+      }
+    }
+  }
+
+  /// Bước 2: Đặt mật khẩu và gửi Firebase Email Verification Link (Không cần OTP!)
+  Future<void> registerAndSendVerificationLink({
+    required PhenikaaStudentEntity student,
+    required String password,
+  }) async {
+    emit(AuthLoading());
+    try {
+      await _authRepository.registerAndSendVerificationLink(
+        student: student,
+        password: password,
+      );
+      emit(ActivationVerificationEmailSent(
+        student: student,
+        email: student.email,
+      ));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  /// Gửi lại liên kết xác thực Firebase tới email sinh viên
+  Future<void> resendVerificationLink({
+    required String email,
+    required String password,
+  }) async {
+    emit(AuthLoading());
+    try {
+      await _authRepository.resendEmailVerificationLink(
+        email: email,
+        password: password,
+      );
+      emit(ResendVerificationEmailSuccess(email));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  /// Quên mật khẩu
   Future<void> sendPasswordReset(String email) async {
     emit(AuthLoading());
     try {
@@ -71,6 +130,10 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }
+  }
+
+  void resetToUnauthenticated() {
+    emit(Unauthenticated());
   }
 
   Future<void> signOut() async {
