@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/feed_cubit.dart';
@@ -126,7 +127,15 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    final categoryLabels = {
+      'Thảo luận': l10n.discussions_filter,
+      'Hỏi bài': l10n.questions_filter,
+      'Tài liệu': l10n.docs_filter,
+      'Tìm nhóm': l10n.groups_filter,
+    };
 
     return Container(
       padding: EdgeInsets.only(
@@ -147,9 +156,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Tạo bài viết mới',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.create_post_title,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -163,7 +172,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               children: _categories.map((cat) {
                 final isSelected = _selectedCategory == cat;
                 return ChoiceChip(
-                  label: Text(cat),
+                  label: Text(categoryLabels[cat] ?? cat),
                   selected: isSelected,
                   selectedColor: AppTheme.blueContainer(context),
                   labelStyle: TextStyle(
@@ -181,7 +190,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
             TextField(
               controller: _subjectCodeController,
               decoration: InputDecoration(
-                hintText: 'Gắn mã môn học (ví dụ: CNTT-225, CSDL-101)...',
+                hintText: 'Mã môn học (CNTT-225, CSDL-101)...',
                 prefixIcon: const Icon(Icons.menu_book_rounded, size: 20),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -191,8 +200,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
             TextField(
               controller: _contentController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Bạn muốn chia sẻ điều gì với cộng đồng Phenikaa?',
+              decoration: InputDecoration(
+                hintText: l10n.post_content_hint,
                 border: InputBorder.none,
               ),
             ),
@@ -271,12 +280,12 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Thêm hình ảnh',
+                  tooltip: l10n.attach_image,
                   icon: Icon(Icons.photo_library_outlined, color: AppTheme.primaryColor(context)),
                   onPressed: _isUploading ? null : _pickImage,
                 ),
                 IconButton(
-                  tooltip: 'Đính kèm tài liệu PDF / DOCX',
+                  tooltip: l10n.attach_file,
                   icon: Icon(Icons.attach_file_rounded, color: AppTheme.accentColor(context)),
                   onPressed: _isUploading ? null : _pickDocument,
                 ),
@@ -294,7 +303,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Đăng bài', style: TextStyle(color: Colors.white)),
+                      : Text(l10n.post_btn, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

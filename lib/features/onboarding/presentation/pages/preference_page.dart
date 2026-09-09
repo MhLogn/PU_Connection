@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class PreferencePage extends StatelessWidget {
   const PreferencePage({super.key});
@@ -11,6 +12,7 @@ class PreferencePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -40,7 +42,7 @@ class PreferencePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Thiết Lập Cá Nhân',
+                        l10n.setup_title,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
@@ -48,7 +50,7 @@ class PreferencePage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Tùy biến ngôn ngữ và giao diện hiển thị',
+                        l10n.setup_subtitle,
                         style: TextStyle(
                           fontSize: 13,
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -59,7 +61,7 @@ class PreferencePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 36),
-              _buildSectionTitle(context, 'Ngôn ngữ ứng dụng', Icons.language_rounded),
+              _buildSectionTitle(context, l10n.app_language_section, Icons.language_rounded),
               const SizedBox(height: 12),
               BlocBuilder<LocaleCubit, Locale>(
                 builder: (context, locale) {
@@ -70,8 +72,8 @@ class PreferencePage extends StatelessWidget {
                         child: _buildOptionCard(
                           context: context,
                           flag: '🇻🇳',
-                          title: 'Tiếng Việt',
-                          subtitle: 'Mặc định',
+                          title: l10n.vietnamese,
+                          subtitle: l10n.default_label,
                           isSelected: isVi,
                           onTap: () => context.read<LocaleCubit>().setLocale(const Locale('vi')),
                         ),
@@ -81,8 +83,8 @@ class PreferencePage extends StatelessWidget {
                         child: _buildOptionCard(
                           context: context,
                           flag: '🇬🇧',
-                          title: 'English',
-                          subtitle: 'International',
+                          title: l10n.english,
+                          subtitle: l10n.international_label,
                           isSelected: !isVi,
                           onTap: () => context.read<LocaleCubit>().setLocale(const Locale('en')),
                         ),
@@ -92,7 +94,7 @@ class PreferencePage extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 32),
-              _buildSectionTitle(context, 'Chế độ giao diện', Icons.palette_outlined),
+              _buildSectionTitle(context, l10n.theme_mode_section, Icons.palette_outlined),
               const SizedBox(height: 12),
               BlocBuilder<ThemeCubit, ThemeMode>(
                 builder: (context, themeMode) {
@@ -101,8 +103,8 @@ class PreferencePage extends StatelessWidget {
                       _buildThemeTile(
                         context: context,
                         icon: Icons.wb_sunny_rounded,
-                        title: 'Giao diện Sáng',
-                        description: 'Tone trắng & Navy thanh lịch, dễ đọc ban ngày',
+                        title: l10n.light_theme_title,
+                        description: l10n.light_theme_desc,
                         isSelected: themeMode == ThemeMode.light,
                         onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.light),
                       ),
@@ -110,8 +112,8 @@ class PreferencePage extends StatelessWidget {
                       _buildThemeTile(
                         context: context,
                         icon: Icons.nightlight_round,
-                        title: 'Giao diện Tối',
-                        description: 'Tone đen than dịu mắt, tiết kiệm pin ban đêm',
+                        title: l10n.dark_theme_title,
+                        description: l10n.dark_theme_desc,
                         isSelected: themeMode == ThemeMode.dark,
                         onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.dark),
                       ),
@@ -119,8 +121,8 @@ class PreferencePage extends StatelessWidget {
                       _buildThemeTile(
                         context: context,
                         icon: Icons.settings_brightness_rounded,
-                        title: 'Tự động theo hệ thống',
-                        description: 'Tự động đồng bộ theo cài đặt thiết bị',
+                        title: l10n.system_theme_title,
+                        description: l10n.system_theme_desc,
                         isSelected: themeMode == ThemeMode.system,
                         onTap: () => context.read<ThemeCubit>().setThemeMode(ThemeMode.system),
                       ),
@@ -138,15 +140,15 @@ class PreferencePage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 2,
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Tiếp tục đến Đăng nhập',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      l10n.continue_to_login,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, size: 20),
                   ],
                 ),
               ),

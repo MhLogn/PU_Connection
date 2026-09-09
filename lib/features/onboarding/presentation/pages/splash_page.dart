@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -110,7 +111,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      'TRƯỜNG ĐẠI HỌC PHENIKAA',
+                      AppLocalizations.of(context)?.university_name ?? 'TRƯỜNG ĐẠI HỌC PHENIKAA',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -136,7 +137,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Mạng xã hội sinh viên Phenikaa',
+                        AppLocalizations.of(context)?.student_network ?? 'Mạng xã hội sinh viên Phenikaa',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -169,7 +170,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Kết nối tri thức • Tương lai vững bước',
+                    AppLocalizations.of(context)?.student_slogan ?? 'Kết nối tri thức • Tương lai vững bước',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

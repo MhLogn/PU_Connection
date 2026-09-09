@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/phenikaa_student_entity.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -88,17 +89,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   void _showForgotPasswordDialog() {
     final resetEmailController = TextEditingController(text: _signInEmailController.text.trim());
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Quên mật khẩu'),
+        title: Text(l10n.forgot_password_title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Nhập Mã SV hoặc Email sinh viên (@st.phenikaa-uni.edu.vn) để nhận liên kết đặt lại mật khẩu:',
-              style: TextStyle(fontSize: 14),
+            Text(
+              l10n.forgot_password_desc,
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -115,7 +117,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -125,7 +127,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 Navigator.pop(ctx);
               }
             },
-            child: const Text('Gửi yêu cầu'),
+            child: Text(l10n.send_reset_link),
           ),
         ],
       ),
@@ -219,6 +221,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
+          final l10n = AppLocalizations.of(context)!;
 
           return SafeArea(
             child: Center(
@@ -305,9 +308,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           labelColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
                           unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.65),
                           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          tabs: const [
-                            Tab(text: 'Đăng nhập'),
-                            Tab(text: 'Kích hoạt tài khoản'),
+                          tabs: [
+                            Tab(text: l10n.login_tab),
+                            Tab(text: l10n.activate_tab),
                           ],
                         ),
                       ),
@@ -316,8 +319,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         animation: _tabController,
                         builder: (context, _) {
                           return _tabController.index == 0
-                              ? _buildSignInTab(isLoading, colorScheme)
-                              : _buildActivationTab(isLoading, colorScheme);
+                              ? _buildSignInTab(isLoading, colorScheme, l10n)
+                              : _buildActivationTab(isLoading, colorScheme, l10n);
                         },
                       ),
                     ],
@@ -332,7 +335,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   // ================= TAB 1: ĐĂNG NHẬP =================
-  Widget _buildSignInTab(bool isLoading, ColorScheme colorScheme) {
+  Widget _buildSignInTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     return Form(
       key: _signInFormKey,
       child: Column(
@@ -343,14 +346,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             controller: _signInEmailController,
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
-              labelText: 'Mã SV hoặc Email trường',
-              hintText: 'Ví dụ: 23010390',
+              labelText: l10n.student_email_label,
+              hintText: l10n.student_email_hint,
               prefixIcon: const Icon(Icons.badge_outlined),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Vui lòng nhập mã sinh viên hoặc email';
+                return l10n.empty_field_err;
               }
               return null;
             },
@@ -360,7 +363,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             controller: _signInPasswordController,
             obscureText: _signInObscurePassword,
             decoration: InputDecoration(
-              labelText: 'Mật khẩu',
+              labelText: l10n.password_label,
+              hintText: l10n.password_hint,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(_signInObscurePassword ? Icons.visibility_off : Icons.visibility),
@@ -370,7 +374,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Vui lòng nhập mật khẩu';
+                return l10n.empty_field_err;
               }
               return null;
             },
@@ -379,7 +383,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _showForgotPasswordDialog,
-              child: const Text('Quên mật khẩu?'),
+              child: Text(l10n.forgot_password),
             ),
           ),
           const SizedBox(height: 8),
@@ -398,7 +402,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Đăng nhập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                : Text(l10n.sign_in_btn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
@@ -407,7 +411,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
-            child: const Text('Chưa kích hoạt tài khoản? Kích hoạt ngay'),
+            child: Text(l10n.activate_tab),
           ),
           const SizedBox(height: 18),
           Row(
@@ -416,7 +420,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
-                  'HOẶC',
+                  l10n.or_divider.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurface.withValues(alpha: 0.45),
@@ -446,10 +450,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 22),
                 ),
                 const SizedBox(width: 10),
-                const Flexible(
+                Flexible(
                   child: Text(
-                    'Đăng nhập bằng Google sinh viên (@st.phenikaa-uni.edu.vn)',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    l10n.google_sign_in_btn,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -459,7 +463,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           const SizedBox(height: 12),
           Center(
             child: Text(
-              '1 chạm bằng email trường cấp (@st.phenikaa-uni.edu.vn)',
+              l10n.google_sign_in_sub,
               style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
             ),
           ),
@@ -469,20 +473,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   // ================= TAB 2: KÍCH HOẠT TÀI KHOẢN =================
-  Widget _buildActivationTab(bool isLoading, ColorScheme colorScheme) {
+  Widget _buildActivationTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     switch (_activationStep) {
       case 2:
-        return _buildCheckInfoAndSetPasswordStep(isLoading, colorScheme);
+        return _buildCheckInfoAndSetPasswordStep(isLoading, colorScheme, l10n);
       case 3:
-        return _buildEmailVerificationSentStep(isLoading, colorScheme);
+        return _buildEmailVerificationSentStep(isLoading, colorScheme, l10n);
       case 1:
       default:
-        return _buildEnterIdentifierStep(isLoading, colorScheme);
+        return _buildEnterIdentifierStep(isLoading, colorScheme, l10n);
     }
   }
 
   // Bước 1: Nhập Mã sinh viên để tra cứu danh mục trường
-  Widget _buildEnterIdentifierStep(bool isLoading, ColorScheme colorScheme) {
+  Widget _buildEnterIdentifierStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     return Form(
       key: _activationFormKey,
       child: Column(
@@ -503,7 +507,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Nhập Mã sinh viên để tra cứu dữ liệu trường Phenikaa. Sau khi thiết lập mật khẩu, Firebase sẽ gửi liên kết xác thực chính chủ đến hộp thư của bạn.',
+                    l10n.activate_step1_desc,
                     style: TextStyle(
                       fontSize: 12.5,
                       color: colorScheme.onSurface.withValues(alpha: 0.8),
@@ -519,14 +523,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             controller: _activationIdentifierController,
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
-              labelText: 'Mã sinh viên hoặc Email Phenikaa',
-              hintText: 'Ví dụ: 23010390',
+              labelText: l10n.student_email_label,
+              hintText: l10n.student_email_hint,
               prefixIcon: const Icon(Icons.badge_outlined),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
             validator: (val) {
               if (val == null || val.trim().isEmpty) {
-                return 'Vui lòng nhập mã sinh viên của bạn';
+                return l10n.empty_field_err;
               }
               return null;
             },
@@ -547,7 +551,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                : Text(l10n.verify_student_btn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 18),
           Row(
@@ -556,7 +560,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
-                  'HOẶC',
+                  l10n.or_divider.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurface.withValues(alpha: 0.45),
@@ -586,9 +590,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 22),
                 ),
                 const SizedBox(width: 10),
-                const Text(
-                  'Đăng nhập 1 chạm bằng Google sinh viên',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                Flexible(
+                  child: Text(
+                    l10n.google_sign_in_btn,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -606,7 +613,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   // Bước 2: Thẻ sinh viên điện tử & Đặt mật khẩu mới
-  Widget _buildCheckInfoAndSetPasswordStep(bool isLoading, ColorScheme colorScheme) {
+  Widget _buildCheckInfoAndSetPasswordStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     final student = _currentStudent;
     if (student == null) return const SizedBox.shrink();
 
@@ -638,12 +645,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.verified_rounded, color: AppTheme.orangeAccent, size: 18),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'THẺ SINH VIÊN PHENIKAA',
+                        Icon(Icons.verified_rounded, color: AppTheme.orangeAccent, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          'PHENIKAA UNIVERSITY',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -659,9 +666,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
-                        'ĐÃ XÁC THỰC',
-                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      child: Text(
+                        l10n.student_verified_badge.toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -677,18 +684,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'MSV: ${student.studentId} • Khóa: K${student.cohort}',
+                  '${l10n.student_id}: ${student.studentId} • K${student.cohort}',
                   style: const TextStyle(fontSize: 13, color: Colors.white70),
                 ),
                 const SizedBox(height: 8),
                 const Divider(color: Colors.white24, height: 1),
                 const SizedBox(height: 8),
                 Text(
-                  'Khoa: ${student.faculty}',
+                  '${l10n.faculty}: ${student.faculty}',
                   style: const TextStyle(fontSize: 12, color: Colors.white),
                 ),
                 Text(
-                  'Ngành: ${student.major}',
+                  '${l10n.major}: ${student.major}',
                   style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
                 Text(
@@ -703,7 +710,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             controller: _newPasswordController,
             obscureText: _obscureNewPassword,
             decoration: InputDecoration(
-              labelText: 'Thiết lập mật khẩu mới',
+              labelText: l10n.new_password_label,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(_obscureNewPassword ? Icons.visibility_off : Icons.visibility),
@@ -711,20 +718,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               ),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
-            validator: (val) => (val == null || val.length < 6) ? 'Mật khẩu tối thiểu 6 ký tự' : null,
+            validator: (val) => (val == null || val.length < 6) ? l10n.password_length_err : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: _obscureNewPassword,
             decoration: InputDecoration(
-              labelText: 'Nhập lại mật khẩu',
+              labelText: l10n.confirm_password_label,
               prefixIcon: const Icon(Icons.lock_outline),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
             validator: (val) {
               if (val != _newPasswordController.text) {
-                return 'Mật khẩu xác nhận không khớp';
+                return l10n.password_mismatch_err;
               }
               return null;
             },
@@ -745,15 +752,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text(
-                    'Kích hoạt & Nhận link xác thực email',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                : Text(
+                    l10n.send_activation_link_btn,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
           ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: _resetActivationFlow,
-            child: const Text('Quay lại tra cứu mã khác'),
+            child: Text(l10n.back_to_step1),
           ),
         ],
       ),
@@ -761,7 +768,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   // Bước 3: Đã gửi link xác thực Firebase
-  Widget _buildEmailVerificationSentStep(bool isLoading, ColorScheme colorScheme) {
+  Widget _buildEmailVerificationSentStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     final student = _currentStudent;
     final email = student?.email ?? '';
 
@@ -787,7 +794,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         const SizedBox(height: 16),
         Text(
-          'Liên kết xác thực đã được gửi!',
+          l10n.activation_link_sent_title,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 20,
@@ -807,21 +814,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Firebase đã gửi email xác thực chính thức đến hộp thư:',
-                style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.75)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                email,
+                'Firebase: $email',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor(context),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const Divider(height: 1),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -829,7 +831,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Vui lòng mở hộp thư Outlook hoặc Gmail của trường Phenikaa và bấm vào đường link trong email để kích hoạt tài khoản.',
+                      l10n.activation_link_sent_desc,
                       style: TextStyle(
                         fontSize: 13,
                         color: colorScheme.onSurface.withValues(alpha: 0.8),
@@ -852,9 +854,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             });
           },
           icon: const Icon(Icons.login, color: Colors.white),
-          label: const Text(
-            'Tôi đã bấm link (Đăng nhập ngay)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+          label: Text(
+            l10n.recheck_verified_btn,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryColor(context),
@@ -876,7 +878,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   }
                 },
           icon: const Icon(Icons.refresh, size: 18),
-          label: const Text('Gửi lại link xác thực'),
+          label: Text(l10n.retry),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 13),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -885,7 +887,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         const SizedBox(height: 8),
         TextButton(
           onPressed: _resetActivationFlow,
-          child: const Text('Đổi mã sinh viên khác'),
+          child: Text(l10n.back_to_step1),
         ),
       ],
     );

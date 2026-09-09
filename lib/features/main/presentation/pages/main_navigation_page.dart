@@ -7,6 +7,7 @@ import '../../../../core/localization/locale_cubit.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/database_seeder.dart';
 import '../../../../core/services/gemini_service.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../feed/presentation/pages/feed_page.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
@@ -43,6 +44,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final List<Widget> pages = [
       const FeedPage(),
@@ -67,27 +69,27 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded, color: AppTheme.primaryColor(context)),
-            label: 'Bảng tin',
+            label: l10n.nav_feed,
           ),
           NavigationDestination(
             icon: const Icon(Icons.menu_book_outlined),
             selectedIcon: Icon(Icons.menu_book_rounded, color: AppTheme.primaryColor(context)),
-            label: 'Tài liệu',
+            label: l10n.nav_docs,
           ),
           NavigationDestination(
             icon: const Icon(Icons.smart_toy_outlined),
             selectedIcon: Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context)),
-            label: 'PU Bot',
+            label: l10n.nav_bot,
           ),
           NavigationDestination(
             icon: const Icon(Icons.groups_outlined),
             selectedIcon: Icon(Icons.groups_rounded, color: AppTheme.primaryColor(context)),
-            label: 'Nhóm & CLB',
+            label: l10n.nav_clubs,
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryColor(context)),
-            label: 'Cá nhân',
+            label: l10n.nav_profile,
           ),
         ],
       ),
@@ -170,9 +172,219 @@ class _DocsHubViewState extends State<_DocsHubView> {
     super.dispose();
   }
 
+  void _showUploadDocModal(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final titleController = TextEditingController();
+    final codeController = TextEditingController();
+    String selectedFaculty = _faculties[1]; // CNTT
+    String selectedType = 'pdf';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final colorScheme = Theme.of(ctx).colorScheme;
+          final keyboardBottom = MediaQuery.of(ctx).viewInsets.bottom;
+
+          return Container(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + keyboardBottom),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.file_upload_rounded, color: AppTheme.accentColor(context), size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.contribute_dialog_title,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: l10n.doc_title_label,
+                      hintText: l10n.doc_title_hint,
+                      prefixIcon: const Icon(Icons.title_rounded),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: codeController,
+                          decoration: InputDecoration(
+                            labelText: l10n.course_code_label,
+                            hintText: l10n.course_code_hint,
+                            prefixIcon: const Icon(Icons.code_rounded),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedType,
+                          decoration: InputDecoration(
+                            labelText: l10n.doc_type_label,
+                            prefixIcon: const Icon(Icons.insert_drive_file_rounded),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'pdf', child: Text('PDF')),
+                            DropdownMenuItem(value: 'docx', child: Text('Word / DOCX')),
+                            DropdownMenuItem(value: 'zip', child: Text('ZIP / RAR')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setModalState(() => selectedType = val);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedFaculty,
+                    decoration: InputDecoration(
+                      labelText: l10n.faculty_label,
+                      prefixIcon: const Icon(Icons.apartment_rounded),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    items: _faculties
+                        .where((f) => f != 'Tất cả')
+                        .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => selectedFaculty = val);
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final title = titleController.text.trim();
+                      final code = codeController.text.trim();
+                      if (title.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.doc_name_required)),
+                        );
+                        return;
+                      }
+
+                      setState(() {
+                        _documents.insert(0, {
+                          'title': title,
+                          'code': code.isNotEmpty ? code : 'PU-2026',
+                          'faculty': selectedFaculty,
+                          'type': selectedType,
+                          'size': '3.5 MB',
+                          'downloads': 1,
+                          'rating': 5.0,
+                        });
+                      });
+
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${l10n.doc_upload_success}: "$title"'),
+                          backgroundColor: AppTheme.primaryColor(context),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                    label: Text(l10n.upload_btn, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentColor(context),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _downloadDoc(Map<String, dynamic> doc) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.downloading_rounded, color: AppTheme.accentColor(context), size: 26),
+            const SizedBox(width: 8),
+            Text(l10n.downloading_doc, style: const TextStyle(fontSize: 16)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(doc['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 6),
+            Text('Dung lượng: ${doc['size']} • Mã: ${doc['code']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(color: AppTheme.primaryColor(context)),
+            const SizedBox(height: 8),
+            Text(l10n.download_saving, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      if (mounted) {
+        Navigator.pop(context);
+        setState(() {
+          doc['downloads'] = (doc['downloads'] as int) + 1;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.download_complete}: ${doc['title']}'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: l10n.open_file,
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final filteredDocs = _documents.where((doc) {
       final matchesFaculty = _selectedFaculty == 'Tất cả' || doc['faculty'] == _selectedFaculty;
@@ -186,19 +398,12 @@ class _DocsHubViewState extends State<_DocsHubView> {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Kho Tài Liệu Học Tập'),
+        title: Text(l10n.docs_title),
         actions: [
           IconButton(
             icon: const Icon(Icons.file_upload_outlined),
-            tooltip: 'Đóng góp tài liệu',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tính năng đóng góp tài liệu: Vui lòng chọn tệp từ thiết bị.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            tooltip: l10n.contribute_doc_btn,
+            onPressed: () => _showUploadDocModal(context),
           ),
         ],
       ),
@@ -210,7 +415,7 @@ class _DocsHubViewState extends State<_DocsHubView> {
               controller: _searchController,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm giáo trình, slide, đề thi theo môn...',
+                hintText: l10n.search_docs_hint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -242,7 +447,7 @@ class _DocsHubViewState extends State<_DocsHubView> {
                 final faculty = _faculties[index];
                 final isSelected = faculty == _selectedFaculty;
                 return ChoiceChip(
-                  label: Text(faculty),
+                  label: Text(faculty == 'Tất cả' ? l10n.all_courses : faculty),
                   selected: isSelected,
                   selectedColor: AppTheme.primaryColor(context),
                   labelStyle: TextStyle(
@@ -268,7 +473,7 @@ class _DocsHubViewState extends State<_DocsHubView> {
                       children: [
                         Icon(Icons.folder_open_rounded, size: 64, color: colorScheme.outline),
                         const SizedBox(height: 12),
-                        Text('Không tìm thấy tài liệu phù hợp', style: TextStyle(color: colorScheme.outline)),
+                        Text(l10n.no_docs_found, style: TextStyle(color: colorScheme.outline)),
                       ],
                     ),
                   )
@@ -364,7 +569,7 @@ class _DocsHubViewState extends State<_DocsHubView> {
                                         const Icon(Icons.download_rounded, size: 14, color: Colors.grey),
                                         const SizedBox(width: 2),
                                         Text(
-                                          '${doc['downloads']}',
+                                          '${doc['downloads']} ${l10n.downloads_count}',
                                           style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.6)),
                                         ),
                                         const SizedBox(width: 12),
@@ -381,15 +586,8 @@ class _DocsHubViewState extends State<_DocsHubView> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.download_for_offline_rounded, color: AppTheme.primaryColor(context), size: 28),
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Đang tải "${doc['title']}" về máy...'),
-                                      backgroundColor: AppTheme.primaryColor(context),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                },
+                                tooltip: l10n.download,
+                                onPressed: () => _downloadDoc(doc),
                               ),
                             ],
                           ),
@@ -416,22 +614,28 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isTyping = false;
+  bool _initialized = false;
 
-  final List<Map<String, String>> _messages = [
-    {
-      'role': 'bot',
-      'text':
-          'Chào bạn! Mình là **PU Assistant** — Trợ lý ảo sinh viên Trường Đại học Phenikaa. 🎓\n\nMình có thể hỗ trợ bạn về quy chế tín chỉ, học bổng, lịch thi, khuôn viên trường hoặc các CLB sinh viên.',
-    },
-  ];
+  final List<Map<String, String>> _messages = [];
 
-  final List<String> _suggestions = [
-    '💰 Học bổng kỳ này',
-    '📝 Cách đăng ký tín chỉ',
-    '📅 Lịch thi & tra điểm',
-    '🏢 Sơ đồ giảng đường A9-A10',
-    '📚 Giờ mở cửa thư viện',
-    '✨ Các CLB tại Phenikaa',
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final l10n = AppLocalizations.of(context)!;
+      _messages.add({
+        'role': 'bot',
+        'text': l10n.bot_welcome_msg,
+      });
+    }
+  }
+
+  List<String> _getSuggestions(AppLocalizations l10n) => [
+    '💰 ${l10n.bot_quick_scholarship}',
+    '📝 ${l10n.bot_quick_regulations}',
+    '📚 ${l10n.bot_quick_library}',
+    '🏢 ${l10n.bot_quick_dorm}',
   ];
 
   @override
@@ -480,6 +684,8 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final suggestions = _getSuggestions(l10n);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -488,20 +694,20 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
           children: [
             Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context), size: 24),
             const SizedBox(width: 8),
-            const Text('PU Assistant'),
+            Text(l10n.bot_title),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Làm mới đoạn chat',
+            tooltip: l10n.bot_reset_chat,
             onPressed: () {
               sl<GeminiService>().resetChat();
               setState(() {
                 _messages.clear();
                 _messages.add({
                   'role': 'bot',
-                  'text': 'Đã làm mới phiên hội thoại. Mình có thể giúp gì cho bạn?',
+                  'text': l10n.bot_reset_done,
                 });
               });
             },
@@ -571,7 +777,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'PU Assistant đang trả lời...',
+                      l10n.bot_typing,
                       style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
                     ),
                   ],
@@ -584,10 +790,10 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
-              itemCount: _suggestions.length,
+              itemCount: suggestions.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                final suggestion = _suggestions[index];
+                final suggestion = suggestions[index];
                 return ActionChip(
                   label: Text(suggestion, style: const TextStyle(fontSize: 12)),
                   backgroundColor: colorScheme.surface,
@@ -608,7 +814,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                     controller: _msgController,
                     onSubmitted: (text) => _sendMessage(text),
                     decoration: InputDecoration(
-                      hintText: 'Hỏi PU Assistant bất kỳ câu hỏi nào...',
+                      hintText: l10n.bot_input_hint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
@@ -714,9 +920,218 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     }
   }
 
+  String _getCategoryLabel(String cat, AppLocalizations l10n) {
+    switch (cat) {
+      case 'Tất cả':
+        return l10n.all_clubs;
+      case 'Học thuật':
+        return l10n.academic_clubs;
+      case 'Nghệ thuật':
+        return l10n.arts_clubs;
+      case 'Thể thao':
+        return l10n.sports_clubs;
+      case 'Tình nguyện':
+        return l10n.volunteer_clubs;
+      default:
+        return cat;
+    }
+  }
+
+  void _showClubDetailModal(BuildContext context, Map<String, dynamic> club) {
+    final color = _getClubColor(context, club['category'] as String);
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final currentJoined = club['isJoined'] as bool;
+
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.72,
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 4),
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.diversity_3_rounded, color: color, size: 22),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.club_details,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.group_work_rounded, color: color, size: 36),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    club['name'] as String,
+                                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          _getCategoryLabel(club['category'] as String, l10n),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${club['members']} ${l10n.club_members}',
+                                        style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(l10n.club_overview, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 6),
+                        Text(
+                          club['desc'] as String,
+                          style: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.8), height: 1.45),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(l10n.club_schedule, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        _buildClubInfoRow(Icons.schedule_rounded, 'Tối Thứ 4 & Chủ Nhật hàng tuần (18h30 - 20h30)', colorScheme),
+                        const SizedBox(height: 6),
+                        _buildClubInfoRow(Icons.location_on_outlined, 'Tòa A9 (Phòng Hội thảo 2) & Sân thể thao Phenikaa', colorScheme),
+                        const SizedBox(height: 18),
+                        Text(l10n.club_benefits, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        _buildClubInfoRow(Icons.verified_outlined, 'Cộng điểm rèn luyện (ĐRL) tiêu chí Hoạt động phong trào', colorScheme),
+                        const SizedBox(height: 6),
+                        _buildClubInfoRow(Icons.card_membership_rounded, 'Cấp chứng nhận thành viên và cơ hội thi đấu cấp toàn quốc', colorScheme),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setModalState(() {
+                        club['isJoined'] = !currentJoined;
+                        if (club['isJoined']) {
+                          club['members'] = (club['members'] as int) + 1;
+                        } else {
+                          club['members'] = (club['members'] as int) - 1;
+                        }
+                      });
+                      setState(() {});
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            club['isJoined']
+                                ? l10n.join_success
+                                : '${l10n.leave_club}: "${club['name']}".',
+                          ),
+                          backgroundColor: club['isJoined'] ? Colors.green : Colors.grey.shade800,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentJoined ? Colors.red.shade700 : AppTheme.accentColor(context),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Text(
+                      currentJoined ? l10n.leave_club : l10n.join_club,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildClubInfoRow(IconData icon, String text, ColorScheme colorScheme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12.5, color: colorScheme.onSurface.withValues(alpha: 0.75)),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final filteredClubs = _clubs.where((club) {
       return _selectedCategory == 'Tất cả' || club['category'] == _selectedCategory;
@@ -725,7 +1140,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Nhóm & Câu Lạc Bộ'),
+        title: Text(l10n.clubs_title),
       ),
       body: Column(
         children: [
@@ -741,7 +1156,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                 final cat = _categories[index];
                 final isSelected = cat == _selectedCategory;
                 return ChoiceChip(
-                  label: Text(cat),
+                  label: Text(_getCategoryLabel(cat, l10n)),
                   selected: isSelected,
                   selectedColor: AppTheme.primaryColor(context),
                   labelStyle: TextStyle(
@@ -776,8 +1191,11 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                     side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
                   ),
                   color: colorScheme.surface,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+                  child: InkWell(
+                    onTap: () => _showClubDetailModal(context, club),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -801,7 +1219,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
                                   Text(
-                                    '${club['category']} • ${club['members']} thành viên',
+                                    '${_getCategoryLabel(club['category'] as String, l10n)} • ${club['members']} ${l10n.club_members}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -834,7 +1252,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               ),
                               child: Text(
-                                isJoined ? 'Đã tham gia' : 'Tham gia',
+                                isJoined ? l10n.joined_club : l10n.join_club,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -856,8 +1274,9 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                       ],
                     ),
                   ),
-                );
-              },
+                ),
+              );
+            },
             ),
           ),
         ],
@@ -873,15 +1292,16 @@ class _StudentProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Hồ Sơ Sinh Viên'),
+        title: Text(l10n.profile_title),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Đăng xuất',
+            tooltip: l10n.logout,
             onPressed: () => _confirmSignOut(context),
           ),
         ],
@@ -905,7 +1325,7 @@ class _StudentProfileView extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () => _confirmSignOut(context),
                     icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                    label: const Text('Đăng xuất tài khoản', style: TextStyle(color: Colors.white)),
+                    label: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade700,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -917,13 +1337,15 @@ class _StudentProfileView extends StatelessWidget {
               ),
             );
           }
-          return const Center(child: Text('Chưa đăng nhập'));
+          return Center(child: Text(l10n.not_logged_in));
         },
       ),
     );
   }
 
   Widget _buildDigitalStudentCard(BuildContext context, UserEntity user) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -956,12 +1378,12 @@ class _StudentProfileView extends StatelessWidget {
                     errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Colors.white, size: 28),
                   ),
                   const SizedBox(width: 8),
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ĐẠI HỌC PHENIKAA',
-                        style: TextStyle(
+                        l10n.university_name,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -969,14 +1391,25 @@ class _StudentProfileView extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'THẺ SINH VIÊN ĐIỆN TỬ',
-                        style: TextStyle(color: Color(0xFFFFB088), fontSize: 10, fontWeight: FontWeight.bold),
+                        l10n.digital_student_card,
+                        style: const TextStyle(color: Color(0xFFFFB088), fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ],
               ),
-              const Icon(Icons.qr_code_rounded, color: Colors.white70, size: 36),
+              InkWell(
+                onTap: () => _showStudentQrModal(context, user),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.qr_code_rounded, color: Colors.white, size: 28),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -1001,11 +1434,11 @@ class _StudentProfileView extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Mã SV: ${user.studentId.isNotEmpty ? user.studentId : '23010390'} • K${user.cohort != 0 ? user.cohort : 17}',
+                      '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '23010390'} • K${user.cohort != 0 ? user.cohort : 17}',
                       style: const TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                     Text(
-                      'Khoa: ${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'}',
+                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'}',
                       style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                   ],
@@ -1028,7 +1461,7 @@ class _StudentProfileView extends StatelessWidget {
                   Icon(Icons.check_circle_rounded, color: AppTheme.mintColor(context), size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    'ĐÃ XÁC THỰC',
+                    l10n.student_verified_badge.toUpperCase(),
                     style: TextStyle(color: AppTheme.mintColor(context), fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -1042,6 +1475,7 @@ class _StudentProfileView extends StatelessWidget {
 
   Widget _buildAcademicOverviewCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       elevation: 0,
@@ -1055,11 +1489,11 @@ class _StudentProfileView extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildStatItem('GPA Tích lũy', '3.48', '/4.0', AppTheme.primaryColor(context)),
+            _buildStatItem(l10n.gpa_accumulated, '3.48', '/4.0', AppTheme.primaryColor(context)),
             Container(height: 36, width: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-            _buildStatItem('Tín chỉ', '54', '/135', AppTheme.accentColor(context)),
+            _buildStatItem(l10n.credits_accumulated, '54', '/135', AppTheme.accentColor(context)),
             Container(height: 36, width: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-            _buildStatItem('Điểm rèn luyện', '92', 'Xuất sắc', AppTheme.mintColor(context)),
+            _buildStatItem(l10n.training_points, '92', l10n.training_excellent, AppTheme.mintColor(context)),
           ],
         ),
       ),
@@ -1089,6 +1523,9 @@ class _StudentProfileView extends StatelessWidget {
 
   Widget _buildSettingsSection(BuildContext context, ColorScheme colorScheme) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = Localizations.localeOf(context).languageCode;
+    final languageName = currentLocale == 'vi' ? l10n.vietnamese : l10n.english;
 
     return Card(
       elevation: 0,
@@ -1101,8 +1538,8 @@ class _StudentProfileView extends StatelessWidget {
         children: [
           SwitchListTile(
             secondary: Icon(Icons.dark_mode_outlined, color: AppTheme.primaryColor(context)),
-            title: const Text('Giao diện tối', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: const Text('Chuyển đổi giao diện sáng / tối', style: TextStyle(fontSize: 12)),
+            title: Text(l10n.dark_theme_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text(l10n.dark_theme_desc, style: const TextStyle(fontSize: 12)),
             value: isDark,
             onChanged: (val) {
               context.read<ThemeCubit>().setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
@@ -1111,32 +1548,181 @@ class _StudentProfileView extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.language_rounded, color: AppTheme.primaryColor(context)),
-            title: const Text('Ngôn ngữ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: const Text('Tiếng Việt (Mặc định)', style: TextStyle(fontSize: 12)),
+            title: Text(l10n.language, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text(languageName, style: const TextStyle(fontSize: 12)),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              context.read<LocaleCubit>().setLocale(const Locale('vi'));
-            },
+            onTap: () => _showLanguagePickerModal(context),
           ),
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor(context)),
-            title: const Text('Về PU Connection', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: const Text('Phiên bản 1.0.0 • Phenikaa University', style: TextStyle(fontSize: 12)),
+            title: Text(l10n.about_pu, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text(l10n.app_version, style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),
     );
   }
 
-  void _confirmSignOut(BuildContext context) {
+  void _showLanguagePickerModal(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = Localizations.localeOf(context).languageCode;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    l10n.select_language,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Text('🇻🇳', style: TextStyle(fontSize: 24)),
+                  title: Text(l10n.vietnamese),
+                  trailing: currentLocale == 'vi'
+                      ? Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor(context))
+                      : null,
+                  onTap: () {
+                    context.read<LocaleCubit>().setLocale(const Locale('vi'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
+                  title: Text(l10n.english),
+                  trailing: currentLocale == 'en'
+                      ? Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor(context))
+                      : null,
+                  onTap: () {
+                    context.read<LocaleCubit>().setLocale(const Locale('en'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showStudentQrModal(BuildContext context, UserEntity user) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng không?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/logo/phenikaa_logo.png',
+                  width: 28,
+                  height: 28,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.school, size: 24),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.university_name,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.0),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.qr_code_2_rounded, size: 160, color: Color(0xFF203864)),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '23010390'}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF203864)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              user.displayName,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'} • K${user.cohort != 0 ? user.cohort : 17}',
+              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.blueContainer(context),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                l10n.student_qr_desc,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: AppTheme.primaryColor(context), height: 1.3),
+              ),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor(context),
+                foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
+                minimumSize: const Size.fromHeight(42),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmSignOut(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.logout_confirm_title),
+        content: Text(l10n.logout_confirm_desc),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -1144,7 +1730,7 @@ class _StudentProfileView extends StatelessWidget {
               context.go('/login');
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.white)),
+            child: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

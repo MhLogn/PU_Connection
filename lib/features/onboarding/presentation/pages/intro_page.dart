@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -13,38 +14,14 @@ class _IntroPageState extends State<IntroPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_IntroSlideData> _slides = const [
-    _IntroSlideData(
-      imagePath: 'assets/images/intro_1.jpg',
-      badge: 'CỘNG ĐỒNG PHENIKAA',
-      title: 'Kết nối sinh viên Phenikaa',
-      description:
-          'Giao lưu, kết bạn, chia sẻ kinh nghiệm học tập và đời sống sinh viên cùng cộng đồng sinh viên Phenikaa University.',
-    ),
-    _IntroSlideData(
-      imagePath: 'assets/images/intro_2.jpg',
-      badge: 'KHO TÀI LIỆU MỞ',
-      title: 'Kho Tài Liệu & Trao Đổi Môn Học',
-      description:
-          'Tra cứu đề cương, slide bài giảng, đề thi phong phú được phân loại trực quan theo từng Viện, Khoa và Mã học phần.',
-    ),
-    _IntroSlideData(
-      imagePath: 'assets/images/intro_3.jpg',
-      badge: 'TRỢ LÝ AI & CÂU LẠC BỘ',
-      title: 'PU Bot Campus & CLB Năng Động',
-      description:
-          'Trợ lý ảo giải đáp quy chế tín chỉ 24/7 cùng hàng chục câu lạc bộ học thuật, thể thao và nghệ thuật đang chờ bạn.',
-    ),
-  ];
-
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  void _onNext() {
-    if (_currentPage == _slides.length - 1) {
+  void _onNext(int totalSlides) {
+    if (_currentPage == totalSlides - 1) {
       context.go('/preference');
     } else {
       _pageController.nextPage(
@@ -57,6 +34,28 @@ class _IntroPageState extends State<IntroPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    final slides = [
+      _IntroSlideData(
+        imagePath: 'assets/images/intro_1.jpg',
+        badge: l10n.intro1_badge,
+        title: l10n.intro1_title,
+        description: l10n.intro1_desc,
+      ),
+      _IntroSlideData(
+        imagePath: 'assets/images/intro_2.jpg',
+        badge: l10n.intro2_badge,
+        title: l10n.intro2_title,
+        description: l10n.intro2_desc,
+      ),
+      _IntroSlideData(
+        imagePath: 'assets/images/intro_3.jpg',
+        badge: l10n.intro3_badge,
+        title: l10n.intro3_title,
+        description: l10n.intro3_desc,
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -99,9 +98,9 @@ class _IntroPageState extends State<IntroPage> {
                       foregroundColor: colorScheme.onSurface.withValues(alpha: 0.6),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     ),
-                    child: const Text(
-                      'Bỏ qua',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    child: Text(
+                      l10n.skip,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
                 ],
@@ -112,9 +111,9 @@ class _IntroPageState extends State<IntroPage> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (index) => setState(() => _currentPage = index),
-                itemCount: _slides.length,
+                itemCount: slides.length,
                 itemBuilder: (context, index) {
-                  final slide = _slides[index];
+                  final slide = slides[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
@@ -219,7 +218,7 @@ class _IntroPageState extends State<IntroPage> {
                   // Page Indicators
                   Row(
                     children: List.generate(
-                      _slides.length,
+                      slides.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeOut,
@@ -237,7 +236,7 @@ class _IntroPageState extends State<IntroPage> {
                   ),
                   // Next / Get Started Button
                   ElevatedButton(
-                    onPressed: _onNext,
+                    onPressed: () => _onNext(slides.length),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor(context),
                       foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
@@ -251,7 +250,7 @@ class _IntroPageState extends State<IntroPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _currentPage == _slides.length - 1 ? 'Bắt đầu' : 'Tiếp tục',
+                          _currentPage == slides.length - 1 ? l10n.start_btn : l10n.continue_btn,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         const SizedBox(width: 6),
