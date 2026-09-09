@@ -1,3 +1,4 @@
+import '../entities/comment_entity.dart';
 import '../entities/post_entity.dart';
 
 abstract class PostRepository {
@@ -20,6 +21,12 @@ abstract class PostRepository {
 
   /// Xóa bài viết
   Future<void> deletePost(String postId);
+
+  /// Lắng nghe bình luận theo bài viết
+  Stream<List<CommentEntity>> getComments(String postId);
+
+  /// Gửi bình luận cho bài viết
+  Future<void> addComment(String postId, CommentEntity comment);
 
   /// Tự động sinh dữ liệu mẫu Phenikaa nếu bảng tin chưa có dữ liệu
   Future<void> seedMockPostsIfEmpty(String currentUserId, String currentUserName);

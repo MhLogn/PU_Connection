@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/firebase_constants.dart';
+import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/repositories/post_repository.dart';
 import '../models/post_model.dart';
@@ -89,6 +90,32 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<void> deletePost(String postId) async {
     await _postsRef.doc(postId).delete();
+  }
+
+  @override
+  Stream<List<CommentEntity>> getComments(String postId) {
+    return _postsRef
+        .doc(postId)
+        .collection(FirebaseConstants.commentsSubcollection)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return CommentEntity.fromMap(data, id: doc.id);
+      }).toList();
+    });
+  }
+
+  @override
+  Future<void> addComment(String postId, CommentEntity comment) async {
+    final docRef = _postsRef.doc(postId);
+    await docRef.collection(FirebaseConstants.commentsSubcollection).add(comment.toMap());
+    try {
+      await docRef.update({
+        'commentCount': FieldValue.increment(1),
+      });
+    } catch (_) {}
   }
 
   @override

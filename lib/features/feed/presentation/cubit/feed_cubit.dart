@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/cloudinary_service.dart';
+import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/repositories/post_repository.dart';
 import 'feed_state.dart';
@@ -67,6 +68,32 @@ class FeedCubit extends Cubit<FeedState> {
     } catch (_) {
       // Revert if error
     }
+  }
+
+  Stream<List<CommentEntity>> getComments(String postId) {
+    return _postRepository.getComments(postId);
+  }
+
+  Future<void> addComment({
+    required String postId,
+    required String authorId,
+    required String authorName,
+    required String authorAvatar,
+    required String authorStudentId,
+    required String authorFaculty,
+    required String content,
+  }) async {
+    final comment = CommentEntity(
+      commentId: '',
+      authorId: authorId,
+      authorName: authorName,
+      authorAvatar: authorAvatar,
+      authorStudentId: authorStudentId,
+      authorFaculty: authorFaculty,
+      content: content,
+      createdAt: DateTime.now(),
+    );
+    await _postRepository.addComment(postId, comment);
   }
 
   Future<void> createPost({

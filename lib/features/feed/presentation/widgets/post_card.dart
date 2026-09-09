@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/post_entity.dart';
 
 class PostCard extends StatelessWidget {
@@ -51,10 +52,12 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final isLiked = post.isLikedBy(currentUserId);
+    final localeCode = Localizations.localeOf(context).languageCode;
     final formattedTime = post.createdAt != null
-        ? timeago.format(post.createdAt!, locale: 'vi')
-        : 'Vừa xong';
+        ? timeago.format(post.createdAt!, locale: localeCode)
+        : (localeCode == 'vi' ? 'Vừa xong' : 'Just now');
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -207,21 +210,21 @@ class PostCard extends StatelessWidget {
                 _buildActionButton(
                   icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                   iconColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: post.likeCount > 0 ? '${post.likeCount}' : 'Thích',
+                  label: post.likeCount > 0 ? '${post.likeCount}' : l10n.like,
                   textColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
                   onTap: onLikePressed,
                 ),
                 _buildActionButton(
                   icon: Icons.chat_bubble_outline_rounded,
                   iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: post.commentCount > 0 ? '${post.commentCount}' : 'Bình luận',
+                  label: post.commentCount > 0 ? '${post.commentCount}' : l10n.comment,
                   textColor: colorScheme.onSurface.withValues(alpha: 0.7),
                   onTap: onCommentPressed ?? () {},
                 ),
                 _buildActionButton(
                   icon: Icons.share_outlined,
                   iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: 'Chia sẻ',
+                  label: l10n.share,
                   textColor: colorScheme.onSurface.withValues(alpha: 0.7),
                   onTap: onSharePressed ?? () {},
                 ),
@@ -303,9 +306,10 @@ class PostCard extends StatelessWidget {
           final isPdf = doc.type == 'pdf';
           return InkWell(
             onTap: () {
+              final l10n = AppLocalizations.of(context)!;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đang tải tài liệu: ${doc.name}...'),
+                  content: Text('${l10n.downloading} ${doc.name}...'),
                   backgroundColor: AppTheme.primaryColor(context),
                   behavior: SnackBarBehavior.floating,
                 ),
