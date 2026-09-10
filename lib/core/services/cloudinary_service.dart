@@ -4,8 +4,8 @@ import 'package:dio/dio.dart';
 class CloudinaryService {
   final Dio _dio;
 
-  static const String defaultCloudName = 'pu-connection';
-  static const String defaultUploadPreset = 'pu_unsigned_preset';
+  static const String defaultCloudName = 'kh2kphrq';
+  static const String defaultUploadPreset = 'pu_connection';
 
   String cloudName;
   String uploadPreset;
@@ -26,7 +26,7 @@ class CloudinaryService {
   }
 
   Future<String?> uploadDocument(File file, {String folder = 'pu_connection/documents'}) async {
-    return _uploadFile(file: file, resourceType: 'raw', folder: folder);
+    return _uploadFile(file: file, resourceType: 'auto', folder: folder);
   }
 
   Future<String?> _uploadFile({
