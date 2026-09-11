@@ -154,8 +154,12 @@ class FeedCubit extends Cubit<FeedState> {
     }
   }
 
-  Future<void> seedMockData(String uid, String name) async {
-    await _postRepository.seedMockPostsIfEmpty(uid, name);
+  Future<void> deletePost(String postId) async {
+    try {
+      await _postRepository.deletePost(postId);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   List<String> _extractTags(String content) {

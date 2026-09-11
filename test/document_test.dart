@@ -75,9 +75,6 @@ class MockDocumentRepository implements DocumentRepository {
   }) async {
     return File('mock_path/$fileName');
   }
-
-  @override
-  Future<void> seedMockDocumentsIfEmpty() async {}
 }
 
 void main() {

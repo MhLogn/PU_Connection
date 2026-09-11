@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
@@ -58,18 +61,7 @@ class _FeedPageState extends State<FeedPage> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthCubit>().state;
-    String uid = '';
-    String name = 'Sinh viên Phenikaa';
-    if (authState is Authenticated) {
-      uid = authState.user.uid;
-      name = authState.user.displayName;
-    }
-
-    final feedCubit = context.read<FeedCubit>();
-    feedCubit.seedMockData(uid, name).then((_) {
-      feedCubit.loadFeed();
-    });
+    context.read<FeedCubit>().loadFeed();
   }
 
   @override
@@ -196,81 +188,125 @@ class _FeedPageState extends State<FeedPage> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: notifications.length,
-                separatorBuilder: (_, __) => const Divider(height: 20),
-                itemBuilder: (_, index) {
-                  final notif = notifications[index];
-                  final isNew = notif['isNew'] as bool;
-                  final color = notif['color'] as Color;
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection(FirebaseConstants.notificationsSubcollection)
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  List<Map<String, dynamic>> displayNotifications = notifications;
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    displayNotifications = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final sender = data['sender'] as String? ?? 'Trường ĐH Phenikaa';
+                      final title = data['title'] as String? ?? '';
+                      final content = data['content'] as String? ?? '';
+                      final time = data['time'] as String? ?? 'Gần đây';
+                      final isNew = data['isNew'] as bool? ?? false;
 
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: color.withValues(alpha: 0.15),
-                        child: Icon(notif['icon'] as IconData, color: color, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      IconData icon = Icons.notifications_rounded;
+                      Color color = AppTheme.primaryColor(context);
+
+                      if (sender.contains('Đào tạo')) {
+                        icon = Icons.calendar_month_rounded;
+                        color = AppTheme.primaryColor(context);
+                      } else if (sender.contains('Sinh viên') || sender.contains('Học bổng')) {
+                        icon = Icons.military_tech_rounded;
+                        color = AppTheme.accentColor(context);
+                      } else if (sender.contains('Đoàn') || sender.contains('Hội')) {
+                        icon = Icons.sports_basketball_rounded;
+                        color = AppTheme.mintColor(context);
+                      }
+
+                      return {
+                        'sender': sender,
+                        'title': title,
+                        'content': content,
+                        'time': time,
+                        'isNew': isNew,
+                        'icon': icon,
+                        'color': color,
+                      };
+                    }).toList();
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: displayNotifications.length,
+                    separatorBuilder: (_, __) => const Divider(height: 20),
+                    itemBuilder: (_, index) {
+                      final notif = displayNotifications[index];
+                      final isNew = notif['isNew'] as bool;
+                      final color = notif['color'] as Color;
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: color.withValues(alpha: 0.15),
+                            child: Icon(notif['icon'] as IconData, color: color, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  notif['sender'] as String,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: color,
-                                  ),
-                                ),
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    if (isNew) ...[
-                                      Container(
-                                        width: 7,
-                                        height: 7,
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.accentColor(context),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ],
                                     Text(
-                                      notif['time'] as String,
+                                      notif['sender'] as String,
                                       style: TextStyle(
-                                        fontSize: 10,
-                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: color,
                                       ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        if (isNew) ...[
+                                          Container(
+                                            width: 7,
+                                            height: 7,
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.accentColor(context),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        Text(
+                                          notif['time'] as String,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  notif['title'] as String,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  notif['content'] as String,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                    height: 1.35,
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              notif['title'] as String,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              notif['content'] as String,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: colorScheme.onSurface.withValues(alpha: 0.75),
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -333,6 +369,7 @@ class _FeedPageState extends State<FeedPage> {
     final authState = context.watch<AuthCubit>().state;
     final currentUserId = authState is Authenticated ? authState.user.uid : '';
     final currentUserName = authState is Authenticated ? authState.user.displayName : 'Bạn';
+    final currentUserStudentId = authState is Authenticated ? authState.user.studentId : '';
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -624,6 +661,9 @@ class _FeedPageState extends State<FeedPage> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final post = displayedPosts[index];
+                        final isOwner = (currentUserId.isNotEmpty && post.authorId == currentUserId) ||
+                            (currentUserStudentId.isNotEmpty && post.authorStudentId == currentUserStudentId);
+
                         return PostCard(
                           post: post,
                           currentUserId: currentUserId,
@@ -631,6 +671,33 @@ class _FeedPageState extends State<FeedPage> {
                             context.read<FeedCubit>().toggleLike(post, currentUserId);
                           },
                           onCommentPressed: () => _openCommentsModal(post),
+                          onSharePressed: () {
+                            Clipboard.setData(ClipboardData(text: '${post.authorName}: ${post.content}'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Đã sao chép nội dung bài viết vào bộ nhớ tạm!'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          onDeletePressed: isOwner
+                              ? () async {
+                                  try {
+                                    await context.read<FeedCubit>().deletePost(post.postId);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Đã xóa bài viết thành công!')),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Lỗi khi xóa bài: $e')),
+                                      );
+                                    }
+                                  }
+                                }
+                              : null,
                         );
                       },
                       childCount: displayedPosts.length,

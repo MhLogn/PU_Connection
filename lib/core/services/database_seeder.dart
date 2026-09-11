@@ -250,6 +250,100 @@ class DatabaseSeeder {
       debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy study_documents: $e');
     }
 
+    try {
+      final groupsCol = db.collection(FirebaseConstants.groupsCollection);
+      final existingGroups = await groupsCol.limit(1).get();
+      if (existingGroups.docs.isEmpty) {
+        final sampleGroups = [
+          {
+            'name': 'CLB Tin Học Phenikaa PRO',
+            'category': 'Học thuật',
+            'membersCount': 480,
+            'members': currentUser != null ? [currentUser.uid] : <String>[],
+            'desc': 'Cộng đồng đam mê lập trình phần mềm, an toàn thông tin & AI trường Phenikaa.',
+            'color': 0xFF203864,
+          },
+          {
+            'name': 'Phenikaa English Club (PEC)',
+            'category': 'Học thuật',
+            'membersCount': 620,
+            'members': <String>[],
+            'desc': 'Môi trường giao tiếp tiếng Anh tự tin, workshop IELTS và săn học bổng du học.',
+            'color': 0xFF203864,
+          },
+          {
+            'name': 'Phenikaa Guitar Club (PGC)',
+            'category': 'Nghệ thuật',
+            'membersCount': 350,
+            'members': <String>[],
+            'desc': 'Nơi hội tụ những tâm hồn yêu âm nhạc acoustic, biểu diễn trong các đêm gala trường.',
+            'color': 0xFFF76B1C,
+          },
+          {
+            'name': 'Phenikaa Basketball Club',
+            'category': 'Thể thao',
+            'membersCount': 290,
+            'members': <String>[],
+            'desc': 'Luyện tập thể lực, thi đấu giao hữu các giải bóng rổ sinh viên toàn Hà Nội.',
+            'color': 0xFF203864,
+          },
+          {
+            'name': 'Đội Sinh Viên Tình Nguyện PU',
+            'category': 'Tình nguyện',
+            'membersCount': 540,
+            'members': <String>[],
+            'desc': 'Tiếp sức mùa thi, Mùa hè xanh và các chiến dịch thiện nguyện vì cộng đồng.',
+            'color': 0xFFF76B1C,
+          },
+        ];
+        for (final g in sampleGroups) {
+          await groupsCol.add(g);
+        }
+        debugPrint('✅ [DatabaseSeeder] Đã đẩy thành công ${sampleGroups.length} CLB lên "groups"');
+      }
+    } catch (e) {
+      debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy groups: $e');
+    }
+
+    try {
+      final notifCol = db.collection(FirebaseConstants.notificationsSubcollection);
+      final existingNotif = await notifCol.limit(1).get();
+      if (existingNotif.docs.isEmpty) {
+        final sampleNotifs = [
+          {
+            'sender': 'Phòng Đào tạo',
+            'title': 'Đăng ký học phần HK2 (2025-2026)',
+            'content': 'Hệ thống mở cổng đăng ký tín chỉ đợt 1 từ ngày 15/09 cho sinh viên K16, K17. Sinh viên lưu ý hoàn tất đóng học phí đúng hạn.',
+            'time': '2 giờ trước',
+            'isNew': true,
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 2))),
+          },
+          {
+            'sender': 'Phòng Công tác Sinh viên',
+            'title': 'Xét Học bổng Khuyến khích Học tập Kỳ 1',
+            'content': 'Công bố danh sách dự kiến sinh viên đạt học bổng Xuất sắc và Giỏi. Thời gian phản hồi đến hết ngày 18/09.',
+            'time': '1 ngày trước',
+            'isNew': true,
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+          },
+          {
+            'sender': 'Đoàn Thanh Niên Phenikaa',
+            'title': 'Khai mạc Hội thao Phenikaa Youth Games 2026',
+            'content': 'Hội thao toàn trường với 6 môn thi đấu chính thức. Đăng ký tham gia tại văn phòng Đoàn Tòa A9.',
+            'time': '2 ngày trước',
+            'isNew': false,
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 2))),
+          },
+        ];
+        for (final n in sampleNotifs) {
+          await notifCol.add(n);
+        }
+        debugPrint('✅ [DatabaseSeeder] Đã đẩy thành công ${sampleNotifs.length} thông báo lên "notifications"');
+      }
+    } catch (e) {
+      debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy notifications: $e');
+    }
+
     return {
       'studentsCount': studentsCount,
       'postsCount': postsCount,

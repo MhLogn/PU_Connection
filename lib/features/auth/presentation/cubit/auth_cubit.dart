@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/phenikaa_student_entity.dart';
+import '../../domain/entities/user_entity.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -121,6 +122,15 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.sendPasswordResetEmail(email);
       emit(PasswordResetSent(email));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<void> updateUserProfile(UserEntity updatedUser) async {
+    try {
+      await _authRepository.updateUserProfile(updatedUser);
+      emit(Authenticated(updatedUser));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }

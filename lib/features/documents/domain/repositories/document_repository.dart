@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import '../entities/document_entity.dart';
 
 abstract class DocumentRepository {
@@ -19,6 +19,4 @@ abstract class DocumentRepository {
     required String fileName,
     void Function(int received, int total)? onProgress,
   });
-
-  Future<void> seedMockDocumentsIfEmpty();
 }

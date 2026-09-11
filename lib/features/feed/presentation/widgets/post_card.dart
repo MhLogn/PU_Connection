@@ -11,6 +11,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback onLikePressed;
   final VoidCallback? onCommentPressed;
   final VoidCallback? onSharePressed;
+  final VoidCallback? onDeletePressed;
 
   const PostCard({
     super.key,
@@ -19,6 +20,7 @@ class PostCard extends StatelessWidget {
     required this.onLikePressed,
     this.onCommentPressed,
     this.onSharePressed,
+    this.onDeletePressed,
   });
 
   Color _getCategoryColor(BuildContext context, String category) {
@@ -149,6 +151,31 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onDeletePressed != null) ...[
+                  const SizedBox(width: 4),
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert_rounded, size: 20, color: colorScheme.outline),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onSelected: (val) {
+                      if (val == 'delete') {
+                        _confirmDelete(context);
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade700),
+                            const SizedBox(width: 8),
+                            Text('Xóa bài viết', style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
             if (post.subjectCode != null && post.subjectCode!.isNotEmpty) ...[
@@ -389,6 +416,30 @@ class PostCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onDeletePressed?.call();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: const Text('Xóa', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

@@ -16,7 +16,6 @@ class DocumentCubit extends Cubit<DocumentState> {
         super(const DocumentState());
 
   void init() {
-    _documentRepository.seedMockDocumentsIfEmpty();
     loadDocuments();
   }
 

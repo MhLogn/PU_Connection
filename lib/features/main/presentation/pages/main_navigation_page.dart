@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
@@ -14,6 +16,7 @@ import '../../../documents/presentation/cubit/document_cubit.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -568,15 +571,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      setModalState(() {
-                        club['isJoined'] = !currentJoined;
-                        if (club['isJoined']) {
-                          club['members'] = (club['members'] as int) + 1;
-                        } else {
-                          club['members'] = (club['members'] as int) - 1;
-                        }
-                      });
-                      setState(() {});
+                      _toggleJoinClub(club);
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -610,6 +605,37 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     );
   }
 
+  Future<void> _toggleJoinClub(Map<String, dynamic> club) async {
+    final currentJoined = club['isJoined'] as bool;
+    final authState = context.read<AuthCubit>().state;
+    final uid = authState is Authenticated ? authState.user.uid : '';
+    final clubId = club['id'] as String?;
+
+    setState(() {
+      club['isJoined'] = !currentJoined;
+      if (club['isJoined']) {
+        club['members'] = (club['members'] as int) + 1;
+      } else {
+        club['members'] = (club['members'] as int) - 1;
+      }
+    });
+
+    if (clubId != null && clubId.isNotEmpty && uid.isNotEmpty) {
+      final groupRef = FirebaseFirestore.instance.collection(FirebaseConstants.groupsCollection).doc(clubId);
+      if (!currentJoined) {
+        groupRef.update({
+          'members': FieldValue.arrayUnion([uid]),
+          'membersCount': FieldValue.increment(1),
+        }).catchError((_) {});
+      } else {
+        groupRef.update({
+          'members': FieldValue.arrayRemove([uid]),
+          'membersCount': FieldValue.increment(-1),
+        }).catchError((_) {});
+      }
+    }
+  }
+
   Widget _buildClubInfoRow(IconData icon, String text, ColorScheme colorScheme) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,10 +656,6 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-
-    final filteredClubs = _clubs.where((club) {
-      return _selectedCategory == 'Tất cả' || club['category'] == _selectedCategory;
-    }).toList();
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -673,108 +695,134 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              itemCount: filteredClubs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final club = filteredClubs[index];
-                final isJoined = club['isJoined'] as bool;
-                final color = _getClubColor(context, club['category'] as String);
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection(FirebaseConstants.groupsCollection).snapshots(),
+              builder: (context, snapshot) {
+                List<Map<String, dynamic>> clubsToDisplay = _clubs;
+                final authState = context.watch<AuthCubit>().state;
+                final currentUserId = authState is Authenticated ? authState.user.uid : '';
 
-                return Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
-                  ),
-                  color: colorScheme.surface,
-                  child: InkWell(
-                    onTap: () => _showClubDetailModal(context, club),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: AppTheme.isDark(context) ? 0.18 : 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.group_work_rounded, color: color, size: 26),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  clubsToDisplay = snapshot.data!.docs.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final membersList = List<String>.from(data['members'] as List? ?? []);
+                    return {
+                      'id': doc.id,
+                      'name': data['name'] ?? '',
+                      'category': data['category'] ?? 'Học thuật',
+                      'members': (data['membersCount'] as num?)?.toInt() ?? membersList.length,
+                      'isJoined': currentUserId.isNotEmpty && membersList.contains(currentUserId),
+                      'desc': data['desc'] ?? '',
+                      'color': (data['color'] as num?)?.toInt() ?? 0xFF203864,
+                    };
+                  }).toList();
+                }
+
+                final filteredClubs = clubsToDisplay.where((club) {
+                  return _selectedCategory == 'Tất cả' || club['category'] == _selectedCategory;
+                }).toList();
+
+                if (filteredClubs.isEmpty) {
+                  return Center(
+                    child: Text('Không tìm thấy CLB nào', style: TextStyle(color: colorScheme.outline)),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  itemCount: filteredClubs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final club = filteredClubs[index];
+                    final isJoined = club['isJoined'] as bool;
+                    final color = _getClubColor(context, club['category'] as String);
+
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                      ),
+                      color: colorScheme.surface,
+                      child: InkWell(
+                        onTap: () => _showClubDetailModal(context, club),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  Text(
-                                    club['name'] as String,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: color.withValues(alpha: AppTheme.isDark(context) ? 0.18 : 0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.group_work_rounded, color: color, size: 26),
                                   ),
-                                  Text(
-                                    '${_getCategoryLabel(club['category'] as String, l10n)} • ${club['members']} ${l10n.club_members}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          club['name'] as String,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                        ),
+                                        Text(
+                                          '${_getCategoryLabel(club['category'] as String, l10n)} • ${club['members']} ${l10n.club_members}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: () => _toggleJoinClub(club),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: isJoined
+                                          ? AppTheme.primaryColor(context).withValues(
+                                              alpha: AppTheme.isDark(context) ? 0.2 : 0.08,
+                                            )
+                                          : null,
+                                      side: BorderSide(
+                                        color: AppTheme.primaryColor(context).withValues(alpha: isJoined ? 0.4 : 1.0),
+                                      ),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    ),
+                                    child: Text(
+                                      isJoined ? l10n.joined_club : l10n.join_club,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor(context),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  club['isJoined'] = !isJoined;
-                                  if (club['isJoined']) {
-                                    club['members'] = (club['members'] as int) + 1;
-                                  } else {
-                                    club['members'] = (club['members'] as int) - 1;
-                                  }
-                                });
-                              },
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: isJoined
-                                    ? AppTheme.primaryColor(context).withValues(
-                                        alpha: AppTheme.isDark(context) ? 0.2 : 0.08,
-                                      )
-                                    : null,
-                                side: BorderSide(
-                                  color: AppTheme.primaryColor(context).withValues(alpha: isJoined ? 0.4 : 1.0),
-                                ),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              ),
-                              child: Text(
-                                isJoined ? l10n.joined_club : l10n.join_club,
+                              const SizedBox(height: 10),
+                              Text(
+                                club['desc'] as String,
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor(context),
+                                  fontSize: 13,
+                                  color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                  height: 1.35,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          club['desc'] as String,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.onSurface.withValues(alpha: 0.75),
-                            height: 1.35,
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -814,6 +862,20 @@ class _StudentProfileView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildDigitalStudentCard(context, user),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () => _showEditProfileModal(context, user),
+                    icon: Icon(Icons.edit_outlined, size: 16, color: AppTheme.primaryColor(context)),
+                    label: Text(
+                      'Chỉnh sửa thông tin cá nhân',
+                      style: TextStyle(color: AppTheme.primaryColor(context), fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   _buildAcademicOverviewCard(context),
                   const SizedBox(height: 16),
@@ -938,6 +1000,15 @@ class _StudentProfileView extends StatelessWidget {
                       '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'}',
                       style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
+                    if (user.bio.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '💬 "${user.bio}"',
+                        style: const TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Colors.white70),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1205,6 +1276,133 @@ class _StudentProfileView extends StatelessWidget {
               child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditProfileModal(BuildContext context, UserEntity user) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final nameCtrl = TextEditingController(text: user.displayName);
+    final bioCtrl = TextEditingController(text: user.bio);
+    final facultyCtrl = TextEditingController(text: user.faculty);
+    final majorCtrl = TextEditingController(text: user.major);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Chỉnh sửa hồ sơ cá nhân',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Họ và tên',
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: bioCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Tiểu sử (Bio)',
+                  hintText: 'Giới thiệu ngắn về bản thân, sở thích...',
+                  prefixIcon: const Icon(Icons.edit_note_rounded),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: facultyCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Khoa / Viện',
+                  prefixIcon: const Icon(Icons.school_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: majorCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Ngành học',
+                  prefixIcon: const Icon(Icons.book_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  final newName = nameCtrl.text.trim();
+                  if (newName.isEmpty) return;
+
+                  final updated = UserModel(
+                    uid: user.uid,
+                    email: user.email,
+                    studentId: user.studentId,
+                    displayName: newName,
+                    username: user.username,
+                    avatarUrl: user.avatarUrl,
+                    coverUrl: user.coverUrl,
+                    bio: bioCtrl.text.trim(),
+                    faculty: facultyCtrl.text.trim(),
+                    major: majorCtrl.text.trim(),
+                    cohort: user.cohort,
+                    userType: user.userType,
+                    isVerified: user.isVerified,
+                    currentSubjects: user.currentSubjects,
+                    friendsCount: user.friendsCount,
+                    postsCount: user.postsCount,
+                    createdAt: user.createdAt,
+                  );
+
+                  Navigator.pop(ctx);
+                  await context.read<AuthCubit>().updateUserProfile(updated);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã cập nhật thông tin hồ sơ thành công!')),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor(context),
+                  foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
+            ],
+          ),
         ),
       ),
     );

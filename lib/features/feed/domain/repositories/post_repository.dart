@@ -21,6 +21,4 @@ abstract class PostRepository {
   Stream<List<CommentEntity>> getComments(String postId);
 
   Future<void> addComment(String postId, CommentEntity comment);
-
-  Future<void> seedMockPostsIfEmpty(String currentUserId, String currentUserName);
 }
