@@ -31,7 +31,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
     PhenikaaStudentModel? student;
 
-    // 1. Tra cứu trong danh bạ nội bộ
     final localMatch = PhenikaaStudentDirectory.defaultStudents.where(
       (s) => s.studentId.toLowerCase() == studentId || s.email.toLowerCase() == trimmed,
     );
@@ -39,7 +38,6 @@ class AuthRepositoryImpl implements AuthRepository {
       student = localMatch.first;
     }
 
-    // 2. Tra cứu trong Firestore collection 'phenikaa_students'
     try {
       final doc = await _firestore
           .collection(FirebaseConstants.phenikaaStudentsCollection)
@@ -52,14 +50,12 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     } catch (_) {}
 
-    // 3. Nếu không tìm thấy trong danh sách sinh viên
     if (student == null) {
       throw Exception(
         'Mã sinh viên "$studentId" không tồn tại trong danh sách sinh viên Đại học Phenikaa. Vui lòng kiểm tra lại.',
       );
     }
 
-    // 4. Kiểm tra tài khoản đã kích hoạt hay chưa
     final isActivated = await isStudentActivated(
       studentId: student.studentId,
       email: student.email,
@@ -82,7 +78,6 @@ class AuthRepositoryImpl implements AuthRepository {
     final cleanEmail = email.trim().toLowerCase();
     final cleanId = studentId.trim().toLowerCase();
 
-    // Kiểm tra Firestore 'phenikaa_students'
     try {
       final studentDoc = await _firestore
           .collection(FirebaseConstants.phenikaaStudentsCollection)
@@ -95,7 +90,6 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     } catch (_) {}
 
-    // Kiểm tra Firestore 'users'
     try {
       final userQuery = await _firestore
           .collection(FirebaseConstants.usersCollection)
@@ -109,7 +103,6 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     } catch (_) {}
 
-    // Kiểm tra Firestore 'users' theo email
     try {
       final emailQuery = await _firestore
           .collection(FirebaseConstants.usersCollection)
@@ -126,7 +119,6 @@ class AuthRepositoryImpl implements AuthRepository {
     return false;
   }
 
-  @override
   @override
   Future<void> registerAndSendVerificationLink({
     required PhenikaaStudentEntity student,
@@ -230,7 +222,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     String loginEmail = email.trim().toLowerCase();
 
-    // Hỗ trợ đăng nhập bằng Mã sinh viên (ví dụ 23010390)
     if (!loginEmail.contains('@')) {
       loginEmail = '$loginEmail${FirebaseConstants.studentEmailDomain}';
     }
@@ -250,12 +241,10 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('Đăng nhập thất bại. Vui lòng thử lại.');
       }
 
-      // Kiểm tra trạng thái xác thực link email
       await firebaseUser.reload();
       final refreshedUser = _firebaseAuth.currentUser ?? firebaseUser;
 
       if (!refreshedUser.emailVerified) {
-        // Tự động gửi lại link nếu chưa bấm
         try {
           await refreshedUser.sendEmailVerification();
         } catch (_) {}
@@ -267,20 +256,17 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // Cập nhật isVerified: true lên Firestore nếu đã xác thực
       await _firestore
           .collection(FirebaseConstants.usersCollection)
           .doc(refreshedUser.uid)
           .set({'isVerified': true}, SetOptions(merge: true))
           .catchError((_) {});
 
-      // Lấy hồ sơ từ Firestore
       final profile = await getUserProfile(refreshedUser.uid);
       if (profile != null) {
         return profile;
       }
 
-      // Nếu hồ sơ Firestore chưa tồn tại (tự phục hồi từ danh bạ trường)
       final studentId = loginEmail.split('@').first;
       String fullName = firebaseUser.displayName ?? 'Sinh viên Phenikaa';
       String faculty = 'Công nghệ thông tin';
@@ -310,7 +296,6 @@ class AuthRepositoryImpl implements AuthRepository {
         isVerified: true,
       );
 
-      // Lưu lại vào Firestore để lần sau không bị thiếu thông tin
       await _firestore
           .collection(FirebaseConstants.usersCollection)
           .doc(firebaseUser.uid)
@@ -351,7 +336,6 @@ class AuthRepositoryImpl implements AuthRepository {
         );
         credential = await _firebaseAuth.signInWithCredential(authCredential);
       } else {
-        // Windows Desktop / Linux / macOS
         final googleProvider = GoogleAuthProvider();
         credential = await _firebaseAuth.signInWithProvider(googleProvider);
       }
@@ -363,7 +347,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final email = (firebaseUser.email ?? '').trim().toLowerCase();
 
-      // RÀNG BUỘC PHƯƠNG ÁN 2: CHỈ CHẤP NHẬN TÀI KHOẢN TRƯỜNG PHENIKAA
       if (!FirebaseConstants.isPhenikaaEmail(email)) {
         await _firebaseAuth.signOut();
         throw Exception(
@@ -371,13 +354,11 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // 1. Kiểm tra nếu hồ sơ đã có trên Firestore
       final profile = await getUserProfile(firebaseUser.uid);
       if (profile != null) {
         return profile;
       }
-
-      // 2. Nếu đăng nhập lần đầu: Tự động khởi tạo hồ sơ sinh viên
+ 
       final studentId = email.split('@').first;
       String fullName = firebaseUser.displayName ?? 'Sinh viên Phenikaa';
       String faculty = 'Công nghệ thông tin';

@@ -334,7 +334,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  // ================= TAB 1: ĐĂNG NHẬP =================
   Widget _buildSignInTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     return Form(
       key: _signInFormKey,
@@ -472,7 +471,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  // ================= TAB 2: KÍCH HOẠT TÀI KHOẢN =================
   Widget _buildActivationTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     switch (_activationStep) {
       case 2:
@@ -485,7 +483,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
   }
 
-  // Bước 1: Nhập Mã sinh viên để tra cứu danh mục trường
   Widget _buildEnterIdentifierStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     return Form(
       key: _activationFormKey,
@@ -612,7 +609,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  // Bước 2: Thẻ sinh viên điện tử & Đặt mật khẩu mới
   Widget _buildCheckInfoAndSetPasswordStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     final student = _currentStudent;
     if (student == null) return const SizedBox.shrink();
@@ -767,7 +763,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  // Bước 3: Đã gửi link xác thực Firebase
   Widget _buildEmailVerificationSentStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
     final student = _currentStudent;
     final email = student?.email ?? '';

@@ -61,13 +61,11 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
   final ScrollController _scrollController = ScrollController();
   bool _isSending = false;
 
-  // Local fallback comments for immediate visual response & offline demo
   final List<CommentEntity> _localComments = [];
 
   @override
   void initState() {
     super.initState();
-    // Seed standard initial discussion comments if post already has comment count
     if (widget.post.commentCount > 0) {
       _localComments.addAll([
         CommentEntity(
@@ -137,7 +135,6 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
 
     if (mounted) {
       setState(() => _isSending = false);
-      // Auto scroll to bottom
       Future.delayed(const Duration(milliseconds: 100), () {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -172,7 +169,6 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
       ),
       child: Column(
         children: [
-          // Header Drag Handle & Title
           Padding(
             padding: const EdgeInsets.only(top: 10, bottom: 4),
             child: Container(
@@ -214,7 +210,6 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
               ],
             ),
           ),
-          // Post Preview Box
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             padding: const EdgeInsets.all(12),
@@ -294,13 +289,11 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
             ),
           ),
           const Divider(height: 16),
-          // Comments Stream List
           Expanded(
             child: StreamBuilder<List<CommentEntity>>(
               stream: context.read<FeedCubit>().getComments(widget.post.postId),
               builder: (context, snapshot) {
                 final firestoreComments = snapshot.data ?? [];
-                // Merge firestore comments with local additions (avoid duplicate IDs)
                 final Set<String> existingIds = firestoreComments.map((c) => c.commentId).toSet();
                 final allComments = [
                   ...firestoreComments,
@@ -348,7 +341,6 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
               },
             ),
           ),
-          // Comment Input Bar
           Container(
             padding: EdgeInsets.fromLTRB(14, 8, 14, 8 + keyboardBottom),
             decoration: BoxDecoration(

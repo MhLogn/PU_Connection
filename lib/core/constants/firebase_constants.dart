@@ -1,5 +1,4 @@
 class FirebaseConstants {
-  // Collections
   static const String usersCollection = 'users';
   static const String phenikaaStudentsCollection = 'phenikaa_students';
   static const String postsCollection = 'posts';
@@ -15,12 +14,10 @@ class FirebaseConstants {
   static const String subjectsCollection = 'subjects';
   static const String topicsCollection = 'topics';
 
-  // Subcollections for social graph
   static const String friendsSubcollection = 'friends';
   static const String friendRequestsSubcollection = 'friend_requests';
   static const String followersSubcollection = 'followers';
 
-  // Email domains
   static const String studentEmailDomain = '@st.phenikaa-uni.edu.vn';
   static const String staffEmailDomain = '@phenikaa-uni.edu.vn';
 

@@ -102,9 +102,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   }
 }
 
-// (Tab 1: Docs Hub has been migrated to lib/features/documents/presentation/pages/docs_hub_page.dart)
-
-// ================= TAB 2: PU BOT (CAMPUS AI ASSISTANT) =================
 class _PuBotChatView extends StatefulWidget {
   const _PuBotChatView();
 
@@ -345,7 +342,6 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
   }
 }
 
-// ================= TAB 3: NHÓM & CLB (COMMUNITY) =================
 class _ClubsCommunityView extends StatefulWidget {
   const _ClubsCommunityView();
 
@@ -787,7 +783,6 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
   }
 }
 
-// ================= TAB 4: HỒ SƠ & THẺ SINH VIÊN (PROFILE) =================
 class _StudentProfileView extends StatelessWidget {
   const _StudentProfileView();
 

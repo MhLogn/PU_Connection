@@ -392,7 +392,6 @@ class _FeedPageState extends State<FeedPage> {
         onRefresh: () async => context.read<FeedCubit>().loadFeed(),
         child: CustomScrollView(
           slivers: [
-            // Campus Highlights Story Strip
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 4),
@@ -445,7 +444,6 @@ class _FeedPageState extends State<FeedPage> {
                 ),
               ),
             ),
-            // Quick Post Creation Bar
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -505,7 +503,6 @@ class _FeedPageState extends State<FeedPage> {
                 ),
               ),
             ),
-            // Category Filter Chips
             SliverToBoxAdapter(
               child: BlocBuilder<FeedCubit, FeedState>(
                 builder: (context, state) {
@@ -555,7 +552,6 @@ class _FeedPageState extends State<FeedPage> {
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 6)),
-            // Feed Post List
             BlocBuilder<FeedCubit, FeedState>(
               builder: (context, state) {
                 if (state is FeedLoading) {

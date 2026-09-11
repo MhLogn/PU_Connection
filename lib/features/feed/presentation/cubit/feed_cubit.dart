@@ -65,9 +65,7 @@ class FeedCubit extends Cubit<FeedState> {
         userId: currentUserId,
         isCurrentlyLiked: isLiked,
       );
-    } catch (_) {
-      // Revert if error
-    }
+    } catch (_) {}
   }
 
   Stream<List<CommentEntity>> getComments(String postId) {
@@ -111,7 +109,6 @@ class FeedCubit extends Cubit<FeedState> {
     try {
       List<PostAttachment> attachments = [];
 
-      // 1. Upload ảnh lên Cloudinary miễn phí nếu có
       for (final imgFile in imageFiles) {
         final url = await _cloudinaryService.uploadImage(imgFile);
         if (url != null) {
@@ -123,7 +120,6 @@ class FeedCubit extends Cubit<FeedState> {
         }
       }
 
-      // 2. Upload tài liệu (PDF, Word) lên Cloudinary miễn phí nếu có
       for (final docFile in docFiles) {
         final url = await _cloudinaryService.uploadDocument(docFile);
         if (url != null) {

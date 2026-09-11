@@ -28,7 +28,6 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  /// Đăng nhập bằng Email hoặc Mã sinh viên
   Future<void> signIn({
     required String email,
     required String password,
@@ -51,7 +50,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Phương án 2: Đăng nhập 1 chạm bằng Google tài khoản trường Phenikaa (@st.phenikaa-uni.edu.vn)
   Future<void> signInWithGoogle() async {
     emit(AuthLoading());
     try {
@@ -62,7 +60,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Bước 1: Tra cứu và xác minh sinh viên trong danh sách Phenikaa
   Future<void> verifyStudent(String identifier) async {
     emit(AuthLoading());
     try {
@@ -84,7 +81,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Bước 2: Đặt mật khẩu và gửi Firebase Email Verification Link (Không cần OTP!)
   Future<void> registerAndSendVerificationLink({
     required PhenikaaStudentEntity student,
     required String password,
@@ -104,7 +100,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Gửi lại liên kết xác thực Firebase tới email sinh viên
   Future<void> resendVerificationLink({
     required String email,
     required String password,
@@ -121,7 +116,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Quên mật khẩu
   Future<void> sendPasswordReset(String email) async {
     emit(AuthLoading());
     try {

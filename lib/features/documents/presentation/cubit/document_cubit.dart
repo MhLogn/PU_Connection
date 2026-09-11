@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_filex/open_filex.dart';
@@ -106,7 +106,6 @@ class DocumentCubit extends Cubit<DocumentState> {
         },
       );
 
-      // Tăng lượt tải
       await _documentRepository.incrementDownloads(doc.id);
 
       emit(state.copyWith(

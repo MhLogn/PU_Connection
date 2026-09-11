@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -90,7 +90,6 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
           _selectedFileSize = displaySize;
           _selectedFileType = ext;
           if (_titleController.text.trim().isEmpty) {
-            // Gợi ý tên tài liệu theo tên file
             final dotIdx = fileName.lastIndexOf('.');
             _titleController.text = dotIdx > 0 ? fileName.substring(0, dotIdx) : fileName;
           }
@@ -210,7 +209,6 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
             ),
             const SizedBox(height: 14),
 
-            // Nút chọn tệp
             InkWell(
               onTap: _isUploading ? null : _pickFile,
               borderRadius: BorderRadius.circular(16),

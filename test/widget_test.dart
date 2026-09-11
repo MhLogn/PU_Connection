@@ -17,14 +17,12 @@ void main() {
   testWidgets('App renders SplashPage and transitions to IntroPage', (WidgetTester tester) async {
     await tester.pumpWidget(const PUConnectionApp());
 
-    // Verify PU Connection text is present on SplashPage
     expect(find.text('PU Connection'), findsOneWidget);
 
     // Fast-forward past splash delay (2500ms)
     await tester.pump(const Duration(milliseconds: 2600));
     await tester.pumpAndSettle();
 
-    // Verify Intro page is displayed
     expect(find.text('Kết nối sinh viên Phenikaa'), findsOneWidget);
   });
 }

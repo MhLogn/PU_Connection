@@ -4,7 +4,6 @@ import '../models/phenikaa_student_model.dart';
 
 class PhenikaaStudentDirectory {
   static final List<PhenikaaStudentModel> defaultStudents = [
-    // Khoa Công nghệ thông tin
     const PhenikaaStudentModel(
       studentId: '23010390',
       fullName: 'Hà Mạnh Long',
@@ -32,7 +31,6 @@ class PhenikaaStudentDirectory {
       cohort: 16,
       isActivated: false,
     ),
-    // Khoa Kỹ thuật Ô tô & Năng lượng
     const PhenikaaStudentModel(
       studentId: '23020015',
       fullName: 'Vũ Đức Thắng',
@@ -51,7 +49,6 @@ class PhenikaaStudentDirectory {
       cohort: 16,
       isActivated: false,
     ),
-    // Khoa Điện - Điện tử
     const PhenikaaStudentModel(
       studentId: '23030045',
       fullName: 'Lê Tuấn Anh',
@@ -61,7 +58,6 @@ class PhenikaaStudentDirectory {
       cohort: 17,
       isActivated: false,
     ),
-    // Khoa Kinh tế & Kinh doanh
     const PhenikaaStudentModel(
       studentId: '23040102',
       fullName: 'Phạm Thu Trang',
@@ -80,7 +76,6 @@ class PhenikaaStudentDirectory {
       cohort: 16,
       isActivated: false,
     ),
-    // Khoa Y - Dược
     const PhenikaaStudentModel(
       studentId: '23050012',
       fullName: 'Nguyễn Thùy Linh',
@@ -99,7 +94,6 @@ class PhenikaaStudentDirectory {
       cohort: 17,
       isActivated: false,
     ),
-    // Ngôn ngữ
     const PhenikaaStudentModel(
       studentId: '23070034',
       fullName: 'Bùi Phương Thảo',

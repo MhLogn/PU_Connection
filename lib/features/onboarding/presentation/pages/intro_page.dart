@@ -62,7 +62,6 @@ class _IntroPageState extends State<IntroPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: Row(
@@ -106,7 +105,6 @@ class _IntroPageState extends State<IntroPage> {
                 ],
               ),
             ),
-            // Slide Content
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -119,7 +117,6 @@ class _IntroPageState extends State<IntroPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Realistic Image Container
                         Container(
                           width: double.infinity,
                           height: 230,
@@ -159,7 +156,6 @@ class _IntroPageState extends State<IntroPage> {
                           ),
                         ),
                         const SizedBox(height: 28),
-                        // Badge
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                           decoration: BoxDecoration(
@@ -181,7 +177,6 @@ class _IntroPageState extends State<IntroPage> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        // Title
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
@@ -193,7 +188,6 @@ class _IntroPageState extends State<IntroPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Description
                         Text(
                           slide.description,
                           textAlign: TextAlign.center,
@@ -209,13 +203,11 @@ class _IntroPageState extends State<IntroPage> {
                 },
               ),
             ),
-            // Bottom Bar: Indicators & Continue Button
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Page Indicators
                   Row(
                     children: List.generate(
                       slides.length,
@@ -234,7 +226,6 @@ class _IntroPageState extends State<IntroPage> {
                       ),
                     ),
                   ),
-                  // Next / Get Started Button
                   ElevatedButton(
                     onPressed: () => _onNext(slides.length),
                     style: ElevatedButton.styleFrom(

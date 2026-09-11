@@ -22,7 +22,6 @@ class DatabaseSeeder {
 
     debugPrint('🚀 [DatabaseSeeder] Bắt đầu đẩy dữ liệu lên Cloud Firestore...');
 
-    // 1. Đẩy danh sách toàn bộ sinh viên Phenikaa lên collection 'phenikaa_students'
     try {
       final batch = db.batch();
       for (final student in PhenikaaStudentDirectory.defaultStudents) {
@@ -46,7 +45,6 @@ class DatabaseSeeder {
       rethrow;
     }
 
-    // 2. Đẩy hồ sơ người dùng hiện tại lên collection 'users'
     try {
       final authUser = firebaseAuth.currentUser;
       if (authUser != null) {
@@ -93,7 +91,6 @@ class DatabaseSeeder {
       debugPrint('❌ [DatabaseSeeder] Lỗi khi lưu users: $e');
     }
 
-    // 3. Đẩy các bài viết mẫu lên collection 'posts'
     try {
       final postsCol = db.collection(FirebaseConstants.postsCollection);
       final existingPosts = await postsCol.limit(1).get();
@@ -163,7 +160,6 @@ class DatabaseSeeder {
       debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy posts: $e');
     }
 
-    // 4. Đẩy tài liệu mẫu lên collection 'study_documents'
     try {
       final docsCol = db.collection(FirebaseConstants.studyDocumentsCollection);
       final existingDocs = await docsCol.limit(1).get();

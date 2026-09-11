@@ -42,7 +42,6 @@ class PasswordResetSent extends AuthState {
   List<Object?> get props => [email];
 }
 
-/// Bước 1 thành công: Đã tìm thấy sinh viên hợp lệ trong danh sách trường Phenikaa
 class StudentVerifiedForActivation extends AuthState {
   final PhenikaaStudentEntity student;
 
@@ -52,7 +51,6 @@ class StudentVerifiedForActivation extends AuthState {
   List<Object?> get props => [student];
 }
 
-/// Đã tạo tài khoản và gửi liên kết xác thực Firebase tới email sinh viên
 class ActivationVerificationEmailSent extends AuthState {
   final PhenikaaStudentEntity student;
   final String email;
@@ -66,7 +64,6 @@ class ActivationVerificationEmailSent extends AuthState {
   List<Object?> get props => [student, email];
 }
 
-/// Gửi lại liên kết xác thực thành công
 class ResendVerificationEmailSuccess extends AuthState {
   final String email;
 
@@ -76,7 +73,6 @@ class ResendVerificationEmailSuccess extends AuthState {
   List<Object?> get props => [email];
 }
 
-/// Lỗi khi đăng nhập: Email chưa bấm link xác thực
 class EmailNotVerified extends AuthState {
   final String email;
   final String message;
@@ -90,7 +86,6 @@ class EmailNotVerified extends AuthState {
   List<Object?> get props => [email, message];
 }
 
-/// Trường hợp sinh viên đã kích hoạt tài khoản trước đó -> Gợi ý chuyển sang Đăng nhập
 class StudentAlreadyActivated extends AuthState {
   final String studentId;
   final String email;
