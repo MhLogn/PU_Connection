@@ -192,5 +192,24 @@
   "credits_accumulated": "Tín chỉ",
   "training_points": "Điểm rèn luyện",
   "training_excellent": "Xuất sắc",
-  "not_logged_in": "Chưa đăng nhập"
+  "not_logged_in": "Chưa đăng nhập",
+  "pdf_viewer_title": "Xem tài liệu PDF",
+  "page_indicator": "Trang {current} / {total}",
+  "@page_indicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "error_loading_pdf": "Không thể tải tài liệu PDF này.",
+  "retry": "Thử lại",
+  "open_with_external": "Mở bằng ứng dụng ngoài",
+  "file_selected": "Đã chọn tệp",
+  "no_file_selected": "Chưa chọn tệp nào",
+  "uploading_to_cloud": "Đang tải tệp lên máy chủ...",
+  "file_size_label": "Kích thước"
 }

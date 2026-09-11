@@ -570,4 +570,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get not_logged_in => 'Not logged in';
+
+  @override
+  String get pdf_viewer_title => 'PDF Document Viewer';
+
+  @override
+  String page_indicator(int current, int total) {
+    return 'Page $current / $total';
+  }
+
+  @override
+  String get error_loading_pdf => 'Unable to load this PDF document.';
+
+  @override
+  String get open_with_external => 'Open with external app';
+
+  @override
+  String get file_selected => 'File selected';
+
+  @override
+  String get no_file_selected => 'No file selected';
+
+  @override
+  String get uploading_to_cloud => 'Uploading file to server...';
+
+  @override
+  String get file_size_label => 'Size';
 }

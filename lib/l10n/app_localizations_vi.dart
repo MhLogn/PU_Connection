@@ -570,4 +570,30 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get not_logged_in => 'Chưa đăng nhập';
+
+  @override
+  String get pdf_viewer_title => 'Xem tài liệu PDF';
+
+  @override
+  String page_indicator(int current, int total) {
+    return 'Trang $current / $total';
+  }
+
+  @override
+  String get error_loading_pdf => 'Không thể tải tài liệu PDF này.';
+
+  @override
+  String get open_with_external => 'Mở bằng ứng dụng ngoài';
+
+  @override
+  String get file_selected => 'Đã chọn tệp';
+
+  @override
+  String get no_file_selected => 'Chưa chọn tệp nào';
+
+  @override
+  String get uploading_to_cloud => 'Đang tải tệp lên máy chủ...';
+
+  @override
+  String get file_size_label => 'Kích thước';
 }

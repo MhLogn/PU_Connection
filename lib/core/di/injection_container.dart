@@ -10,6 +10,9 @@ import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/feed/domain/repositories/post_repository.dart';
 import '../../features/feed/data/repositories/post_repository_impl.dart';
 import '../../features/feed/presentation/cubit/feed_cubit.dart';
+import '../../features/documents/domain/repositories/document_repository.dart';
+import '../../features/documents/data/repositories/document_repository_impl.dart';
+import '../../features/documents/presentation/cubit/document_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -31,4 +34,12 @@ Future<void> initDI() async {
         postRepository: sl(),
         cloudinaryService: sl(),
       ));
+
+  sl.registerLazySingleton<DocumentRepository>(() => DocumentRepositoryImpl(
+        cloudinaryService: sl(),
+      ));
+  sl.registerFactory(() => DocumentCubit(
+        documentRepository: sl(),
+      ));
 }
+

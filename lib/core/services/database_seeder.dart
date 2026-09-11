@@ -163,6 +163,97 @@ class DatabaseSeeder {
       debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy posts: $e');
     }
 
+    // 4. Đẩy tài liệu mẫu lên collection 'study_documents'
+    try {
+      final docsCol = db.collection(FirebaseConstants.studyDocumentsCollection);
+      final existingDocs = await docsCol.limit(1).get();
+      if (existingDocs.docs.isEmpty) {
+        final sampleDocs = [
+          {
+            'title': 'Đề cương & Ngân hàng trắc nghiệm Lập trình Mạng',
+            'code': 'CNTT-225',
+            'faculty': 'CNTT',
+            'fileUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            'fileType': 'pdf',
+            'fileSize': '4.2 MB',
+            'authorId': 'pu_admin',
+            'authorName': 'Ban Học Tập Khoa CNTT',
+            'authorStudentId': 'CNTT-PU',
+            'downloads': 1240,
+            'rating': 4.9,
+            'description': 'Đề cương ôn tập chi tiết gồm 150 câu hỏi trắc nghiệm kèm đáp án và giải thích.',
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
+          },
+          {
+            'title': 'Slide bài giảng Cơ sở dữ liệu & SQL Nâng cao',
+            'code': 'CSDL-101',
+            'faculty': 'CNTT',
+            'fileUrl': 'https://pdfobject.com/pdf/sample.pdf',
+            'fileType': 'pdf',
+            'fileSize': '8.5 MB',
+            'authorId': 'pu_admin',
+            'authorName': 'Giảng viên Bộ môn HTTT',
+            'authorStudentId': 'GV-012',
+            'downloads': 980,
+            'rating': 4.8,
+            'description': 'Bộ slide trọn gói 12 chương bài giảng CSDL từ thiết kế ERD đến tối ưu hóa truy vấn SQL.',
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 5))),
+          },
+          {
+            'title': 'Bộ đề thi thử Xác suất Thống kê có lời giải chi tiết',
+            'code': 'XSTK-01',
+            'faculty': 'Kinh tế & QTKD',
+            'fileUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            'fileType': 'pdf',
+            'fileSize': '2.8 MB',
+            'authorId': 'student_3',
+            'authorName': 'Lê Phương Thảo',
+            'authorStudentId': '23010512',
+            'downloads': 1560,
+            'rating': 5.0,
+            'description': 'Tuyển tập 10 bộ đề thi học kỳ các năm gần nhất có lời giải từng bước.',
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 7))),
+          },
+          {
+            'title': 'Dược lý học đại cương & Tổng hợp tương tác thuốc',
+            'code': 'DUOC-102',
+            'faculty': 'Dược - Y',
+            'fileUrl': 'https://pdfobject.com/pdf/sample.pdf',
+            'fileType': 'pdf',
+            'fileSize': '6.1 MB',
+            'authorId': 'student_4',
+            'authorName': 'Nguyễn Hoàng Nam',
+            'authorStudentId': '22030119',
+            'downloads': 620,
+            'rating': 4.7,
+            'description': 'Sổ tay bỏ túi Dược lý và phân loại nhóm kháng sinh lâm sàng.',
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 10))),
+          },
+          {
+            'title': 'Tổng hợp từ vựng & đề thi Tiếng Anh B1 Vstep Phenikaa',
+            'code': 'ENG-B1',
+            'faculty': 'Ngôn ngữ Anh',
+            'fileUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            'fileType': 'pdf',
+            'fileSize': '15.3 MB',
+            'authorId': 'pu_admin',
+            'authorName': 'Trung tâm Ngoại ngữ Phenikaa',
+            'authorStudentId': 'ENG-PU',
+            'downloads': 2100,
+            'rating': 4.9,
+            'description': 'Trọn bộ bí kíp ôn thi chuẩn đầu ra B1 Vstep dành riêng cho sinh viên Phenikaa.',
+            'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 14))),
+          },
+        ];
+        for (final doc in sampleDocs) {
+          await docsCol.add(doc);
+        }
+        debugPrint('✅ [DatabaseSeeder] Đã đẩy thành công ${sampleDocs.length} tài liệu lên "study_documents"');
+      }
+    } catch (e) {
+      debugPrint('❌ [DatabaseSeeder] Lỗi khi đẩy study_documents: $e');
+    }
+
     return {
       'studentsCount': studentsCount,
       'postsCount': postsCount,

@@ -1189,6 +1189,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa đăng nhập'**
   String get not_logged_in;
+
+  /// No description provided for @pdf_viewer_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tài liệu PDF'**
+  String get pdf_viewer_title;
+
+  /// No description provided for @page_indicator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang {current} / {total}'**
+  String page_indicator(int current, int total);
+
+  /// No description provided for @error_loading_pdf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải tài liệu PDF này.'**
+  String get error_loading_pdf;
+
+  /// No description provided for @open_with_external.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bằng ứng dụng ngoài'**
+  String get open_with_external;
+
+  /// No description provided for @file_selected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chọn tệp'**
+  String get file_selected;
+
+  /// No description provided for @no_file_selected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn tệp nào'**
+  String get no_file_selected;
+
+  /// No description provided for @uploading_to_cloud.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải tệp lên máy chủ...'**
+  String get uploading_to_cloud;
+
+  /// No description provided for @file_size_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kích thước'**
+  String get file_size_label;
 }
 
 class _AppLocalizationsDelegate

@@ -192,5 +192,24 @@
   "credits_accumulated": "Credits",
   "training_points": "Training Points",
   "training_excellent": "Excellent",
-  "not_logged_in": "Not logged in"
+  "not_logged_in": "Not logged in",
+  "pdf_viewer_title": "PDF Document Viewer",
+  "page_indicator": "Page {current} / {total}",
+  "@page_indicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "error_loading_pdf": "Unable to load this PDF document.",
+  "retry": "Retry",
+  "open_with_external": "Open with external app",
+  "file_selected": "File selected",
+  "no_file_selected": "No file selected",
+  "uploading_to_cloud": "Uploading file to server...",
+  "file_size_label": "Size"
 }
