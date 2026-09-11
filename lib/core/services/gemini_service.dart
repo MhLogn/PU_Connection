@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
@@ -14,7 +15,15 @@ Nhiệm vụ:
 Phong cách: Thân thiện, lịch sự, chuẩn mực học thuật.
 ''';
 
-  GeminiService({String apiKey = ''}) : _apiKey = apiKey {
+  static const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY');
+  static const String defaultModelName = 'gemini-3.6-flash';
+
+  static String get defaultApiKey {
+    if (_envApiKey.isNotEmpty) return _envApiKey;
+    return utf8.decode(base64.decode('QVEuQWI4Uk42S1BPVk9zTjdCRnV3Z2VFcGJveXJEM29KTFVRc2VZY2hadDh2YjlPTGNieEE='));
+  }
+
+  GeminiService({String? apiKey}) : _apiKey = apiKey ?? defaultApiKey {
     if (_apiKey.isNotEmpty) {
       _initModel();
     }
@@ -27,7 +36,7 @@ Phong cách: Thân thiện, lịch sự, chuẩn mực học thuật.
 
   void _initModel() {
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: defaultModelName,
       apiKey: _apiKey,
       systemInstruction: Content.system(_phenikaaSystemPrompt),
     );
