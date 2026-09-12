@@ -67,39 +67,52 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         index: _currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        backgroundColor: colorScheme.surface,
-        indicatorColor: AppTheme.blueContainer(context),
-        elevation: 3,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded, color: AppTheme.primaryColor(context)),
-            label: l10n.nav_feed,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book_rounded, color: AppTheme.primaryColor(context)),
-            label: l10n.nav_docs,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.smart_toy_outlined),
-            selectedIcon: Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context)),
-            label: l10n.nav_bot,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups_rounded, color: AppTheme.primaryColor(context)),
-            label: l10n.nav_clubs,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryColor(context)),
-            label: l10n.nav_profile,
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.3 : 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) => setState(() => _currentIndex = index),
+          backgroundColor: Colors.transparent,
+          indicatorColor: AppTheme.blueContainer(context),
+          elevation: 0,
+          height: 66,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded, color: AppTheme.primaryColor(context)),
+              label: l10n.nav_feed,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book_rounded, color: AppTheme.primaryColor(context)),
+              label: l10n.nav_docs,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.smart_toy_outlined),
+              selectedIcon: Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context)),
+              label: l10n.nav_bot,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.groups_outlined),
+              selectedIcon: Icon(Icons.groups_rounded, color: AppTheme.primaryColor(context)),
+              label: l10n.nav_clubs,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_outline_rounded),
+              selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryColor(context)),
+              label: l10n.nav_profile,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -221,45 +234,111 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
                 final isUser = msg['role'] == 'user';
 
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? (AppTheme.isDark(context) ? const Color(0xFF1D4ED8) : AppTheme.primaryBlue)
-                          : colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16).copyWith(
-                        bottomRight: isUser ? const Radius.circular(0) : null,
-                        bottomLeft: !isUser ? const Radius.circular(0) : null,
-                      ),
-                      border: isUser
-                          ? null
-                          : Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                if (isUser) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: AppTheme.isDark(context)
+                              ? [const Color(0xFF1E3A8A), const Color(0xFF2563EB)]
+                              : [const Color(0xFF203864), const Color(0xFF2E5088)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      msg['text'] ?? '',
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.4,
-                        color: isUser ? Colors.white : colorScheme.onSurface,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(18),
+                          topRight: Radius.circular(18),
+                          bottomLeft: Radius.circular(18),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        msg['text'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.45,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFF76B1C), Color(0xFFFF8E42)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFF76B1C).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 16),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              topRight: Radius.circular(18),
+                              bottomLeft: Radius.circular(18),
+                              bottomRight: Radius.circular(18),
+                            ),
+                            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            msg['text'] ?? '',
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.45,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -267,28 +346,62 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
           ),
           if (_isTyping) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 20, bottom: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accentColor(context)),
+              padding: const EdgeInsets.only(left: 16, bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF76B1C),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.bot_typing,
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                    child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 14),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.accentColor(context),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.bot_typing,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
           SizedBox(
-            height: 38,
+            height: 40,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
@@ -297,9 +410,10 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
               itemBuilder: (context, index) {
                 final suggestion = suggestions[index];
                 return ActionChip(
-                  label: Text(suggestion, style: const TextStyle(fontSize: 12)),
+                  label: Text(suggestion, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                   backgroundColor: colorScheme.surface,
                   side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.25)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   onPressed: () => _sendMessage(suggestion),
                 );
               },
@@ -307,32 +421,55 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-            color: colorScheme.surface,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _msgController,
-                    onSubmitted: (text) => _sendMessage(text),
-                    decoration: InputDecoration(
-                      hintText: l10n.bot_input_hint,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    ),
+                    child: TextField(
+                      controller: _msgController,
+                      onSubmitted: (text) => _sendMessage(text),
+                      decoration: InputDecoration(
+                        hintText: l10n.bot_input_hint,
+                        hintStyle: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                       ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor(context),
-                  radius: 22,
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF76B1C), Color(0xFFFF8E42)],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFF76B1C).withValues(alpha: 0.35),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 19),
                     onPressed: () => _sendMessage(_msgController.text),
                   ),
                 ),
@@ -737,85 +874,122 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                     final isJoined = club['isJoined'] as bool;
                     final color = _getClubColor(context, club['category'] as String);
 
-                    return Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      color: colorScheme.surface,
-                      child: InkWell(
-                        onTap: () => _showClubDetailModal(context, club),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: AppTheme.isDark(context) ? 0.18 : 0.12),
-                                      shape: BoxShape.circle,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showClubDetailModal(context, club),
+                          borderRadius: BorderRadius.circular(18),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.1),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(Icons.group_work_rounded, color: color, size: 24),
                                     ),
-                                    child: Icon(Icons.group_work_rounded, color: color, size: 26),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          club['name'] as String,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                        ),
-                                        Text(
-                                          '${_getCategoryLabel(club['category'] as String, l10n)} • ${club['members']} ${l10n.club_members}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            club['name'] as String,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  OutlinedButton(
-                                    onPressed: () => _toggleJoinClub(club),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: isJoined
-                                          ? AppTheme.primaryColor(context).withValues(
-                                              alpha: AppTheme.isDark(context) ? 0.2 : 0.08,
-                                            )
-                                          : null,
-                                      side: BorderSide(
-                                        color: AppTheme.primaryColor(context).withValues(alpha: isJoined ? 0.4 : 1.0),
+                                          const SizedBox(height: 3),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: color.withValues(alpha: 0.12),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  _getCategoryLabel(club['category'] as String, l10n),
+                                                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: color),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Icon(Icons.people_alt_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                '${club['members']} ${l10n.club_members}',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     ),
-                                    child: Text(
-                                      isJoined ? l10n.joined_club : l10n.join_club,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primaryColor(context),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                club['desc'] as String,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.75),
-                                  height: 1.35,
+                                    isJoined
+                                        ? OutlinedButton.icon(
+                                            onPressed: () => _toggleJoinClub(club),
+                                            icon: Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.mintColor(context)),
+                                            label: Text(
+                                              l10n.joined_club,
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.mintColor(context),
+                                              ),
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              backgroundColor: AppTheme.mintColor(context).withValues(alpha: 0.08),
+                                              side: BorderSide(color: AppTheme.mintColor(context).withValues(alpha: 0.4)),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            ),
+                                          )
+                                        : ElevatedButton.icon(
+                                            onPressed: () => _toggleJoinClub(club),
+                                            icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                                            label: Text(
+                                              l10n.join_club,
+                                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppTheme.primaryColor(context),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            ),
+                                          ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 10),
+                                Text(
+                                  club['desc'] as String,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -909,16 +1083,16 @@ class _StudentProfileView extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF203864), Color(0xFF162846)],
+          colors: [Color(0xFF16294A), Color(0xFF203864), Color(0xFF2E5088)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.isDark(context) ? Colors.black38 : AppTheme.navyBlue.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: AppTheme.isDark(context) ? Colors.black45 : AppTheme.navyBlue.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -936,7 +1110,7 @@ class _StudentProfileView extends StatelessWidget {
                     height: 32,
                     errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Colors.white, size: 28),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -944,7 +1118,7 @@ class _StudentProfileView extends StatelessWidget {
                         l10n.university_name,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.0,
                         ),
@@ -957,17 +1131,56 @@ class _StudentProfileView extends StatelessWidget {
                   ),
                 ],
               ),
-              InkWell(
-                onTap: () => _showStudentQrModal(context, user),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 25,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFD54F), Color(0xFFFFB300), Color(0xFFFFE082)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: Colors.black26, width: 0.5),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 12,
+                          child: Container(height: 0.8, color: Colors.black38),
+                        ),
+                        Center(
+                          child: Container(
+                            width: 13,
+                            height: 13,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black38, width: 0.6),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: const Icon(Icons.qr_code_rounded, color: Colors.white, size: 28),
-                ),
+                  InkWell(
+                    onTap: () => _showStudentQrModal(context, user),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white24, width: 0.8),
+                      ),
+                      child: const Icon(Icons.qr_code_rounded, color: Colors.white, size: 24),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1042,50 +1255,125 @@ class _StudentProfileView extends StatelessWidget {
   }
 
   Widget _buildAcademicOverviewCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
-      ),
-      color: colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildStatItem(l10n.gpa_accumulated, '3.48', '/4.0', AppTheme.primaryColor(context)),
-            Container(height: 36, width: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-            _buildStatItem(l10n.credits_accumulated, '54', '/135', AppTheme.accentColor(context)),
-            Container(height: 36, width: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-            _buildStatItem(l10n.training_points, '92', l10n.training_excellent, AppTheme.mintColor(context)),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMetricCard(
+            context,
+            title: l10n.gpa_accumulated,
+            value: '3.48',
+            unit: '/4.0',
+            badge: 'Giỏi',
+            color: AppTheme.primaryColor(context),
+            icon: Icons.auto_awesome_rounded,
+          ),
         ),
-      ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildMetricCard(
+            context,
+            title: l10n.credits_accumulated,
+            value: '54',
+            unit: '/135',
+            badge: 'Tín chỉ',
+            color: AppTheme.accentColor(context),
+            icon: Icons.menu_book_rounded,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildMetricCard(
+            context,
+            title: l10n.training_points,
+            value: '92',
+            unit: 'ĐRL',
+            badge: l10n.training_excellent,
+            color: AppTheme.mintColor(context),
+            icon: Icons.military_tech_rounded,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildStatItem(String label, String value, String sub, Color color) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
-            ),
-            const SizedBox(width: 2),
-            Text(sub, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          ],
-        ),
-      ],
+  Widget _buildMetricCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required String unit,
+    required String badge,
+    required Color color,
+    required IconData icon,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: AppTheme.isDark(context) ? 0.22 : 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: color),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                value,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: colorScheme.onSurface),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                unit,
+                style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1095,37 +1383,64 @@ class _StudentProfileView extends StatelessWidget {
     final currentLocale = Localizations.localeOf(context).languageCode;
     final languageName = currentLocale == 'vi' ? l10n.vietnamese : l10n.english;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      color: colorScheme.surface,
       child: Column(
         children: [
           SwitchListTile(
-            secondary: Icon(Icons.dark_mode_outlined, color: AppTheme.primaryColor(context)),
+            secondary: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.softViolet.withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.dark_mode_rounded, color: isDark ? AppTheme.darkSoftViolet : AppTheme.softViolet, size: 20),
+            ),
             title: Text(l10n.dark_theme_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.dark_theme_desc, style: const TextStyle(fontSize: 12)),
+            subtitle: Text(l10n.dark_theme_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
             value: isDark,
             onChanged: (val) {
               context.read<ThemeCubit>().setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
             },
           ),
-          const Divider(height: 1),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(
-            leading: Icon(Icons.language_rounded, color: AppTheme.primaryColor(context)),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.language_rounded, color: AppTheme.primaryColor(context), size: 20),
+            ),
             title: Text(l10n.language, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(languageName, style: const TextStyle(fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right),
+            subtitle: Text(languageName, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showLanguagePickerModal(context),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(
-            leading: Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor(context)),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.info_outline_rounded, color: AppTheme.accentColor(context), size: 20),
+            ),
             title: Text(l10n.about_pu, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.app_version, style: const TextStyle(fontSize: 12)),
+            subtitle: Text(l10n.app_version, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
           ),
         ],
       ),
