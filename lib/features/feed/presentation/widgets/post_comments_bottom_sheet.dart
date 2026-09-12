@@ -66,30 +66,6 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.post.commentCount > 0) {
-      _localComments.addAll([
-        CommentEntity(
-          commentId: 'init_1',
-          authorId: 'stu_demo_1',
-          authorName: 'Nguyễn Hoàng Nam',
-          authorFaculty: 'Công nghệ thông tin',
-          authorStudentId: '22010214',
-          content: 'Cảm ơn bạn đã chia sẻ tài liệu rất chi tiết, đúng phần mình đang cần ôn thi!',
-          createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
-        ),
-        CommentEntity(
-          commentId: 'init_2',
-          authorId: 'stu_demo_2',
-          authorName: 'Lê Thảo My',
-          authorFaculty: widget.post.authorFaculty.isNotEmpty
-              ? widget.post.authorFaculty
-              : 'Kinh tế & QTKD',
-          authorStudentId: '23010512',
-          content: 'Cho mình xin thêm phần bài tập trắc nghiệm chương 3 với được không ạ?',
-          createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
-        ),
-      ]);
-    }
   }
 
   @override
@@ -194,7 +170,7 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${l10n.comments_title} (${widget.post.commentCount + _localComments.length - (widget.post.commentCount > 0 ? 2 : 0)})',
+                      l10n.comments_title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

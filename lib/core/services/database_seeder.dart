@@ -148,8 +148,29 @@ class DatabaseSeeder {
         ];
 
         for (final post in samplePosts) {
-          await postsCol.add(post.toMap());
+          final docRef = await postsCol.add(post.toMap());
           postsCount++;
+
+          if (post.category == 'Tài liệu') {
+            await docRef.collection(FirebaseConstants.commentsSubcollection).add({
+              'authorId': 'stu_demo_1',
+              'authorName': 'Nguyễn Hoàng Nam',
+              'authorAvatar': '',
+              'authorStudentId': '22010214',
+              'authorFaculty': 'Công nghệ thông tin',
+              'content': 'Cảm ơn bạn đã chia sẻ tài liệu rất chi tiết, đúng phần mình đang cần ôn thi!',
+              'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 45))),
+            });
+            await docRef.collection(FirebaseConstants.commentsSubcollection).add({
+              'authorId': 'stu_demo_2',
+              'authorName': 'Lê Thảo My',
+              'authorAvatar': '',
+              'authorStudentId': '23010512',
+              'authorFaculty': 'Kinh tế & QTKD',
+              'content': 'Cho mình xin thêm phần bài tập trắc nghiệm chương 3 với được không ạ?',
+              'createdAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 20))),
+            });
+          }
         }
         debugPrint('✅ [DatabaseSeeder] Đã đẩy thành công $postsCount bài viết lên "posts"');
       } else {
