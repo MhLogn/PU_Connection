@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/document_entity.dart';
@@ -9,6 +9,7 @@ class DocumentCard extends StatelessWidget {
   final bool isDownloading;
   final double downloadProgress;
   final VoidCallback onDownload;
+  final VoidCallback? onDelete;
 
   const DocumentCard({
     super.key,
@@ -16,6 +17,7 @@ class DocumentCard extends StatelessWidget {
     this.isDownloading = false,
     this.downloadProgress = 0.0,
     required this.onDownload,
+    this.onDelete,
   });
 
   @override
@@ -172,25 +174,58 @@ class DocumentCard extends StatelessWidget {
                       ),
                     )
                   else
-                    IconButton(
-                      icon: Icon(
-                        isPdf ? Icons.visibility_outlined : Icons.download_for_offline_rounded,
-                        color: AppTheme.primaryColor(context),
-                        size: 26,
-                      ),
-                      tooltip: isPdf ? l10n.pdf_viewer_title : l10n.download,
-                      onPressed: () {
-                        if (isPdf && document.fileUrl.isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PdfViewerPage(document: document),
-                            ),
-                          );
-                        } else {
-                          onDownload();
-                        }
-                      },
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            isPdf ? Icons.visibility_outlined : Icons.download_for_offline_rounded,
+                            color: AppTheme.primaryColor(context),
+                            size: 26,
+                          ),
+                          tooltip: isPdf ? l10n.pdf_viewer_title : l10n.download,
+                          onPressed: () {
+                            if (isPdf && document.fileUrl.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PdfViewerPage(document: document),
+                                ),
+                              );
+                            } else {
+                              onDownload();
+                            }
+                          },
+                        ),
+                        if (onDelete != null)
+                          IconButton(
+                            icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 22),
+                            tooltip: 'Xóa tài liệu',
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Xác nhận xóa tài liệu'),
+                                  content: Text('Bạn có chắc muốn xóa tài liệu "${document.title}"? Thao tác này không thể hoàn tác.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        onDelete!();
+                                      },
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+                                      child: const Text('Xóa', style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                      ],
                     ),
                 ],
               ),

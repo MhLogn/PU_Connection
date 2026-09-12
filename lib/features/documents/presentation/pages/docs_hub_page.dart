@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/document_cubit.dart';
 import '../cubit/document_state.dart';
 import '../widgets/document_card.dart';
@@ -212,6 +214,10 @@ class _DocsHubPageState extends State<DocsHubPage> {
       );
     }
 
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserId = authState is Authenticated ? authState.user.uid : '';
+    final currentUserStudentId = authState is Authenticated ? authState.user.studentId : '';
+
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
       itemCount: state.documents.length,
@@ -219,12 +225,15 @@ class _DocsHubPageState extends State<DocsHubPage> {
       itemBuilder: (context, index) {
         final doc = state.documents[index];
         final isDownloading = state.downloadingDocId == doc.id;
+        final isOwner = (currentUserId.isNotEmpty && doc.authorId == currentUserId) ||
+            (currentUserStudentId.isNotEmpty && doc.authorStudentId == currentUserStudentId);
 
         return DocumentCard(
           document: doc,
           isDownloading: isDownloading,
           downloadProgress: isDownloading ? state.downloadProgress : 0.0,
           onDownload: () => cubit.downloadDocument(doc),
+          onDelete: isOwner ? () => cubit.deleteDocument(doc.id) : null,
         );
       },
     );
