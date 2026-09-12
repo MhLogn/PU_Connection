@@ -75,6 +75,11 @@ class MockDocumentRepository implements DocumentRepository {
   }) async {
     return File('mock_path/$fileName');
   }
+
+  @override
+  Future<void> deleteDocument(String documentId) async {
+    _docs.removeWhere((d) => d.id == documentId);
+  }
 }
 
 void main() {
@@ -183,6 +188,13 @@ void main() {
       expect(cubit.state.searchQuery, 'Giải tích');
       expect(cubit.state.documents.length, 1);
       expect(cubit.state.documents.first.code, 'TOAN-101');
+    });
+
+    test('deleteDocument removes document from repository', () async {
+      await cubit.deleteDocument('doc_1');
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(cubit.state.successMessage, 'Đã xóa tài liệu thành công');
     });
   });
 }

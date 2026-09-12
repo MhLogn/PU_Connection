@@ -127,6 +127,19 @@ class DocumentCubit extends Cubit<DocumentState> {
     }
   }
 
+  Future<void> deleteDocument(String documentId) async {
+    try {
+      await _documentRepository.deleteDocument(documentId);
+      emit(state.copyWith(
+        successMessage: 'Đã xóa tài liệu thành công',
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        errorMessage: 'Lỗi khi xóa tài liệu: ${e.toString()}',
+      ));
+    }
+  }
+
   void clearMessages() {
     emit(state.copyWith(clearError: true, clearSuccess: true));
   }

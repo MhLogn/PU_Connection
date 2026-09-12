@@ -136,4 +136,10 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
     return File(filePath);
   }
+
+  @override
+  Future<void> deleteDocument(String documentId) async {
+    if (documentId.isEmpty) return;
+    await _docsRef.doc(documentId).delete();
+  }
 }
