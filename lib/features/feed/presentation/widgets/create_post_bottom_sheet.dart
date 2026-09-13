@@ -139,20 +139,38 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
     return Container(
       padding: EdgeInsets.only(
-        top: 20,
-        left: 16,
-        right: 16,
-        bottom: bottomInset + 16,
+        top: 10,
+        left: 18,
+        right: 18,
+        bottom: bottomInset + 18,
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.3 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -161,23 +179,34 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const Divider(),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
+              runSpacing: 6,
               children: _categories.map((cat) {
                 final isSelected = _selectedCategory == cat;
                 return ChoiceChip(
                   label: Text(categoryLabels[cat] ?? cat),
                   selected: isSelected,
-                  selectedColor: AppTheme.blueContainer(context),
+                  showCheckmark: false,
+                  selectedColor: AppTheme.primaryColor(context),
+                  backgroundColor: colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isSelected
+                          ? Colors.transparent
+                          : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
                   labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.primaryColor(context) : colorScheme.onSurface,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.8),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     fontSize: 12,
                   ),
                   onSelected: (selected) {
@@ -186,29 +215,54 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             TextField(
               controller: _subjectCodeController,
               decoration: InputDecoration(
                 hintText: 'Mã môn học (CNTT-225, CSDL-101)...',
-                prefixIcon: const Icon(Icons.menu_book_rounded, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                prefixIcon: Icon(Icons.menu_book_rounded, size: 19, color: AppTheme.primaryColor(context)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppTheme.primaryColor(context), width: 1.5),
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _contentController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: l10n.post_content_hint,
-                border: InputBorder.none,
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                controller: _contentController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: l10n.post_content_hint,
+                  hintStyle: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
             ),
             if (_selectedImages.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 80,
+                height: 84,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _selectedImages.length,
@@ -217,21 +271,21 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                     return Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.file(
                             _selectedImages[index],
-                            width: 80,
-                            height: 80,
+                            width: 84,
+                            height: 84,
                             fit: BoxFit.cover,
                           ),
                         ),
                         Positioned(
-                          top: 2,
-                          right: 2,
+                          top: 4,
+                          right: 4,
                           child: GestureDetector(
                             onTap: () => setState(() => _selectedImages.removeAt(index)),
                             child: const CircleAvatar(
-                              radius: 10,
+                              radius: 11,
                               backgroundColor: Colors.black54,
                               child: Icon(Icons.close, size: 14, color: Colors.white),
                             ),
@@ -244,15 +298,15 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               ),
             ],
             if (_selectedDocs.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Column(
                 children: _selectedDocs.map((doc) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.blueContainer(context),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
@@ -275,27 +329,39 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 }).toList(),
               ),
             ],
-            const SizedBox(height: 12),
-            const Divider(),
+            const SizedBox(height: 14),
             Row(
               children: [
-                IconButton(
+                IconButton.filledTonal(
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                    foregroundColor: AppTheme.primaryColor(context),
+                    padding: const EdgeInsets.all(10),
+                  ),
                   tooltip: l10n.attach_image,
-                  icon: Icon(Icons.photo_library_outlined, color: AppTheme.primaryColor(context)),
+                  icon: const Icon(Icons.photo_library_outlined, size: 20),
                   onPressed: _isUploading ? null : _pickImage,
                 ),
-                IconButton(
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppTheme.accentColor(context).withValues(alpha: 0.08),
+                    foregroundColor: AppTheme.accentColor(context),
+                    padding: const EdgeInsets.all(10),
+                  ),
                   tooltip: l10n.attach_file,
-                  icon: Icon(Icons.attach_file_rounded, color: AppTheme.accentColor(context)),
+                  icon: const Icon(Icons.attach_file_rounded, size: 20),
                   onPressed: _isUploading ? null : _pickDocument,
                 ),
                 const Spacer(),
                 ElevatedButton(
                   onPressed: _isUploading ? null : _submitPost,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor(context),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    backgroundColor: AppTheme.accentColor(context),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 1,
                   ),
                   child: _isUploading
                       ? const SizedBox(

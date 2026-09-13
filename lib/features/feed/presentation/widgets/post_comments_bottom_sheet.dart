@@ -367,19 +367,43 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _isSending ? null : _sendComment,
-                    icon: _isSending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: AppTheme.accentColor(context),
+                  GestureDetector(
+                    onTap: _isSending ? null : _sendComment,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.accentColor(context),
+                            const Color(0xFFFF9E45),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accentColor(context).withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
-                    tooltip: l10n.comment,
+                        ],
+                      ),
+                      child: Center(
+                        child: _isSending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(
+                                Icons.send_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                      ),
+                    ),
                   ),
                 ],
               ),

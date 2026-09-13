@@ -487,28 +487,38 @@ class _FeedPageState extends State<FeedPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
+                      color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.025),
+                      blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: AppTheme.isDark(context)
-                          ? AppTheme.darkBlueContainer
-                          : AppTheme.primaryBlue,
-                      child: Text(
-                        currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : 'P',
-                        style: TextStyle(
-                          color: AppTheme.isDark(context) ? AppTheme.darkPrimaryBlue : Colors.white,
-                          fontWeight: FontWeight.bold,
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryColor(context),
+                            AppTheme.primaryColor(context).withValues(alpha: 0.8),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : 'P',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -519,20 +529,41 @@ class _FeedPageState extends State<FeedPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
                             borderRadius: BorderRadius.circular(24),
                           ),
-                          child: Text(
-                            l10n.create_post_hint,
-                            style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.55), fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_note_rounded,
+                                size: 18,
+                                color: colorScheme.onSurface.withValues(alpha: 0.45),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.create_post_hint,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: Icon(Icons.image_outlined, color: AppTheme.primaryColor(context)),
+                    IconButton.filledTonal(
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                        foregroundColor: AppTheme.primaryColor(context),
+                        minimumSize: const Size(38, 38),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      icon: const Icon(Icons.image_outlined, size: 20),
                       tooltip: l10n.attach_image,
                       onPressed: _openCreatePost,
                     ),
@@ -568,12 +599,22 @@ class _FeedPageState extends State<FeedPage> {
                         return ChoiceChip(
                           label: Text(categoryMap[cat] ?? cat),
                           selected: isSelected,
+                          showCheckmark: false,
                           selectedColor: AppTheme.primaryColor(context),
+                          backgroundColor: colorScheme.surface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? Colors.transparent
+                                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
                           labelStyle: TextStyle(
                             color: isSelected
-                                ? (AppTheme.isDark(context) ? Colors.black87 : Colors.white)
-                                : colorScheme.onSurface,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ? Colors.white
+                                : colorScheme.onSurface.withValues(alpha: 0.8),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             fontSize: 12,
                           ),
                           onSelected: (selected) {
