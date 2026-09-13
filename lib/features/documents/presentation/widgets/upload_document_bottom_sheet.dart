@@ -178,16 +178,34 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
     final keyboardBottom = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + keyboardBottom),
+      padding: EdgeInsets.fromLTRB(20, 10, 20, 20 + keyboardBottom),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.3 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
