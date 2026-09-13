@@ -103,29 +103,40 @@ class _DocsHubPageState extends State<DocsHubPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => cubit.search(val),
-                    decoration: InputDecoration(
-                      hintText: l10n.search_docs_hint,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                cubit.search('');
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: colorScheme.surface,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => cubit.search(val),
+                      decoration: InputDecoration(
+                        hintText: l10n.search_docs_hint,
+                        hintStyle: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                        prefixIcon: Icon(Icons.search_rounded, color: AppTheme.primaryColor(context), size: 22),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  cubit.search('');
+                                },
+                              )
+                            : null,
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                       ),
                     ),
                   ),
@@ -144,12 +155,22 @@ class _DocsHubPageState extends State<DocsHubPage> {
                       return ChoiceChip(
                         label: Text(faculty == 'Tất cả' ? l10n.all_courses : faculty),
                         selected: isSelected,
+                        showCheckmark: false,
                         selectedColor: AppTheme.primaryColor(context),
+                        backgroundColor: colorScheme.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected
+                                ? Colors.transparent
+                                : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                          ),
+                        ),
                         labelStyle: TextStyle(
                           color: isSelected
-                              ? (AppTheme.isDark(context) ? Colors.black87 : Colors.white)
-                              : colorScheme.onSurface,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ? Colors.white
+                              : colorScheme.onSurface.withValues(alpha: 0.8),
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           fontSize: 12,
                         ),
                         onSelected: (val) {
