@@ -61,16 +61,22 @@ class PostCard extends StatelessWidget {
         ? timeago.format(post.createdAt!, locale: localeCode)
         : (localeCode == 'vi' ? 'Vừa xong' : 'Just now');
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.025),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      color: colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -312,19 +318,57 @@ class PostCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (images.isNotEmpty) ...[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: images.first.url,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 200,
-              placeholder: (_, __) => Container(
-                height: 200,
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                child: const Center(child: CircularProgressIndicator()),
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.all(12),
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: InteractiveViewer(
+                          child: CachedNetworkImage(
+                            imageUrl: images.first.url,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black54,
+                          radius: 18,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: CachedNetworkImage(
+                imageUrl: images.first.url,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 210,
+                placeholder: (_, __) => Container(
+                  height: 210,
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (_, __, ___) => const SizedBox.shrink(),
               ),
-              errorWidget: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
           const SizedBox(height: 6),
