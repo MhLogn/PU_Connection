@@ -13,6 +13,9 @@ import '../../features/feed/presentation/cubit/feed_cubit.dart';
 import '../../features/documents/domain/repositories/document_repository.dart';
 import '../../features/documents/data/repositories/document_repository_impl.dart';
 import '../../features/documents/presentation/cubit/document_cubit.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/presentation/cubit/chat_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -41,5 +44,8 @@ Future<void> initDI() async {
   sl.registerFactory(() => DocumentCubit(
         documentRepository: sl(),
       ));
+
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl());
+  sl.registerFactory(() => ChatCubit(chatRepository: sl()));
 }
 

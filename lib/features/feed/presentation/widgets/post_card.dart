@@ -12,6 +12,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onCommentPressed;
   final VoidCallback? onSharePressed;
   final VoidCallback? onDeletePressed;
+  final VoidCallback? onChatPressed;
 
   const PostCard({
     super.key,
@@ -21,6 +22,7 @@ class PostCard extends StatelessWidget {
     this.onCommentPressed,
     this.onSharePressed,
     this.onDeletePressed,
+    this.onChatPressed,
   });
 
   Color _getCategoryColor(BuildContext context, String category) {
@@ -104,15 +106,15 @@ class PostCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Icon(
                             Icons.verified_rounded,
-                            size: 15,
+                            size: 14,
                             color: AppTheme.primaryColor(context),
                           ),
                           if (post.authorStudentId.isNotEmpty) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 4),
                             Text(
                               '• ${post.authorStudentId}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: colorScheme.onSurface.withValues(alpha: 0.55),
                               ),
                             ),
@@ -123,12 +125,16 @@ class PostCard extends StatelessWidget {
                       Row(
                         children: [
                           if (post.authorFaculty.isNotEmpty) ...[
-                            Text(
-                              post.authorFaculty,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.primaryColor(context),
-                                fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Text(
+                                post.authorFaculty,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.primaryColor(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Text(' • ', style: TextStyle(fontSize: 11, color: colorScheme.outline)),
@@ -142,14 +148,18 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  constraints: const BoxConstraints(maxWidth: 110),
                   decoration: BoxDecoration(
                     color: _getCategoryBg(context, post.category),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     post.category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -180,6 +190,15 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ] else if (onChatPressed != null) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: colorScheme.outline),
+                    tooltip: 'Nhắn tin cho tác giả',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: onChatPressed,
                   ),
                 ],
               ],

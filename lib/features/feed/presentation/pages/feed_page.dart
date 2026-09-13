@@ -13,6 +13,9 @@ import '../cubit/feed_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/create_post_bottom_sheet.dart';
 import '../widgets/post_comments_bottom_sheet.dart';
+import '../../../chat/presentation/pages/conversations_page.dart';
+import '../../../chat/presentation/pages/chat_detail_page.dart';
+import '../../../chat/presentation/cubit/chat_cubit.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -61,7 +64,11 @@ class _FeedPageState extends State<FeedPage> {
   @override
   void initState() {
     super.initState();
-    context.read<FeedCubit>().loadFeed();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<FeedCubit>().loadFeed();
+      }
+    });
   }
 
   @override
@@ -414,6 +421,16 @@ class _FeedPageState extends State<FeedPage> {
             },
           ),
           IconButton(
+            icon: const Icon(Icons.forum_outlined, color: Colors.white),
+            tooltip: 'Tin nhắn',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ConversationsPage()),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
             tooltip: l10n.notifications,
             onPressed: () => _showNotificationsModal(context),
@@ -721,6 +738,39 @@ class _FeedPageState extends State<FeedPage> {
                               ),
                             );
                           },
+                          onChatPressed: (!isOwner && post.authorId.isNotEmpty && currentUserId.isNotEmpty)
+                              ? () async {
+                                  try {
+                                    final convId = await context.read<ChatCubit>().startDirectChat(
+                                          currentUserId: currentUserId,
+                                          currentUserName: currentUserName,
+                                          otherUserId: post.authorId,
+                                          otherUserName: post.authorName,
+                                          otherUserFaculty: post.authorFaculty,
+                                        );
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ChatDetailPage(
+                                            conversationId: convId,
+                                            otherUserId: post.authorId,
+                                            otherUserName: post.authorName,
+                                            otherUserFaculty: post.authorFaculty,
+                                            participantIds: [currentUserId, post.authorId]..sort(),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Không thể mở cuộc trò chuyện: $e')),
+                                      );
+                                    }
+                                  }
+                                }
+                              : null,
                           onDeletePressed: isOwner
                               ? () async {
                                   try {

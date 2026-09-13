@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pu_connection/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
@@ -11,11 +13,19 @@ import 'core/di/injection_container.dart';
 import 'core/routes/app_router.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/feed/presentation/cubit/feed_cubit.dart';
+import 'features/chat/presentation/cubit/chat_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  timeago.setLocaleMessages('vi', timeago.ViMessages());
+  timeago.setLocaleMessages('vi_short', timeago.ViShortMessages());
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  try {
+    FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
+  } catch (_) {}
 
   await initDI();
 
@@ -33,6 +43,7 @@ class PUConnectionApp extends StatelessWidget {
         BlocProvider(create: (_) => sl<LocaleCubit>()),
         BlocProvider(create: (_) => sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<FeedCubit>()),
+        BlocProvider(create: (_) => sl<ChatCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
