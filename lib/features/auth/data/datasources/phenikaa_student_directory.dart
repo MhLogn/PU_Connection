@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/constants/firebase_constants.dart';
 import '../models/phenikaa_student_model.dart';
 
 class PhenikaaStudentDirectory {
@@ -104,16 +102,4 @@ class PhenikaaStudentDirectory {
       isActivated: false,
     ),
   ];
-
-  static Future<void> seedStudentsIfEmpty(FirebaseFirestore firestore) async {
-    try {
-      final colRef = firestore.collection(FirebaseConstants.phenikaaStudentsCollection);
-      final snapshot = await colRef.limit(1).get();
-      if (snapshot.docs.isEmpty) {
-        for (final student in defaultStudents) {
-          await colRef.doc(student.studentId).set(student.toMap());
-        }
-      }
-    } catch (_) {}
-  }
 }

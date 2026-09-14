@@ -89,6 +89,7 @@ class _DocsHubPageState extends State<DocsHubPage> {
             onPressed: () => UploadDocumentBottomSheet.show(context),
             backgroundColor: AppTheme.accentColor(context),
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: const Icon(Icons.add_rounded),
             label: Text(
               l10n.contribute_doc_btn,

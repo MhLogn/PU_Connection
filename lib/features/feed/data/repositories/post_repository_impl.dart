@@ -20,18 +20,32 @@ class PostRepositoryImpl implements PostRepository {
     String? subjectCode,
     String? category,
   }) {
-    Query query = _postsRef.orderBy('createdAt', descending: true).limit(50);
+    return _postsRef
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map((snapshot) {
+      var posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
 
-    if (category != null && category != 'Tất cả') {
-      query = query.where('category', isEqualTo: category);
-    }
+      if (category != null && category.isNotEmpty && category != 'Tất cả') {
+        posts = posts.where((p) => p.category == category).toList();
+      }
 
-    if (subjectCode != null && subjectCode.isNotEmpty) {
-      query = query.where('subjectCode', isEqualTo: subjectCode);
-    }
+      if (subjectCode != null && subjectCode.isNotEmpty) {
+        posts = posts
+            .where((p) =>
+                p.subjectCode != null &&
+                p.subjectCode!.toLowerCase() == subjectCode.toLowerCase())
+            .toList();
+      }
 
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+      if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
+        posts = posts
+            .where((p) => p.authorFaculty.toLowerCase() == faculty.toLowerCase())
+            .toList();
+      }
+
+      return posts;
     });
   }
 

@@ -169,7 +169,7 @@ class AppTheme {
         backgroundColor: orangeAccent,
         foregroundColor: white,
         elevation: 3,
-        shape: CircleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: orangeAccent),
     );
@@ -275,7 +275,7 @@ class AppTheme {
         backgroundColor: darkOrangeAccent,
         foregroundColor: Colors.white,
         elevation: 3,
-        shape: CircleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: darkOrangeAccent),
     );

@@ -29,16 +29,14 @@ class DocumentRepositoryImpl implements DocumentRepository {
     String? faculty,
     String? searchQuery,
   }) {
-    Query query = _docsRef.orderBy('createdAt', descending: true);
-
-    if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
-      query = query.where('faculty', isEqualTo: faculty);
-    }
-
-    return query.snapshots().map((snapshot) {
+    return _docsRef.orderBy('createdAt', descending: true).snapshots().map((snapshot) {
       var list = snapshot.docs
           .map((doc) => DocumentModel.fromFirestore(doc))
           .toList();
+
+      if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
+        list = list.where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase()).toList();
+      }
 
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
         final q = searchQuery.trim().toLowerCase();

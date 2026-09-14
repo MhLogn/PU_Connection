@@ -209,15 +209,20 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.file_upload_rounded, color: AppTheme.accentColor(context), size: 24),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.contribute_dialog_title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.file_upload_rounded, color: AppTheme.accentColor(context), size: 24),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.contribute_dialog_title,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),

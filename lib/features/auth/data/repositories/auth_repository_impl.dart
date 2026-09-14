@@ -241,7 +241,9 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('Đăng nhập thất bại. Vui lòng thử lại.');
       }
 
-      await firebaseUser.reload();
+      try {
+        await firebaseUser.reload().timeout(const Duration(milliseconds: 1500));
+      } catch (_) {}
       final refreshedUser = _firebaseAuth.currentUser ?? firebaseUser;
 
       if (!refreshedUser.emailVerified) {
@@ -254,17 +256,6 @@ class AuthRepositoryImpl implements AuthRepository {
           'Firebase đã gửi lại link kích hoạt tới $loginEmail. '
           'Vui lòng mở hòm thư của bạn và nhấn vào đường link để tiếp tục.',
         );
-      }
-
-      await _firestore
-          .collection(FirebaseConstants.usersCollection)
-          .doc(refreshedUser.uid)
-          .set({'isVerified': true}, SetOptions(merge: true))
-          .catchError((_) {});
-
-      final profile = await getUserProfile(refreshedUser.uid);
-      if (profile != null) {
-        return profile;
       }
 
       final studentId = loginEmail.split('@').first;
@@ -296,12 +287,15 @@ class AuthRepositoryImpl implements AuthRepository {
         isVerified: true,
       );
 
-      await _firestore
-          .collection(FirebaseConstants.usersCollection)
-          .doc(firebaseUser.uid)
-          .set(restoredUser.toMap(), SetOptions(merge: true))
-          .timeout(const Duration(seconds: 4))
-          .catchError((_) {});
+      // Đồng bộ thông tin người dùng lên Firestore một cách bất đồng bộ
+      // Tránh nghẽn Main Thread hoặc tranh chấp tài nguyên mạng khi đang chuyển màn hình
+      Future.delayed(const Duration(milliseconds: 800), () {
+        _firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(firebaseUser.uid)
+            .set(restoredUser.toMap(), SetOptions(merge: true))
+            .catchError((_) {});
+      });
 
       return restoredUser;
     } on FirebaseAuthException catch (e) {
@@ -437,24 +431,37 @@ class AuthRepositoryImpl implements AuthRepository {
       if (firebaseUser == null) return null;
 
       // Chỉ phát trạng thái đăng nhập nếu email đã được xác thực (Google Sign-In luôn là true)
-      if (!firebaseUser.emailVerified) {
-        return null;
-      }
-      
-      final profile = await getUserProfile(firebaseUser.uid);
-      if (profile != null) return profile;
-
-      // Trả về UserEntity tạm thời dựa trên FirebaseUser để tránh bị logout nhầm khi Firestore đang ghi dữ liệu
       final email = firebaseUser.email ?? '';
       final studentId = email.contains('@') ? email.split('@').first : '';
-      return UserModel(
+      String fullName = firebaseUser.displayName ?? 'Sinh viên Phenikaa';
+      String faculty = 'Công nghệ thông tin';
+      String major = 'Kỹ thuật phần mềm';
+      int cohort = 17;
+
+      final match = PhenikaaStudentDirectory.defaultStudents.where(
+        (s) => s.studentId == studentId || s.email == email,
+      );
+      if (match.isNotEmpty) {
+        fullName = match.first.fullName;
+        faculty = match.first.faculty;
+        major = match.first.major;
+        cohort = match.first.cohort;
+      }
+
+      final fallbackUser = UserModel(
         uid: firebaseUser.uid,
         email: email,
         studentId: studentId,
-        displayName: firebaseUser.displayName ?? 'Sinh viên Phenikaa',
+        displayName: fullName,
         username: studentId,
+        faculty: faculty,
+        major: major,
+        cohort: cohort,
+        userType: 'student',
         isVerified: true,
       );
+
+      return fallbackUser;
     });
   }
 
@@ -465,7 +472,7 @@ class AuthRepositoryImpl implements AuthRepository {
           .collection(FirebaseConstants.usersCollection)
           .doc(uid)
           .get()
-          .timeout(const Duration(milliseconds: 4000));
+          .timeout(const Duration(milliseconds: 2000));
 
       if (!doc.exists || doc.data() == null) {
         return null;

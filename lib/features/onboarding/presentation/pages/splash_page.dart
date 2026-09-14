@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -34,7 +35,19 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     );
 
     _animController.forward();
+    _warmUpFirestore();
     _navigateNext();
+  }
+
+  void _warmUpFirestore() {
+    Future.microtask(() async {
+      try {
+        await FirebaseFirestore.instance
+            .collection('health_check')
+            .doc('ping')
+            .get(const GetOptions(source: Source.cache));
+      } catch (_) {}
+    });
   }
 
   @override
@@ -44,7 +57,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Future<void> _navigateNext() async {
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 1200));
 
     if (!mounted) return;
 
@@ -52,9 +65,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await user.reload();
-        final refreshedUser = FirebaseAuth.instance.currentUser;
-        isAuthenticated = refreshedUser != null && refreshedUser.emailVerified;
+        try {
+          await user.reload().timeout(const Duration(milliseconds: 1500));
+        } catch (_) {}
+        final refreshedUser = FirebaseAuth.instance.currentUser ?? user;
+        isAuthenticated = refreshedUser.emailVerified;
       }
     } catch (_) {}
 
@@ -156,28 +171,16 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
             right: 0,
             child: FadeTransition(
               opacity: _fadeAnim,
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppTheme.primaryColor(context),
-                      ),
-                    ),
+              child: Center(
+                child: Text(
+                  AppLocalizations.of(context)?.student_slogan ?? 'Kết nối tri thức • Tương lai vững bước',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                    color: colorScheme.onSurface.withValues(alpha: 0.45),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context)?.student_slogan ?? 'Kết nối tri thức • Tương lai vững bước',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

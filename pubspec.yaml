@@ -64,8 +64,6 @@ dependencies:
   cached_network_image: ^3.4.1
   timeago: ^3.7.0
 
-  # Push Notifications (FCM - 100% Free)
-  firebase_messaging: ^16.6.0
 
 dependency_overrides:
   firebase_core_web: 3.10.0

@@ -7,7 +7,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/database_seeder.dart';
 import '../../../../core/services/gemini_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../feed/presentation/pages/feed_page.dart';
@@ -27,23 +26,7 @@ class MainNavigationPage extends StatefulWidget {
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoSeedData();
-    });
-  }
-
-  void _autoSeedData() {
-    final authState = context.read<AuthCubit>().state;
-    UserEntity? user;
-    if (authState is Authenticated) {
-      user = authState.user;
-    }
-    DatabaseSeeder.seedAllData(currentUser: user);
-  }
+  final Set<int> _loadedTabs = {0};
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +36,15 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
     final List<Widget> pages = [
       const FeedPage(),
-      BlocProvider(
-        create: (_) => sl<DocumentCubit>(),
-        child: const DocsHubPage(),
-      ),
-      const _PuBotChatView(),
-      const _ClubsCommunityView(),
-      const _StudentProfileView(),
+      _loadedTabs.contains(1)
+          ? BlocProvider(
+              create: (_) => sl<DocumentCubit>(),
+              child: const DocsHubPage(),
+            )
+          : const SizedBox.shrink(),
+      _loadedTabs.contains(2) ? const _PuBotChatView() : const SizedBox.shrink(),
+      _loadedTabs.contains(3) ? const _ClubsCommunityView() : const SizedBox.shrink(),
+      _loadedTabs.contains(4) ? const _StudentProfileView() : const SizedBox.shrink(),
     ];
 
     return Scaffold(
@@ -80,7 +65,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
-          onDestinationSelected: (index) => setState(() => _currentIndex = index),
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+              _loadedTabs.add(index);
+            });
+          },
           backgroundColor: Colors.transparent,
           indicatorColor: AppTheme.blueContainer(context),
           elevation: 0,
@@ -401,7 +391,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
             ),
           ],
           SizedBox(
-            height: 40,
+            height: 38,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
@@ -409,12 +399,32 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final suggestion = suggestions[index];
-                return ActionChip(
-                  label: Text(suggestion, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                  backgroundColor: colorScheme.surface,
-                  side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.25)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  onPressed: () => _sendMessage(suggestion),
+                return InkWell(
+                  onTap: () => _sendMessage(suggestion),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.isDark(context)
+                          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
+                          : AppTheme.blueContainer(context),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.primaryColor(context).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      suggestion,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.isDark(context)
+                            ? colorScheme.onSurface
+                            : AppTheme.primaryColor(context),
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
