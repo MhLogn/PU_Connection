@@ -382,36 +382,80 @@ class _FeedPageState extends State<FeedPage> {
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
         title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                cursorColor: Colors.white,
-                decoration: InputDecoration(
-                  hintText: l10n.search_posts_hint,
-                  hintStyle: const TextStyle(color: Colors.white70, fontSize: 13.5),
-                  border: InputBorder.none,
+            ? Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppTheme.isDark(context) ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.isDark(context) ? Colors.white10 : AppTheme.borderLight,
+                    width: 1,
+                  ),
                 ),
-                onChanged: (_) => setState(() {}),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+                    cursorColor: AppTheme.oceanBlue,
+                    decoration: InputDecoration(
+                      hintText: l10n.search_posts_hint,
+                      hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      icon: Icon(Icons.search_rounded, size: 18, color: AppTheme.oceanBlue),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
               )
             : Row(
                 children: [
-                  Image.asset(
-                    'assets/logo/phenikaa_logo.png',
-                    width: 32,
-                    height: 32,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Colors.white, size: 28),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppTheme.oceanToOrangeGradient,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colorScheme.surface,
+                      ),
+                      child: Image.asset(
+                        'assets/logo/phenikaa_logo.png',
+                        width: 28,
+                        height: 28,
+                        errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 24),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'PU Connection',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                  const SizedBox(width: 10),
+                  ShaderMask(
+                    shaderCallback: (bounds) => AppTheme.oceanToOrangeGradient.createShader(bounds),
+                    child: const Text(
+                      'PU Connection',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                        color: Colors.white,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
                   ),
                 ],
               ),
         actions: [
           IconButton(
-            icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded, color: Colors.white),
+            icon: Icon(
+              _isSearching ? Icons.close_rounded : Icons.search_rounded,
+              color: colorScheme.onSurface,
+            ),
             tooltip: _isSearching ? l10n.close : l10n.search,
             onPressed: () {
               setState(() {
@@ -420,27 +464,48 @@ class _FeedPageState extends State<FeedPage> {
               });
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.forum_outlined, color: Colors.white),
-            tooltip: 'Tin nhắn',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ConversationsPage()),
-              );
-            },
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: Icon(Icons.forum_outlined, color: colorScheme.onSurface),
+                tooltip: 'Tin nhắn',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ConversationsPage()),
+                  );
+                },
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.orangeAccent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+            icon: Icon(Icons.notifications_none_rounded, color: colorScheme.onSurface),
             tooltip: l10n.notifications,
             onPressed: () => _showNotificationsModal(context),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _openCreatePost,
         backgroundColor: AppTheme.orangeAccent,
-        child: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 28),
+        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+        label: const Text(
+          'Đăng bài',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async => context.read<FeedCubit>().loadFeed(),
@@ -449,7 +514,7 @@ class _FeedPageState extends State<FeedPage> {
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 4),
-                height: 90,
+                height: 94,
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   scrollDirection: Axis.horizontal,
@@ -464,28 +529,33 @@ class _FeedPageState extends State<FeedPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [color, color.withValues(alpha: 0.6)],
+                              gradient: AppTheme.oceanToOrangeGradient,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colorScheme.surface,
+                              ),
+                              child: CircleAvatar(
+                                radius: 25,
+                                backgroundColor: color.withValues(alpha: 0.12),
+                                child: Icon(item['icon'] as IconData, color: color, size: 24),
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 26,
-                              backgroundColor: colorScheme.surface,
-                              child: Icon(item['icon'] as IconData, color: color, size: 26),
-                            ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 5),
                           SizedBox(
-                            width: 68,
+                            width: 72,
                             child: Text(
                               item['title'] as String,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface.withValues(alpha: 0.8),
+                                color: colorScheme.onSurface.withValues(alpha: 0.85),
                               ),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
@@ -504,37 +574,46 @@ class _FeedPageState extends State<FeedPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.isDark(context)
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+                        : AppTheme.borderLight,
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.025),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+                      color: AppTheme.isDark(context)
+                          ? Colors.black.withValues(alpha: 0.25)
+                          : const Color(0xFF0284C7).withValues(alpha: 0.035),
+                      blurRadius: 14,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryColor(context),
-                            AppTheme.primaryColor(context).withValues(alpha: 0.8),
-                          ],
-                        ),
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
+                        gradient: AppTheme.oceanToOrangeGradient,
                       ),
-                      child: Center(
-                        child: Text(
-                          currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : 'P',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.primaryColor(context),
+                        ),
+                        child: Center(
+                          child: Text(
+                            currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : 'P',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                       ),
@@ -546,7 +625,9 @@ class _FeedPageState extends State<FeedPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                            color: AppTheme.isDark(context)
+                                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                                : AppTheme.borderSubtle,
                             borderRadius: BorderRadius.circular(24),
                           ),
                           child: Row(
@@ -603,7 +684,7 @@ class _FeedPageState extends State<FeedPage> {
                   };
 
                   return SizedBox(
-                    height: 44,
+                    height: 42,
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       scrollDirection: Axis.horizontal,
@@ -613,32 +694,58 @@ class _FeedPageState extends State<FeedPage> {
                         final cat = _filterCategories[index];
                         final isSelected = cat == selectedCategory;
 
-                        return ChoiceChip(
-                          label: Text(categoryMap[cat] ?? cat),
-                          selected: isSelected,
-                          showCheckmark: false,
-                          selectedColor: AppTheme.primaryColor(context),
-                          backgroundColor: colorScheme.surface,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? Colors.transparent
-                                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        return GestureDetector(
+                          onTap: () => context.read<FeedCubit>().filterByCategory(cat),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: isSelected ? AppTheme.oceanGradient : null,
+                              color: isSelected ? null : colorScheme.surface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.transparent
+                                    : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                                width: 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.oceanBlue.withValues(alpha: 0.28),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.orangeAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                Text(
+                                  categoryMap[cat] ?? cat,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : colorScheme.onSurface.withValues(alpha: 0.8),
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          labelStyle: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : colorScheme.onSurface.withValues(alpha: 0.8),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                          onSelected: (selected) {
-                            if (selected) {
-                              context.read<FeedCubit>().filterByCategory(cat);
-                            }
-                          },
                         );
                       },
                     ),

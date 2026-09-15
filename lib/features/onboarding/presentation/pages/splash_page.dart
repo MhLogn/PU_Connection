@@ -135,13 +135,16 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'PU Connection',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: AppTheme.primaryColor(context),
+                    ShaderMask(
+                      shaderCallback: (bounds) => AppTheme.oceanToOrangeGradient.createShader(bounds),
+                      child: const Text(
+                        'PU Connection',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),

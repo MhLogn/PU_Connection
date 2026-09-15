@@ -55,9 +55,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: AppTheme.isDark(context)
+                  ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+                  : AppTheme.borderLight,
+              width: 1,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.3 : 0.05),
+              color: AppTheme.isDark(context)
+                  ? Colors.black.withValues(alpha: 0.35)
+                  : const Color(0xFF0284C7).withValues(alpha: 0.05),
               blurRadius: 16,
               offset: const Offset(0, -3),
             ),
@@ -240,8 +250,8 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: AppTheme.isDark(context)
-                              ? [const Color(0xFF1E3A8A), const Color(0xFF2563EB)]
-                              : [const Color(0xFF203864), const Color(0xFF2E5088)],
+                              ? [const Color(0xFF0C4A6E), const Color(0xFF0284C7)]
+                              : [const Color(0xFF0284C7), const Color(0xFF0369A1)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -517,7 +527,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
       'members': 480,
       'isJoined': true,
       'desc': 'Cộng đồng đam mê lập trình phần mềm, an toàn thông tin & AI trường Phenikaa.',
-      'color': 0xFF203864,
+      'color': 0xFF0284C7,
     },
     {
       'name': 'Phenikaa English Club (PEC)',
@@ -525,7 +535,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
       'members': 620,
       'isJoined': false,
       'desc': 'Môi trường giao tiếp tiếng Anh tự tin, workshop IELTS và săn học bổng du học.',
-      'color': 0xFF203864,
+      'color': 0xFF0284C7,
     },
     {
       'name': 'Phenikaa Guitar Club (PGC)',
@@ -533,7 +543,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
       'members': 350,
       'isJoined': false,
       'desc': 'Nơi hội tụ những tâm hồn yêu âm nhạc acoustic, biểu diễn trong các đêm gala trường.',
-      'color': 0xFFF76B1C,
+      'color': 0xFFFF7A00,
     },
     {
       'name': 'Phenikaa Basketball Club',
@@ -541,7 +551,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
       'members': 290,
       'isJoined': false,
       'desc': 'Luyện tập thể lực, thi đấu giao hữu các giải bóng rổ sinh viên toàn Hà Nội.',
-      'color': 0xFF203864,
+      'color': 0xFF0284C7,
     },
     {
       'name': 'Đội Sinh Viên Tình Nguyện PU',
@@ -860,7 +870,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                       'members': (data['membersCount'] as num?)?.toInt() ?? membersList.length,
                       'isJoined': currentUserId.isNotEmpty && membersList.contains(currentUserId),
                       'desc': data['desc'] ?? '',
-                      'color': (data['color'] as num?)?.toInt() ?? 0xFF203864,
+                      'color': (data['color'] as num?)?.toInt() ?? 0xFF0284C7,
                     };
                   }).toList();
                 }
@@ -1090,18 +1100,20 @@ class _StudentProfileView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF16294A), Color(0xFF203864), Color(0xFF2E5088)],
+          colors: [Color(0xFF0369A1), Color(0xFF0284C7), Color(0xFF0C4A6E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.isDark(context) ? Colors.black45 : AppTheme.navyBlue.withValues(alpha: 0.28),
-            blurRadius: 18,
+            color: AppTheme.isDark(context)
+                ? Colors.black54
+                : const Color(0xFF0284C7).withValues(alpha: 0.35),
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
@@ -1556,11 +1568,11 @@ class _StudentProfileView extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.qr_code_2_rounded, size: 160, color: Color(0xFF203864)),
+                  const Icon(Icons.qr_code_2_rounded, size: 160, color: AppTheme.oceanBlue),
                   const SizedBox(height: 8),
                   Text(
                     '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '23010390'}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF203864)),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.oceanBlue),
                   ),
                 ],
               ),

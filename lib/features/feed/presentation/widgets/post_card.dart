@@ -67,13 +67,20 @@ class PostCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.isDark(context)
+              ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+              : AppTheme.borderLight,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.025),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: AppTheme.isDark(context)
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFF0284C7).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -289,40 +296,58 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context, String avatarUrl, String name) {
-    if (avatarUrl.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: CachedNetworkImage(
-          imageUrl: avatarUrl,
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => CircleAvatar(
-            radius: 20,
-            backgroundColor: AppTheme.blueContainer(context),
-            child: Icon(Icons.person, size: 20, color: AppTheme.primaryColor(context)),
-          ),
-          errorWidget: (_, __, ___) => _buildInitialsAvatar(context, name),
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppTheme.oceanToOrangeGradient,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).colorScheme.surface,
         ),
-      );
-    }
-    return _buildInitialsAvatar(context, name);
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: avatarUrl.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: avatarUrl,
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => CircleAvatar(
+                    radius: 19,
+                    backgroundColor: AppTheme.blueContainer(context),
+                    child: Icon(Icons.person, size: 19, color: AppTheme.primaryColor(context)),
+                  ),
+                  errorWidget: (_, __, ___) => _buildInitialsAvatar(context, name),
+                )
+              : _buildInitialsAvatar(context, name),
+        ),
+      ),
+    );
   }
 
   Widget _buildInitialsAvatar(BuildContext context, String name) {
     final initials = name.trim().isNotEmpty
         ? name.trim().split(' ').last.substring(0, 1).toUpperCase()
         : 'P';
-    final isDark = AppTheme.isDark(context);
-    return CircleAvatar(
-      radius: 20,
-      backgroundColor: isDark ? AppTheme.darkBlueContainer : AppTheme.primaryBlue,
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: isDark ? AppTheme.darkPrimaryBlue : Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppTheme.oceanGradient,
+      ),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
         ),
       ),
     );

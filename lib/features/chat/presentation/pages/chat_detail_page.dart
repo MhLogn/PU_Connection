@@ -245,18 +245,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            gradient: isMe
-                ? const LinearGradient(
-                    colors: [Color(0xFF203864), Color(0xFF2E5088)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            gradient: isMe ? AppTheme.oceanGradient : null,
             color: isMe
                 ? null
                 : (isDark
                     ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-                    : const Color(0xFFF1F3F5)),
+                    : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(18),
               topRight: const Radius.circular(18),

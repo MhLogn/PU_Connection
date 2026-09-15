@@ -144,7 +144,7 @@ class _DocsHubPageState extends State<DocsHubPage> {
                 ),
 
                 SizedBox(
-                  height: 44,
+                  height: 42,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     scrollDirection: Axis.horizontal,
@@ -153,30 +153,58 @@ class _DocsHubPageState extends State<DocsHubPage> {
                     itemBuilder: (context, index) {
                       final faculty = _faculties[index];
                       final isSelected = faculty == state.selectedFaculty;
-                      return ChoiceChip(
-                        label: Text(faculty == 'Tất cả' ? l10n.all_courses : faculty),
-                        selected: isSelected,
-                        showCheckmark: false,
-                        selectedColor: AppTheme.primaryColor(context),
-                        backgroundColor: colorScheme.surface,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: isSelected
-                                ? Colors.transparent
-                                : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      return GestureDetector(
+                        onTap: () => cubit.filterByFaculty(faculty),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: isSelected ? AppTheme.oceanGradient : null,
+                            color: isSelected ? null : colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.transparent
+                                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                              width: 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppTheme.oceanBlue.withValues(alpha: 0.28),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isSelected) ...[
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.orangeAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                faculty == 'Tất cả' ? l10n.all_courses : faculty,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : colorScheme.onSurface.withValues(alpha: 0.8),
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : colorScheme.onSurface.withValues(alpha: 0.8),
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                        onSelected: (val) {
-                          if (val) cubit.filterByFaculty(faculty);
-                        },
                       );
                     },
                   ),
