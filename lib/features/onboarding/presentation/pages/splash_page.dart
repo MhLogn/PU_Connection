@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -57,7 +58,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Future<void> _navigateNext() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 3000));
 
     if (!mounted) return;
 
@@ -73,9 +74,17 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       }
     } catch (_) {}
 
+    bool hasSeenIntro = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      hasSeenIntro = prefs.getBool('has_seen_intro') ?? false;
+    } catch (_) {}
+
     if (mounted) {
       if (isAuthenticated) {
         context.go('/home');
+      } else if (hasSeenIntro) {
+        context.go('/login');
       } else {
         context.go('/intro');
       }
@@ -176,7 +185,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
               opacity: _fadeAnim,
               child: Center(
                 child: Text(
-                  AppLocalizations.of(context)?.student_slogan ?? 'Kết nối tri thức • Tương lai vững bước',
+                  AppLocalizations.of(context)?.student_slogan ?? 'Tôn trọng – Sáng tạo – Phản biện',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,

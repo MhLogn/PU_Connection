@@ -160,14 +160,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get student_email_label => 'Student Email or Student ID';
 
   @override
-  String get student_email_hint =>
-      'E.g.: 23010390 or 23010390@st.phenikaa-uni.edu.vn';
+  String get student_email_hint => 'E.g.: 23010390 or student email';
 
   @override
   String get password_label => 'Password';
 
   @override
   String get password_hint => 'Enter your password';
+
+  @override
+  String get valid_password => 'Valid password';
 
   @override
   String get forgot_password => 'Forgot password?';
@@ -504,8 +506,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get university_name => 'PHENIKAA UNIVERSITY';
 
   @override
-  String get student_slogan =>
-      'Connecting Knowledge • Stepping into the Future';
+  String get student_slogan => 'Respect – Innovation – Critical Thinking';
 
   @override
   String get student_network => 'Phenikaa Student Social Network';

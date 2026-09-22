@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/localization/locale_cubit.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/phenikaa_student_entity.dart';
 import '../cubit/auth_cubit.dart';
@@ -32,16 +34,39 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   bool _obscureNewPassword = true;
 
   int _activationStep = 1;
+  String? _signInEmailError;
+  String? _signInPasswordError;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _signInEmailController.addListener(_onEmailChanged);
+    _signInPasswordController.addListener(_onPasswordChanged);
+    _newPasswordController.addListener(_onPasswordChanged);
+    _confirmPasswordController.addListener(_onPasswordChanged);
+  }
+
+  void _onEmailChanged() {
+    if (_signInEmailError != null) {
+      setState(() => _signInEmailError = null);
+    }
+  }
+
+  void _onPasswordChanged() {
+    if (_signInPasswordError != null) {
+      setState(() => _signInPasswordError = null);
+    }
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _signInEmailController.removeListener(_onEmailChanged);
+    _signInPasswordController.removeListener(_onPasswordChanged);
+    _newPasswordController.removeListener(_onPasswordChanged);
+    _confirmPasswordController.removeListener(_onPasswordChanged);
     _signInEmailController.dispose();
     _signInPasswordController.dispose();
     _activationIdentifierController.dispose();
@@ -51,6 +76,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   void _onSignInSubmitted() {
+    setState(() {
+      _signInEmailError = null;
+      _signInPasswordError = null;
+    });
     if (_signInFormKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().signIn(
             email: _signInEmailController.text.trim(),
@@ -141,9 +170,31 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          _buildLanguageToggleButton(context),
+        ],
+      ),
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
+            final msg = state.message;
+            if (msg.toLowerCase().contains('chưa kích hoạt') ||
+                msg.toLowerCase().contains('chưa được kích hoạt') ||
+                msg.toLowerCase().contains('không tồn tại')) {
+              setState(() {
+                _signInEmailError = 'Tài khoản chưa kích hoạt';
+              });
+            } else if (msg.toLowerCase().contains('mật khẩu sai') ||
+                msg.toLowerCase().contains('không chính xác')) {
+              setState(() {
+                _signInPasswordError = 'Mật khẩu sai';
+              });
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -208,6 +259,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               ),
             );
           } else if (state is Authenticated) {
+            SharedPreferences.getInstance().then((prefs) {
+              prefs.setBool('has_seen_intro', true);
+            });
             context.go('/home');
           } else if (state is PasswordResetSent) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -348,6 +402,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               labelText: l10n.student_email_label,
               hintText: l10n.student_email_hint,
               prefixIcon: const Icon(Icons.badge_outlined),
+              errorText: _signInEmailError,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
             validator: (value) {
@@ -365,6 +420,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               labelText: l10n.password_label,
               hintText: l10n.password_hint,
               prefixIcon: const Icon(Icons.lock_outline),
+              errorText: _signInPasswordError,
               suffixIcon: IconButton(
                 icon: Icon(_signInObscurePassword ? Icons.visibility_off : Icons.visibility),
                 onPressed: () => setState(() => _signInObscurePassword = !_signInObscurePassword),
@@ -402,15 +458,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(l10n.sign_in_btn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: () => _tabController.animateTo(1),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: Text(l10n.activate_tab),
           ),
           const SizedBox(height: 18),
           Row(
@@ -716,6 +763,26 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ),
             validator: (val) => (val == null || val.length < 6) ? l10n.password_length_err : null,
           ),
+          if (_newPasswordController.text.length >= 6) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.valid_password,
+                    style: const TextStyle(
+                      color: Color(0xFF16A34A),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           TextFormField(
             controller: _confirmPasswordController,
@@ -732,6 +799,40 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               return null;
             },
           ),
+          if (_confirmPasswordController.text.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  if (_confirmPasswordController.text == _newPasswordController.text &&
+                      _newPasswordController.text.length >= 6) ...[
+                    const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.valid_password,
+                      style: const TextStyle(
+                        color: Color(0xFF16A34A),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ] else ...[
+                    const Icon(Icons.cancel_rounded, color: Colors.redAccent, size: 16),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Mật khẩu không khớp',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           ElevatedButton(
             onPressed: isLoading ? null : _onRegisterWithVerificationLinkSubmitted,
@@ -885,6 +986,57 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           child: Text(l10n.back_to_step1),
         ),
       ],
+    );
+  }
+
+  Widget _buildLanguageToggleButton(BuildContext context) {
+    return BlocBuilder<LocaleCubit, Locale>(
+      builder: (context, locale) {
+        final isVi = locale.languageCode == 'vi';
+        return Padding(
+          padding: const EdgeInsets.only(right: 14),
+          child: Tooltip(
+            message: isVi ? 'Switch to English' : 'Chuyển sang Tiếng Việt',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
+                final nextLocale = isVi ? const Locale('en') : const Locale('vi');
+                context.read<LocaleCubit>().setLocale(nextLocale);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueContainer(context),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isVi ? '🇻🇳 VI' : '🇬🇧 EN',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primaryColor(context),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.translate_rounded,
+                      size: 15,
+                      color: AppTheme.primaryColor(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

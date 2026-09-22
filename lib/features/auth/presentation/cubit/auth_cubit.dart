@@ -18,7 +18,10 @@ class AuthCubit extends Cubit<AuthState> {
   void _initAuthListener() {
     _authSubscription = _authRepository.authStateChanges.listen((user) {
       if (user != null) {
-        emit(Authenticated(user));
+        if (state is! StudentVerifiedForActivation &&
+            state is! ActivationVerificationEmailSent) {
+          emit(Authenticated(user));
+        }
       } else {
         if (state is! AuthInitial &&
             state is! StudentVerifiedForActivation &&
@@ -141,7 +144,9 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _authRepository.signOut();
+    try {
+      await _authRepository.signOut().timeout(const Duration(seconds: 3));
+    } catch (_) {}
     emit(Unauthenticated());
   }
 

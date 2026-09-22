@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/intro_page.dart';
-import '../../features/onboarding/presentation/pages/preference_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/main/presentation/pages/main_navigation_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
@@ -11,11 +10,8 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/intro', builder: (context, state) => const IntroPage()),
-    GoRoute(
-      path: '/preference',
-      builder: (context, state) => const PreferencePage(),
-    ),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/preference', redirect: (context, state) => '/login'),
     GoRoute(path: '/home', builder: (context, state) => const MainNavigationPage()),
     GoRoute(path: '/chat', builder: (context, state) => const ConversationsPage()),
   ],

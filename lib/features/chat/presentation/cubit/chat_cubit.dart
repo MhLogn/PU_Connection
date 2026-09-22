@@ -47,9 +47,14 @@ class ChatCubit extends Cubit<ChatState> {
 
     _msgSubscription = _chatRepository
         .getMessagesStream(conversationId)
-        .listen((messages) {
-      emit(state.copyWith(currentMessages: messages));
-    });
+        .listen(
+      (messages) {
+        emit(state.copyWith(currentMessages: messages));
+      },
+      onError: (error) {
+        // Silently handle or log if disconnected on signout
+      },
+    );
 
     _chatRepository.markAsRead(
       conversationId: conversationId,
@@ -128,6 +133,14 @@ class ChatCubit extends Cubit<ChatState> {
 
     openConversation(convId, currentUserId);
     return convId;
+  }
+
+  void reset() {
+    _convSubscription?.cancel();
+    _convSubscription = null;
+    _msgSubscription?.cancel();
+    _msgSubscription = null;
+    emit(const ChatState());
   }
 
   @override

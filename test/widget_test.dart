@@ -19,8 +19,8 @@ void main() {
 
     expect(find.text('PU Connection'), findsOneWidget);
 
-    // Fast-forward past splash delay (2500ms)
-    await tester.pump(const Duration(milliseconds: 2600));
+    // Fast-forward past splash delay (3000ms)
+    await tester.pump(const Duration(milliseconds: 3200));
     await tester.pumpAndSettle();
 
     expect(find.text('Kết nối sinh viên Phenikaa'), findsOneWidget);

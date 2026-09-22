@@ -11,6 +11,7 @@ class FirebaseConstants {
   static const String chatsCollection = 'chats';
   static const String messagesSubcollection = 'messages';
   static const String notificationsSubcollection = 'notifications';
+  static const String eventsCollection = 'events';
   static const String subjectsCollection = 'subjects';
   static const String topicsCollection = 'topics';
 

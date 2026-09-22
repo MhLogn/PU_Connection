@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @student_email_hint.
   ///
   /// In vi, this message translates to:
-  /// **'Ví dụ: 23010390 hoặc 23010390@st.phenikaa-uni.edu.vn'**
+  /// **'Ví dụ: 23010390 hoặc email trường'**
   String get student_email_hint;
 
   /// No description provided for @password_label.
@@ -409,6 +409,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập mật khẩu của bạn'**
   String get password_hint;
+
+  /// No description provided for @valid_password.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu hợp lệ'**
+  String get valid_password;
 
   /// No description provided for @forgot_password.
   ///
@@ -1061,7 +1067,7 @@ abstract class AppLocalizations {
   /// No description provided for @student_slogan.
   ///
   /// In vi, this message translates to:
-  /// **'Kết nối tri thức • Tương lai vững bước'**
+  /// **'Tôn trọng – Sáng tạo – Phản biện'**
   String get student_slogan;
 
   /// No description provided for @student_network.

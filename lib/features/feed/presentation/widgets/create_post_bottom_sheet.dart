@@ -81,7 +81,10 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       uid = authState.user.uid;
       name = authState.user.displayName.isNotEmpty ? authState.user.displayName : name;
       studentId = authState.user.studentId;
-      faculty = authState.user.faculty;
+      if (studentId.isEmpty && authState.user.email.contains('@')) {
+        studentId = authState.user.email.split('@').first;
+      }
+      faculty = authState.user.faculty.isNotEmpty ? authState.user.faculty : faculty;
       avatar = authState.user.avatarUrl;
     }
 

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
+import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../cubit/feed_cubit.dart';
 
 class PostCommentsBottomSheet extends StatefulWidget {
@@ -199,17 +200,27 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppTheme.primaryColor(context),
-                  child: Text(
-                    widget.post.authorName.isNotEmpty
-                        ? widget.post.authorName[0].toUpperCase()
-                        : 'P',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.black87 : Colors.white,
+                GestureDetector(
+                  onTap: () => _openAuthorProfile(
+                    context,
+                    authorId: widget.post.authorId,
+                    authorName: widget.post.authorName,
+                    authorStudentId: widget.post.authorStudentId,
+                    authorFaculty: widget.post.authorFaculty,
+                    authorAvatar: widget.post.authorAvatar,
+                  ),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppTheme.primaryColor(context),
+                    child: Text(
+                      widget.post.authorName.isNotEmpty
+                          ? widget.post.authorName[0].toUpperCase()
+                          : 'P',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.black87 : Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -221,18 +232,37 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(
-                              widget.post.authorName,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                            child: GestureDetector(
+                              onTap: () => _openAuthorProfile(
+                                context,
+                                authorId: widget.post.authorId,
+                                authorName: widget.post.authorName,
+                                authorStudentId: widget.post.authorStudentId,
+                                authorFaculty: widget.post.authorFaculty,
+                                authorAvatar: widget.post.authorAvatar,
                               ),
-                              overflow: TextOverflow.ellipsis,
+                              child: Text(
+                                widget.post.authorName,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
+                          Icon(Icons.verified_rounded, size: 13, color: AppTheme.primaryColor(context)),
+                          if (widget.post.authorStudentId.isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '• ${widget.post.authorStudentId}',
+                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                            ),
+                          ],
+                          const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppTheme.orangeContainer(context),
                               borderRadius: BorderRadius.circular(6),
@@ -240,7 +270,7 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                             child: Text(
                               widget.post.category,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.accentColor(context),
                               ),
@@ -248,6 +278,19 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                           ),
                         ],
                       ),
+                      if (widget.post.authorFaculty.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.post.authorFaculty,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor(context),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       const SizedBox(height: 3),
                       Text(
                         widget.post.content,
@@ -414,6 +457,29 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     );
   }
 
+  void _openAuthorProfile(
+    BuildContext context, {
+    required String authorId,
+    required String authorName,
+    String authorStudentId = '',
+    String authorFaculty = '',
+    String authorAvatar = '',
+  }) {
+    if (authorId.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfilePage(
+          userId: authorId,
+          userName: authorName,
+          studentId: authorStudentId,
+          faculty: authorFaculty,
+          avatarUrl: authorAvatar,
+        ),
+      ),
+    );
+  }
+
   Widget _buildCommentItem(
     BuildContext context,
     CommentEntity comment,
@@ -429,15 +495,25 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 17,
-          backgroundColor: AppTheme.blueContainer(context),
-          child: Text(
-            initials,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor(context),
+        GestureDetector(
+          onTap: () => _openAuthorProfile(
+            context,
+            authorId: comment.authorId,
+            authorName: comment.authorName,
+            authorStudentId: comment.authorStudentId,
+            authorFaculty: comment.authorFaculty,
+            authorAvatar: comment.authorAvatar,
+          ),
+          child: CircleAvatar(
+            radius: 17,
+            backgroundColor: AppTheme.blueContainer(context),
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor(context),
+              ),
             ),
           ),
         ),
@@ -461,25 +537,37 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                       child: Row(
                         children: [
                           Flexible(
-                            child: Text(
-                              comment.authorName,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                            child: GestureDetector(
+                              onTap: () => _openAuthorProfile(
+                                context,
+                                authorId: comment.authorId,
+                                authorName: comment.authorName,
+                                authorStudentId: comment.authorStudentId,
+                                authorFaculty: comment.authorFaculty,
+                                authorAvatar: comment.authorAvatar,
                               ),
-                              overflow: TextOverflow.ellipsis,
+                              child: Text(
+                                comment.authorName,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                           if (comment.authorFaculty.isNotEmpty) ...[
                             const SizedBox(width: 6),
-                            Text(
-                              '• ${comment.authorFaculty}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.primaryColor(context),
-                                fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Text(
+                                '• ${comment.authorFaculty}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.primaryColor(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ],

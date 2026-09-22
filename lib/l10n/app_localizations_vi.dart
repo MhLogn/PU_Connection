@@ -160,14 +160,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get student_email_label => 'Email sinh viên hoặc Mã SV';
 
   @override
-  String get student_email_hint =>
-      'Ví dụ: 23010390 hoặc 23010390@st.phenikaa-uni.edu.vn';
+  String get student_email_hint => 'Ví dụ: 23010390 hoặc email trường';
 
   @override
   String get password_label => 'Mật khẩu';
 
   @override
   String get password_hint => 'Nhập mật khẩu của bạn';
+
+  @override
+  String get valid_password => 'Mật khẩu hợp lệ';
 
   @override
   String get forgot_password => 'Quên mật khẩu?';
@@ -504,7 +506,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get university_name => 'TRƯỜNG ĐẠI HỌC PHENIKAA';
 
   @override
-  String get student_slogan => 'Kết nối tri thức • Tương lai vững bước';
+  String get student_slogan => 'Tôn trọng – Sáng tạo – Phản biện';
 
   @override
   String get student_network => 'Mạng xã hội sinh viên Phenikaa';

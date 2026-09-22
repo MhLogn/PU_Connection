@@ -3,6 +3,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/data/datasources/phenikaa_student_directory.dart';
+import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../../domain/entities/post_entity.dart';
 
 class PostCard extends StatelessWidget {
@@ -13,6 +15,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onSharePressed;
   final VoidCallback? onDeletePressed;
   final VoidCallback? onChatPressed;
+  final VoidCallback? onAuthorTap;
 
   const PostCard({
     super.key,
@@ -23,6 +26,7 @@ class PostCard extends StatelessWidget {
     this.onSharePressed,
     this.onDeletePressed,
     this.onChatPressed,
+    this.onAuthorTap,
   });
 
   Color _getCategoryColor(BuildContext context, String category) {
@@ -52,6 +56,25 @@ class PostCard extends StatelessWidget {
     }
   }
 
+  void _openAuthorProfile(BuildContext context, String resolvedStudentId, String resolvedFaculty) {
+    if (onAuthorTap != null) {
+      onAuthorTap!();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfilePage(
+          userId: post.authorId,
+          userName: post.authorName,
+          studentId: resolvedStudentId,
+          faculty: resolvedFaculty,
+          avatarUrl: post.authorAvatar,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -62,6 +85,19 @@ class PostCard extends StatelessWidget {
     final formattedTime = post.createdAt != null
         ? timeago.format(post.createdAt!, locale: localeCode)
         : (localeCode == 'vi' ? 'Vừa xong' : 'Just now');
+
+    final resolvedStudentId = post.authorStudentId.isNotEmpty
+        ? post.authorStudentId
+        : (PhenikaaStudentDirectory.defaultStudents
+            .where((s) => s.fullName.toLowerCase() == post.authorName.toLowerCase())
+            .firstOrNull
+            ?.studentId ?? '');
+    final resolvedFaculty = post.authorFaculty.isNotEmpty
+        ? post.authorFaculty
+        : (PhenikaaStudentDirectory.defaultStudents
+            .where((s) => s.fullName.toLowerCase() == post.authorName.toLowerCase())
+            .firstOrNull
+            ?.faculty ?? '');
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -89,95 +125,119 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- HEADER: Thông tin người đăng (Rộng rãi, không bị che mất) ---
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAvatar(context, post.authorAvatar, post.authorName),
-                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => _openAuthorProfile(context, resolvedStudentId, resolvedFaculty),
+                  child: _buildAvatar(context, post.authorAvatar, post.authorName),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              post.authorName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.verified_rounded,
-                            size: 14,
-                            color: AppTheme.primaryColor(context),
-                          ),
-                          if (post.authorStudentId.isNotEmpty) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              '• ${post.authorStudentId}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colorScheme.onSurface.withValues(alpha: 0.55),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          if (post.authorFaculty.isNotEmpty) ...[
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openAuthorProfile(context, resolvedStudentId, resolvedFaculty),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Dòng 1: Họ và tên người đăng + Huy hiệu xác minh sinh viên Phenikaa
+                        Row(
+                          children: [
                             Flexible(
                               child: Text(
-                                post.authorFaculty,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.primaryColor(context),
-                                  fontWeight: FontWeight.w600,
+                                post.authorName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  letterSpacing: -0.2,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Text(' • ', style: TextStyle(fontSize: 11, color: colorScheme.outline)),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified_rounded,
+                              size: 15,
+                              color: AppTheme.primaryColor(context),
+                            ),
                           ],
-                          Text(
-                            formattedTime,
-                            style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  constraints: const BoxConstraints(maxWidth: 110),
-                  decoration: BoxDecoration(
-                    color: _getCategoryBg(context, post.category),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    post.category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: _getCategoryColor(context, post.category),
+                        ),
+                        const SizedBox(height: 3),
+                        // Dòng 2: Mã số sinh viên (Badge) & Khoa / Viện đào tạo
+                        Row(
+                          children: [
+                            if (resolvedStudentId.isNotEmpty) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  resolvedStudentId,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                  ),
+                                ),
+                              ),
+                              if (resolvedFaculty.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                                  child: Text(
+                                    '•',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.outlineVariant,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                            if (resolvedFaculty.isNotEmpty)
+                              Flexible(
+                                child: Text(
+                                  resolvedFaculty,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppTheme.primaryColor(context),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        // Dòng 3: Thời gian đăng bài
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 12,
+                              color: colorScheme.onSurface.withValues(alpha: 0.45),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              formattedTime,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
+                // Nút tùy chọn (Menu 3 chấm nếu là chủ bài viết, icon chat nếu là người khác)
                 if (onDeletePressed != null) ...[
-                  const SizedBox(width: 4),
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert_rounded, size: 20, color: colorScheme.outline),
+                    icon: Icon(Icons.more_horiz_rounded, size: 22, color: colorScheme.outline),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onSelected: (val) {
@@ -199,9 +259,8 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ] else if (onChatPressed != null) ...[
-                  const SizedBox(width: 4),
                   IconButton(
-                    icon: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: colorScheme.outline),
+                    icon: Icon(Icons.chat_bubble_outline_rounded, size: 19, color: AppTheme.primaryColor(context)),
                     tooltip: 'Nhắn tin cho tác giả',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -210,31 +269,78 @@ class PostCard extends StatelessWidget {
                 ],
               ],
             ),
-            if (post.subjectCode != null && post.subjectCode!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.blueContainer(context),
-                  borderRadius: BorderRadius.circular(6),
+
+            // --- METADATA PILLS: Thẻ phân loại & Mã môn học ---
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 5,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                // Tag Phân loại (Hỏi bài, Thảo luận, Tìm nhóm, Tài liệu)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: _getCategoryBg(context, post.category),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _getCategoryColor(context, post.category).withValues(alpha: 0.25),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _getCategoryColor(context, post.category),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        post.category,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: _getCategoryColor(context, post.category),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.menu_book_rounded, size: 13, color: AppTheme.primaryColor(context)),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Môn: ${post.subjectCode}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryColor(context),
+                // Tag Mã môn học (nếu có)
+                if (post.subjectCode != null && post.subjectCode!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: AppTheme.blueContainer(context),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
+                        width: 0.8,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.menu_book_rounded, size: 12, color: AppTheme.primaryColor(context)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Môn: ${post.subjectCode}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 10),
             Text(
               post.content,

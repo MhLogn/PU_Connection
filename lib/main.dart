@@ -55,6 +55,8 @@ class PUConnectionApp extends StatelessWidget {
                 theme: AppTheme.lightTheme,
                 darkTheme: AppTheme.darkTheme,
                 themeMode: themeMode,
+                themeAnimationDuration: const Duration(milliseconds: 350),
+                themeAnimationCurve: Curves.easeInOutCubic,
                 locale: locale,
                 localizationsDelegates: const [
                   AppLocalizations.delegate,

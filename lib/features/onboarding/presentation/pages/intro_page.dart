@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -20,9 +21,15 @@ class _IntroPageState extends State<IntroPage> {
     super.dispose();
   }
 
-  void _onNext(int totalSlides) {
+  Future<void> _onNext(int totalSlides) async {
     if (_currentPage == totalSlides - 1) {
-      context.go('/preference');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('has_seen_intro', true);
+      } catch (_) {}
+      if (mounted) {
+        context.go('/login');
+      }
     } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -63,43 +70,27 @@ class _IntroPageState extends State<IntroPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/logo/phenikaa_logo.png',
-                        width: 32,
-                        height: 32,
-                        errorBuilder: (_, __, ___) => Icon(
-                          Icons.school_rounded,
-                          size: 26,
-                          color: AppTheme.primaryColor(context),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'PU Connection',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primaryColor(context),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () => context.go('/preference'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  Image.asset(
+                    'assets/logo/phenikaa_logo.png',
+                    width: 32,
+                    height: 32,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.school_rounded,
+                      size: 26,
+                      color: AppTheme.primaryColor(context),
                     ),
-                    child: Text(
-                      l10n.skip,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'PU Connection',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primaryColor(context),
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],

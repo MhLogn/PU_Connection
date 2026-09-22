@@ -230,6 +230,15 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Vui lòng sử dụng email sinh viên Phenikaa (${FirebaseConstants.studentEmailDomain})');
     }
 
+    final studentId = loginEmail.split('@').first;
+    final isActivated = await isStudentActivated(
+      studentId: studentId,
+      email: loginEmail,
+    );
+    if (!isActivated) {
+      throw Exception('Tài khoản chưa kích hoạt. Vui lòng chuyển sang tab "Kích hoạt tài khoản" để kích hoạt.');
+    }
+
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: loginEmail,
@@ -258,14 +267,14 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      final studentId = loginEmail.split('@').first;
+      final studentIdStr = loginEmail.split('@').first;
       String fullName = firebaseUser.displayName ?? 'Sinh viên Phenikaa';
       String faculty = 'Công nghệ thông tin';
       String major = 'Chưa cập nhật';
       int cohort = 17;
 
       final match = PhenikaaStudentDirectory.defaultStudents.where(
-        (s) => s.studentId == studentId || s.email == loginEmail,
+        (s) => s.studentId == studentIdStr || s.email == loginEmail,
       );
       if (match.isNotEmpty) {
         fullName = match.first.fullName;
@@ -277,9 +286,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final restoredUser = UserModel(
         uid: firebaseUser.uid,
         email: loginEmail,
-        studentId: studentId,
+        studentId: studentIdStr,
         displayName: fullName,
-        username: studentId,
+        username: studentIdStr,
         faculty: faculty,
         major: major,
         cohort: cohort,
@@ -299,6 +308,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return restoredUser;
     } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw Exception('Mật khẩu sai. Vui lòng kiểm tra lại.');
+      } else if (e.code == 'user-not-found') {
+        throw Exception('Tài khoản chưa kích hoạt. Vui lòng chuyển sang tab "Kích hoạt tài khoản".');
+      }
       throw _handleFirebaseAuthError(e);
     }
   }
@@ -422,7 +436,30 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await _firebaseAuth.signOut();
+    try {
+      final currentUser = _firebaseAuth.currentUser;
+      final isGoogleUser = currentUser?.providerData.any(
+        (provider) => provider.providerId == 'google.com',
+      ) ?? false;
+
+      if (isGoogleUser) {
+        final googleSignIn = GoogleSignIn(
+          hostedDomain: 'st.phenikaa-uni.edu.vn',
+          scopes: ['email', 'profile'],
+        );
+        await googleSignIn.signOut().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => null,
+        );
+      }
+    } catch (_) {}
+
+    try {
+      await _firebaseAuth.signOut().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => null,
+      );
+    } catch (_) {}
   }
 
   @override
@@ -430,7 +467,12 @@ class AuthRepositoryImpl implements AuthRepository {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
 
-      // Chỉ phát trạng thái đăng nhập nếu email đã được xác thực (Google Sign-In luôn là true)
+      final isGoogle = firebaseUser.providerData.any((p) => p.providerId == 'google.com');
+      // Chỉ phát trạng thái đăng nhập nếu là Google hoặc email đã được xác thực
+      if (!isGoogle && !firebaseUser.emailVerified) {
+        return null;
+      }
+
       final email = firebaseUser.email ?? '';
       final studentId = email.contains('@') ? email.split('@').first : '';
       String fullName = firebaseUser.displayName ?? 'Sinh viên Phenikaa';

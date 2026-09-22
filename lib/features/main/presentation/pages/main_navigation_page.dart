@@ -16,6 +16,7 @@ import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../chat/presentation/cubit/chat_cubit.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -47,8 +48,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       _loadedTabs.contains(4) ? const _StudentProfileView() : const SizedBox.shrink(),
     ];
 
-    return Scaffold(
-      body: IndexedStack(
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is Unauthenticated) {
+          context.go('/login');
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
         index: _currentIndex,
         children: pages,
       ),
@@ -114,7 +121,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -1030,68 +1037,74 @@ class _StudentProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: AppBar(
-        title: Text(l10n.profile_title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: l10n.logout,
-            onPressed: () => _confirmSignOut(context),
-          ),
-        ],
-      ),
-      body: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          if (state is Authenticated) {
-            final user = state.user;
+    return AnimatedTheme(
+      data: theme,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOutCubic,
+      child: Scaffold(
+        backgroundColor: colorScheme.surfaceContainerLowest,
+        appBar: AppBar(
+          title: Text(l10n.profile_title),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              tooltip: l10n.logout,
+              onPressed: () => _confirmSignOut(context),
+            ),
+          ],
+        ),
+        body: BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, state) {
+            if (state is Authenticated) {
+              final user = state.user;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildDigitalStudentCard(context, user),
-                  const SizedBox(height: 10),
-                  OutlinedButton.icon(
-                    onPressed: () => _showEditProfileModal(context, user),
-                    icon: Icon(Icons.edit_outlined, size: 16, color: AppTheme.primaryColor(context)),
-                    label: Text(
-                      'Chỉnh sửa thông tin cá nhân',
-                      style: TextStyle(color: AppTheme.primaryColor(context), fontWeight: FontWeight.w600),
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildDigitalStudentCard(context, user),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => _showEditProfileModal(context, user),
+                      icon: Icon(Icons.edit_outlined, size: 16, color: AppTheme.primaryColor(context)),
+                      label: Text(
+                        'Chỉnh sửa thông tin cá nhân',
+                        style: TextStyle(color: AppTheme.primaryColor(context), fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.4)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    const SizedBox(height: 16),
+                    _buildAcademicOverviewCard(context),
+                    const SizedBox(height: 16),
+                    _buildSettingsSection(context, colorScheme),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => _confirmSignOut(context),
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      label: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildAcademicOverviewCard(context),
-                  const SizedBox(height: 16),
-                  _buildSettingsSection(context, colorScheme),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () => _confirmSignOut(context),
-                    icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                    label: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade700,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            );
-          }
-          return Center(child: Text(l10n.not_logged_in));
-        },
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
       ),
     );
   }
@@ -1330,7 +1343,9 @@ class _StudentProfileView extends StatelessWidget {
     required IconData icon,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOutCubic,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -1338,7 +1353,7 @@ class _StudentProfileView extends StatelessWidget {
         border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1350,7 +1365,9 @@ class _StudentProfileView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: AppTheme.isDark(context) ? 0.22 : 0.1),
@@ -1358,7 +1375,9 @@ class _StudentProfileView extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 16),
               ),
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.12),
@@ -1405,14 +1424,16 @@ class _StudentProfileView extends StatelessWidget {
     final currentLocale = Localizations.localeOf(context).languageCode;
     final languageName = currentLocale == 'vi' ? l10n.vietnamese : l10n.english;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOutCubic,
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1421,24 +1442,43 @@ class _StudentProfileView extends StatelessWidget {
       child: Column(
         children: [
           SwitchListTile(
-            secondary: Container(
+            secondary: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.softViolet.withValues(alpha: isDark ? 0.25 : 0.12),
+                color: isDark
+                    ? AppTheme.darkSoftViolet.withValues(alpha: 0.25)
+                    : const Color(0xFFF3E8FF),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.dark_mode_rounded, color: isDark ? AppTheme.darkSoftViolet : AppTheme.softViolet, size: 20),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                transitionBuilder: (child, anim) => RotationTransition(
+                  turns: anim,
+                  child: FadeTransition(opacity: anim, child: child),
+                ),
+                child: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  key: ValueKey<bool>(isDark),
+                  color: isDark ? AppTheme.darkSoftViolet : AppTheme.softViolet,
+                  size: 20,
+                ),
+              ),
             ),
             title: Text(l10n.dark_theme_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(l10n.dark_theme_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
             value: isDark,
+            activeColor: AppTheme.darkSoftViolet,
             onChanged: (val) {
               context.read<ThemeCubit>().setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
             },
           ),
           Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(
-            leading: Container(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
@@ -1453,7 +1493,9 @@ class _StudentProfileView extends StatelessWidget {
           ),
           Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(
-            leading: Container(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
@@ -1745,28 +1787,38 @@ class _StudentProfileView extends StatelessWidget {
     );
   }
 
-  void _confirmSignOut(BuildContext context) {
+  Future<void> _confirmSignOut(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+    final authCubit = context.read<AuthCubit>();
+    final chatCubit = context.read<ChatCubit>();
 
-    showDialog(
+    final shouldLogout = await showDialog<bool>(
       context: context,
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.logout_confirm_title),
         content: Text(l10n.logout_confirm_desc),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<AuthCubit>().signOut();
-              context.go('/login');
-            },
+            onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
             child: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+
+    if (shouldLogout == true) {
+      chatCubit.reset();
+      if (context.mounted) {
+        context.go('/login');
+      }
+      await authCubit.signOut();
+    }
   }
 }
 
