@@ -1,10 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/data/datasources/phenikaa_student_directory.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
+import '../../../documents/domain/entities/document_entity.dart';
+import '../../../documents/presentation/pages/pdf_viewer_page.dart';
 import '../../domain/entities/post_entity.dart';
 
 class PostCard extends StatelessWidget {
@@ -14,6 +20,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onCommentPressed;
   final VoidCallback? onSharePressed;
   final VoidCallback? onDeletePressed;
+  final VoidCallback? onEditPressed;
   final VoidCallback? onChatPressed;
   final VoidCallback? onAuthorTap;
 
@@ -25,6 +32,7 @@ class PostCard extends StatelessWidget {
     this.onCommentPressed,
     this.onSharePressed,
     this.onDeletePressed,
+    this.onEditPressed,
     this.onChatPressed,
     this.onAuthorTap,
   });
@@ -234,34 +242,63 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Nút tùy chọn (Menu 3 chấm nếu là chủ bài viết, icon chat nếu là người khác)
-                if (onDeletePressed != null) ...[
+                // Nút tùy chọn (Menu 3 chấm nếu là chủ bài viết - có sửa/xóa, icon chat nếu là người khác)
+                if (onEditPressed != null || onDeletePressed != null) ...[
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_horiz_rounded, size: 22, color: colorScheme.outline),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
+                    tooltip: l10n.open_post_options,
                     onSelected: (val) {
-                      if (val == 'delete') {
+                      if (val == 'edit') {
+                        onEditPressed?.call();
+                      } else if (val == 'delete') {
                         _confirmDelete(context);
                       }
                     },
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade700),
-                            const SizedBox(width: 8),
-                            Text('Xóa bài viết', style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
-                          ],
+                      if (onEditPressed != null)
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 18, color: AppTheme.primaryColor(context)),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.edit_post,
+                                style: TextStyle(
+                                  color: colorScheme.onSurface,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      if (onDeletePressed != null)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade700),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.delete_post,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ] else if (onChatPressed != null) ...[
                   IconButton(
                     icon: Icon(Icons.chat_bubble_outline_rounded, size: 19, color: AppTheme.primaryColor(context)),
-                    tooltip: 'Nhắn tin cho tác giả',
+                    tooltip: l10n.message_author,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: onChatPressed,
@@ -524,55 +561,72 @@ class PostCard extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         ...docs.map((doc) {
-          final isPdf = doc.type == 'pdf';
+          final ext = (doc.name.contains('.') ? doc.name.split('.').last : doc.type).toLowerCase();
+          final isPdf = ext == 'pdf';
+          final isWord = ext == 'doc' || ext == 'docx';
+          final isPpt = ext == 'ppt' || ext == 'pptx';
+          final isExcel = ext == 'xls' || ext == 'xlsx';
+          final isZip = ext == 'zip' || ext == 'rar';
+          final isTxt = ext == 'txt';
+
+          final (docColor, docBg, docIcon) = switch (true) {
+            _ when isPdf => (const Color(0xFFEF4444), const Color(0xFFFEF2F2), Icons.picture_as_pdf_rounded),
+            _ when isWord => (const Color(0xFF2563EB), const Color(0xFFEFF6FF), Icons.description_rounded),
+            _ when isPpt => (const Color(0xFFEA580C), const Color(0xFFFFF7ED), Icons.slideshow_rounded),
+            _ when isExcel => (const Color(0xFF16A34A), const Color(0xFFF0FDF4), Icons.table_chart_rounded),
+            _ when isZip => (const Color(0xFF9333EA), const Color(0xFFFAF5FF), Icons.folder_zip_rounded),
+            _ when isTxt => (const Color(0xFF0D9488), const Color(0xFFF0FDFA), Icons.text_snippet_rounded),
+            _ => (AppTheme.primaryColor(context), AppTheme.blueContainer(context), Icons.insert_drive_file_rounded),
+          };
+
           return InkWell(
-            onTap: () {
-              final l10n = AppLocalizations.of(context)!;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${l10n.downloading} ${doc.name}...'),
-                  backgroundColor: AppTheme.primaryColor(context),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: () => _handleOpenAttachment(context, doc),
             borderRadius: BorderRadius.circular(10),
             child: Container(
               margin: const EdgeInsets.only(top: 6),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isPdf ? AppTheme.orangeContainer(context) : AppTheme.blueContainer(context),
+                color: AppTheme.isDark(context)
+                    ? docColor.withValues(alpha: 0.15)
+                    : docBg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isPdf
-                      ? AppTheme.accentColor(context).withValues(alpha: 0.35)
-                      : AppTheme.primaryColor(context).withValues(alpha: 0.2),
+                  color: docColor.withValues(alpha: AppTheme.isDark(context) ? 0.35 : 0.25),
                   width: 0.8,
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-                    color: isPdf ? AppTheme.accentColor(context) : AppTheme.primaryColor(context),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
+                  Icon(docIcon, color: docColor, size: 24),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      doc.name,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          doc.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (doc.sizeBytes > 0)
+                          Text(
+                            '${(doc.sizeBytes / 1024).toStringAsFixed(1)} KB • ${ext.toUpperCase()}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colorScheme.onSurface.withValues(alpha: 0.55),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Icon(
-                    Icons.download_rounded,
-                    color: isPdf ? AppTheme.accentColor(context) : AppTheme.primaryColor(context),
+                    isPdf ? Icons.visibility_rounded : Icons.download_rounded,
+                    color: docColor,
                     size: 20,
                   ),
                 ],
@@ -582,6 +636,70 @@ class PostCard extends StatelessWidget {
         }),
       ],
     );
+  }
+
+  Future<void> _handleOpenAttachment(BuildContext context, PostAttachment doc) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ext = (doc.name.contains('.') ? doc.name.split('.').last : doc.type).toLowerCase();
+    final isPdf = ext == 'pdf';
+
+    if (isPdf && doc.url.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfViewerPage(
+            document: DocumentEntity(
+              id: doc.name,
+              title: doc.name,
+              code: post.subjectCode ?? '',
+              faculty: post.authorFaculty,
+              fileUrl: doc.url,
+              fileType: 'pdf',
+              fileSize: doc.sizeBytes > 0 ? '${(doc.sizeBytes / 1024).toStringAsFixed(1)} KB' : '',
+              authorId: post.authorId,
+              authorName: post.authorName,
+              authorStudentId: post.authorStudentId,
+              createdAt: post.createdAt ?? DateTime.now(),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (doc.url.isEmpty) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.downloading} ${doc.name}...'),
+          backgroundColor: AppTheme.primaryColor(context),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      final tempDir = await getTemporaryDirectory();
+      final cleanName = doc.name.replaceAll(RegExp(r'[^\w\.-]'), '_');
+      final localPath = '${tempDir.path}/$cleanName';
+      final file = File(localPath);
+
+      if (!await file.exists()) {
+        await Dio().download(doc.url, localPath);
+      }
+
+      await OpenFilex.open(localPath);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.error}: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildActionButton({
@@ -615,15 +733,16 @@ class PostCard extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.'),
+        title: Text(l10n.confirm_delete_title),
+        content: Text(l10n.confirm_delete_post),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -631,7 +750,7 @@ class PostCard extends StatelessWidget {
               onDeletePressed?.call();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: const Text('Xóa', style: TextStyle(color: Colors.white)),
+            child: Text(l10n.delete_post, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

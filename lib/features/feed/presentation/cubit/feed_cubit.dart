@@ -123,10 +123,11 @@ class FeedCubit extends Cubit<FeedState> {
       for (final docFile in docFiles) {
         final url = await _cloudinaryService.uploadDocument(docFile);
         if (url != null) {
+          final ext = docFile.path.split('.').last.toLowerCase();
           attachments.add(PostAttachment(
             url: url,
             name: docFile.path.split(Platform.pathSeparator).last,
-            type: docFile.path.endsWith('.pdf') ? 'pdf' : 'docx',
+            type: ext,
           ));
         }
       }
@@ -149,6 +150,63 @@ class FeedCubit extends Cubit<FeedState> {
       );
 
       await _postRepository.createPost(newPost);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updatePost({
+    required String postId,
+    required String content,
+    required String category,
+    String? subjectCode,
+    List<PostAttachment> existingAttachments = const [],
+    List<File> newImageFiles = const [],
+    List<File> newDocFiles = const [],
+  }) async {
+    try {
+      List<PostAttachment> attachments = List.from(existingAttachments);
+
+      for (final imgFile in newImageFiles) {
+        final url = await _cloudinaryService.uploadImage(imgFile);
+        if (url != null) {
+          attachments.add(PostAttachment(
+            url: url,
+            name: imgFile.path.split(Platform.pathSeparator).last,
+            type: 'image',
+          ));
+        }
+      }
+
+      for (final docFile in newDocFiles) {
+        final url = await _cloudinaryService.uploadDocument(docFile);
+        if (url != null) {
+          final ext = docFile.path.split('.').last.toLowerCase();
+          attachments.add(PostAttachment(
+            url: url,
+            name: docFile.path.split(Platform.pathSeparator).last,
+            type: ext,
+          ));
+        }
+      }
+
+      final postType = attachments.isEmpty
+          ? 'text'
+          : (attachments.any((a) => a.type == 'image') ? 'image' : 'document');
+
+      final updatedPost = PostEntity(
+        postId: postId,
+        authorId: '',
+        authorName: '',
+        content: content,
+        postType: postType,
+        category: category,
+        subjectCode: subjectCode?.trim().isEmpty == true ? null : subjectCode?.trim(),
+        attachments: attachments,
+        tags: _extractTags(content),
+      );
+
+      await _postRepository.updatePost(updatedPost);
     } catch (e) {
       rethrow;
     }

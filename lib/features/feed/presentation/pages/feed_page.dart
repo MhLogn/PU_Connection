@@ -94,6 +94,18 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
+  void _openEditPost(PostEntity post) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: context.read<FeedCubit>(),
+        child: CreatePostBottomSheet(postToEdit: post),
+      ),
+    );
+  }
+
   void _openCommentsModal(PostEntity post) {
     final authState = context.read<AuthCubit>().state;
     String uid = '';
@@ -797,15 +809,6 @@ class _FeedPageState extends State<FeedPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreatePost,
-        backgroundColor: AppTheme.orangeAccent,
-        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
-        label: const Text(
-          'Đăng bài',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-        ),
-      ),
       body: RefreshIndicator(
         onRefresh: () async => context.read<FeedCubit>().loadFeed(),
         child: CustomScrollView(
@@ -1286,19 +1289,28 @@ class _FeedPageState extends State<FeedPage> {
                                   }
                                 }
                               : null,
+                          onEditPressed: isOwner ? () => _openEditPost(post) : null,
                           onDeletePressed: isOwner
                               ? () async {
                                   try {
                                     await context.read<FeedCubit>().deletePost(post.postId);
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Đã xóa bài viết thành công!')),
+                                        SnackBar(
+                                          content: Text(l10n.delete_post_success),
+                                          backgroundColor: AppTheme.primaryColor(context),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
                                       );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Lỗi khi xóa bài: $e')),
+                                        SnackBar(
+                                          content: Text('${l10n.error}: $e'),
+                                          backgroundColor: Colors.red.shade700,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
                                       );
                                     }
                                   }
