@@ -598,4 +598,81 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get file_size_label => 'Kích thước';
+
+  @override
+  String get edit_post => 'Chỉnh sửa bài viết';
+
+  @override
+  String get save_changes => 'Lưu thay đổi';
+
+  @override
+  String get edit_post_success => 'Cập nhật bài viết thành công!';
+
+  @override
+  String get delete_post => 'Xóa bài viết';
+
+  @override
+  String get confirm_delete_post =>
+      'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.';
+
+  @override
+  String get delete_post_success => 'Đã xóa bài viết!';
+
+  @override
+  String get confirm_delete_title => 'Xác nhận xóa';
+
+  @override
+  String get post_empty_error => 'Nội dung bài viết không được để trống';
+
+  @override
+  String get existing_attachments => 'Tệp đính kèm hiện tại';
+
+  @override
+  String get add_more_attachments => 'Thêm đính kèm mới';
+
+  @override
+  String get remove_attachment => 'Gỡ tệp';
+
+  @override
+  String get open_post_options => 'Tùy chọn bài viết';
+
+  @override
+  String get event_list_title => 'Sự kiện Phenikaa';
+
+  @override
+  String get registered_events => 'Sự kiện đã tham gia';
+
+  @override
+  String get register_event => 'Đăng ký tham gia';
+
+  @override
+  String get registered => 'Đã đăng ký';
+
+  @override
+  String get view_ticket => 'Xem vé & QR';
+
+  @override
+  String get cancel_registration => 'Hủy đăng ký';
+
+  @override
+  String get event_ticket_title => 'Vé Tham Dự Sự Kiện';
+
+  @override
+  String get ticket_qr_desc =>
+      'Xuất trình mã QR này tại quầy check-in của ban tổ chức';
+
+  @override
+  String get student_search_title => 'Danh Bạ Sinh Viên';
+
+  @override
+  String get search_student_hint => 'Tìm theo tên, MSSV, khoa...';
+
+  @override
+  String get public_profile => 'Hồ sơ công khai';
+
+  @override
+  String get send_message => 'Nhắn tin';
+
+  @override
+  String get message_author => 'Nhắn tin cho tác giả';
 }

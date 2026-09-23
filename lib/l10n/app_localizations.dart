@@ -1243,6 +1243,156 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Kích thước'**
   String get file_size_label;
+
+  /// No description provided for @edit_post.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa bài viết'**
+  String get edit_post;
+
+  /// No description provided for @save_changes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get save_changes;
+
+  /// No description provided for @edit_post_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật bài viết thành công!'**
+  String get edit_post_success;
+
+  /// No description provided for @delete_post.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bài viết'**
+  String get delete_post;
+
+  /// No description provided for @confirm_delete_post.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.'**
+  String get confirm_delete_post;
+
+  /// No description provided for @delete_post_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa bài viết!'**
+  String get delete_post_success;
+
+  /// No description provided for @confirm_delete_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xóa'**
+  String get confirm_delete_title;
+
+  /// No description provided for @post_empty_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung bài viết không được để trống'**
+  String get post_empty_error;
+
+  /// No description provided for @existing_attachments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tệp đính kèm hiện tại'**
+  String get existing_attachments;
+
+  /// No description provided for @add_more_attachments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm đính kèm mới'**
+  String get add_more_attachments;
+
+  /// No description provided for @remove_attachment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ tệp'**
+  String get remove_attachment;
+
+  /// No description provided for @open_post_options.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn bài viết'**
+  String get open_post_options;
+
+  /// No description provided for @event_list_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sự kiện Phenikaa'**
+  String get event_list_title;
+
+  /// No description provided for @registered_events.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sự kiện đã tham gia'**
+  String get registered_events;
+
+  /// No description provided for @register_event.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký tham gia'**
+  String get register_event;
+
+  /// No description provided for @registered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký'**
+  String get registered;
+
+  /// No description provided for @view_ticket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem vé & QR'**
+  String get view_ticket;
+
+  /// No description provided for @cancel_registration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy đăng ký'**
+  String get cancel_registration;
+
+  /// No description provided for @event_ticket_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vé Tham Dự Sự Kiện'**
+  String get event_ticket_title;
+
+  /// No description provided for @ticket_qr_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất trình mã QR này tại quầy check-in của ban tổ chức'**
+  String get ticket_qr_desc;
+
+  /// No description provided for @student_search_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh Bạ Sinh Viên'**
+  String get student_search_title;
+
+  /// No description provided for @search_student_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên, MSSV, khoa...'**
+  String get search_student_hint;
+
+  /// No description provided for @public_profile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ công khai'**
+  String get public_profile;
+
+  /// No description provided for @send_message.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin'**
+  String get send_message;
+
+  /// No description provided for @message_author.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin cho tác giả'**
+  String get message_author;
 }
 
 class _AppLocalizationsDelegate

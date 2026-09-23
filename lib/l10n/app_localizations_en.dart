@@ -597,4 +597,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get file_size_label => 'Size';
+
+  @override
+  String get edit_post => 'Edit Post';
+
+  @override
+  String get save_changes => 'Save Changes';
+
+  @override
+  String get edit_post_success => 'Post updated successfully!';
+
+  @override
+  String get delete_post => 'Delete Post';
+
+  @override
+  String get confirm_delete_post =>
+      'Are you sure you want to delete this post? This action cannot be undone.';
+
+  @override
+  String get delete_post_success => 'Post deleted!';
+
+  @override
+  String get confirm_delete_title => 'Confirm Delete';
+
+  @override
+  String get post_empty_error => 'Post content cannot be empty';
+
+  @override
+  String get existing_attachments => 'Current Attachments';
+
+  @override
+  String get add_more_attachments => 'Add New Attachments';
+
+  @override
+  String get remove_attachment => 'Remove File';
+
+  @override
+  String get open_post_options => 'Post Options';
+
+  @override
+  String get event_list_title => 'Phenikaa Events';
+
+  @override
+  String get registered_events => 'Registered Events';
+
+  @override
+  String get register_event => 'Register';
+
+  @override
+  String get registered => 'Registered';
+
+  @override
+  String get view_ticket => 'View Ticket & QR';
+
+  @override
+  String get cancel_registration => 'Cancel Registration';
+
+  @override
+  String get event_ticket_title => 'Event Attendance Ticket';
+
+  @override
+  String get ticket_qr_desc =>
+      'Present this QR code at the event check-in desk';
+
+  @override
+  String get student_search_title => 'Student Directory';
+
+  @override
+  String get search_student_hint => 'Search by name, student ID, faculty...';
+
+  @override
+  String get public_profile => 'Public Profile';
+
+  @override
+  String get send_message => 'Send Message';
+
+  @override
+  String get message_author => 'Message Author';
 }
