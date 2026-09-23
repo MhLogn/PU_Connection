@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../data/event_repository.dart';
@@ -67,11 +68,32 @@ class _EventsPageState extends State<EventsPage> {
     }
   }
 
+  String _getCategoryLabel(BuildContext context, String cat) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (cat) {
+      case 'Tất cả':
+        return l10n.all_filter;
+      case 'Học thuật':
+        return l10n.academic_clubs;
+      case 'Thể thao':
+        return l10n.sports_clubs;
+      case 'Văn nghệ':
+        return l10n.arts_clubs;
+      case 'Tình nguyện':
+        return l10n.volunteer_clubs;
+      case 'Đã đăng ký':
+        return l10n.registered_events;
+      default:
+        return cat;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final authState = context.watch<AuthCubit>().state;
     final currentStudentId = authState is Authenticated ? authState.user.studentId : '';
@@ -81,7 +103,7 @@ class _EventsPageState extends State<EventsPage> {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Sự kiện & Hoạt động PU'),
+        title: Text(l10n.event_list_title),
         elevation: 0,
       ),
       body: Column(
@@ -160,7 +182,7 @@ class _EventsPageState extends State<EventsPage> {
                     ),
                     child: Center(
                       child: Text(
-                        cat,
+                        _getCategoryLabel(context, cat),
                         style: TextStyle(
                           color: isSelected ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.8),
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -268,6 +290,7 @@ class _EventsPageState extends State<EventsPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
     final color = _getColor(context, event.colorType);
     final dateFormat = DateFormat('dd/MM/yyyy • HH:mm');
     final isRegistered = event.isRegistered(currentStudentId);
@@ -326,7 +349,7 @@ class _EventsPageState extends State<EventsPage> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              event.category,
+                              _getCategoryLabel(context, event.category),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
@@ -342,13 +365,13 @@ class _EventsPageState extends State<EventsPage> {
                                 color: Colors.green.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.qr_code_rounded, size: 12, color: Colors.green),
-                                  SizedBox(width: 3),
+                                  const Icon(Icons.qr_code_rounded, size: 12, color: Colors.green),
+                                  const SizedBox(width: 3),
                                   Text(
-                                    'Đã có vé QR',
-                                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.green),
+                                    l10n.view_ticket,
+                                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.green),
                                   ),
                                 ],
                               ),
@@ -409,7 +432,7 @@ class _EventsPageState extends State<EventsPage> {
                     Icon(Icons.group_outlined, size: 14, color: AppTheme.oceanBlue),
                     const SizedBox(width: 4),
                     Text(
-                      '${event.currentParticipants}/${event.maxParticipants} đã đăng ký',
+                      '${event.currentParticipants}/${event.maxParticipants} ${l10n.registered.toLowerCase()}',
                       style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -424,7 +447,7 @@ class _EventsPageState extends State<EventsPage> {
                       faculty: currentFaculty,
                     ),
                     icon: const Icon(Icons.qr_code_2_rounded, size: 16),
-                    label: const Text('Xem Vé'),
+                    label: Text(l10n.view_ticket),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.primaryColor(context),
                       visualDensity: VisualDensity.compact,

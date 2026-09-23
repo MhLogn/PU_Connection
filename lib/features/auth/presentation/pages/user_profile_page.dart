@@ -13,6 +13,7 @@ import '../../../chat/presentation/cubit/chat_cubit.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../feed/data/models/post_model.dart';
 import '../../../feed/presentation/cubit/feed_cubit.dart';
+import '../../../feed/presentation/widgets/create_post_bottom_sheet.dart';
 import '../../../feed/presentation/widgets/post_card.dart';
 import '../../../feed/presentation/widgets/post_comments_bottom_sheet.dart';
 import '../../../documents/data/models/document_model.dart';
@@ -565,7 +566,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 Icon(Icons.article_outlined, size: 54, color: Theme.of(context).colorScheme.outlineVariant),
                 const SizedBox(height: 12),
                 Text(
-                  'Sinh viên này chưa đăng bài viết nào',
+                  AppLocalizations.of(context)!.no_posts_empty,
                   style: TextStyle(color: Theme.of(context).colorScheme.outline),
                 ),
               ],
@@ -579,6 +580,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           itemCount: posts.length,
           itemBuilder: (context, index) {
             final post = posts[index];
+            final isOwner = currentUid.isNotEmpty && (post.authorId == currentUid || user.uid == currentUid);
             return PostCard(
               post: post,
               currentUserId: currentUid,
@@ -596,6 +598,45 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   currentUserFaculty: user.faculty,
                 );
               },
+              onEditPressed: isOwner
+                  ? () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<FeedCubit>(),
+                          child: CreatePostBottomSheet(postToEdit: post),
+                        ),
+                      );
+                    }
+                  : null,
+              onDeletePressed: isOwner
+                  ? () async {
+                      try {
+                        await context.read<FeedCubit>().deletePost(post.postId);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.delete_post_success),
+                              backgroundColor: AppTheme.primaryColor(context),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Lỗi khi xóa bài: $e'),
+                              backgroundColor: Colors.red.shade700,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  : null,
             );
           },
         );
@@ -623,7 +664,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 Icon(Icons.menu_book_outlined, size: 54, color: Theme.of(context).colorScheme.outlineVariant),
                 const SizedBox(height: 12),
                 Text(
-                  'Chưa có tài liệu đóng góp nào',
+                  AppLocalizations.of(context)!.no_docs_found,
                   style: TextStyle(color: Theme.of(context).colorScheme.outline),
                 ),
               ],
@@ -641,8 +682,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             return DocumentCard(
               document: document,
               onDownload: () {
+                final l10n = AppLocalizations.of(context)!;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đang tải: ${document.title}')),
+                  SnackBar(content: Text('${l10n.downloading} ${document.title}')),
                 );
               },
             );

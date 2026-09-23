@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../data/event_repository.dart';
@@ -124,6 +125,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
     final color = _getColor(_currentEvent.colorType);
     final dateFormat = DateFormat('EEEE, dd/MM/yyyy • HH:mm', 'vi');
 
@@ -181,7 +183,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               faculty: faculty,
                             ),
                     icon: const Icon(Icons.qr_code_rounded, size: 20),
-                    label: const Text('Xem Vé QR'),
+                    label: Text(l10n.view_ticket),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primaryColor(context),
                       side: BorderSide(color: AppTheme.primaryColor(context)),
@@ -194,7 +196,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 IconButton(
                   onPressed: _isLoading ? null : () => _toggleRegistration(studentId, studentName, faculty),
                   icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
-                  tooltip: 'Hủy đăng ký',
+                  tooltip: l10n.cancel_registration,
                 ),
               ] else ...[
                 Expanded(
@@ -215,7 +217,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
                         : Text(
-                            _currentEvent.isFull ? 'Đã hết chỗ' : 'Đăng Ký Tham Gia',
+                            _currentEvent.isFull ? 'Đã hết chỗ' : l10n.register_event,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                   ),

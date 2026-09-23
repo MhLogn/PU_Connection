@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/event_entity.dart';
 
 class EventTicketDialog extends StatelessWidget {
@@ -40,6 +41,7 @@ class EventTicketDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
     final dateFormat = DateFormat('dd/MM/yyyy • HH:mm');
     final ticketCode = 'PU-${event.id.hashCode.abs().toString().padLeft(6, '0').substring(0, 6)}-${studentId.isNotEmpty ? studentId : "ST"}';
 
@@ -210,12 +212,12 @@ class EventTicketDialog extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Student & Event info
-                  _buildTicketRow('Sinh viên:', studentName.isNotEmpty ? studentName : 'Sinh viên Phenikaa', theme),
+                  _buildTicketRow('${l10n.full_name}:', studentName.isNotEmpty ? studentName : 'Sinh viên Phenikaa', theme),
                   const SizedBox(height: 6),
-                  _buildTicketRow('Mã sinh viên:', studentId.isNotEmpty ? studentId : 'Chưa cập nhật', theme),
+                  _buildTicketRow('${l10n.student_id}:', studentId.isNotEmpty ? studentId : 'Chưa cập nhật', theme),
                   if (faculty.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    _buildTicketRow('Khoa:', faculty, theme),
+                    _buildTicketRow('${l10n.faculty}:', faculty, theme),
                   ],
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
@@ -239,7 +241,7 @@ class EventTicketDialog extends StatelessWidget {
                   minimumSize: const Size.fromHeight(46),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Đóng Vé', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.close, style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
