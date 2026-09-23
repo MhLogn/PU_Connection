@@ -18,6 +18,8 @@ abstract class PostRepository {
 
   Future<void> deletePost(String postId);
 
+  Future<void> updatePost(PostEntity post);
+
   Stream<List<CommentEntity>> getComments(String postId);
 
   Future<void> addComment(String postId, CommentEntity comment);

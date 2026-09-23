@@ -72,6 +72,44 @@ class PostEntity extends Equatable {
 
   bool isLikedBy(String uid) => likedUsers.contains(uid);
 
+  PostEntity copyWith({
+    String? postId,
+    String? authorId,
+    String? authorName,
+    String? authorAvatar,
+    String? authorStudentId,
+    String? authorFaculty,
+    String? content,
+    String? postType,
+    String? category,
+    String? subjectCode,
+    List<PostAttachment>? attachments,
+    List<String>? tags,
+    List<String>? likedUsers,
+    int? likeCount,
+    int? commentCount,
+    DateTime? createdAt,
+  }) {
+    return PostEntity(
+      postId: postId ?? this.postId,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorAvatar: authorAvatar ?? this.authorAvatar,
+      authorStudentId: authorStudentId ?? this.authorStudentId,
+      authorFaculty: authorFaculty ?? this.authorFaculty,
+      content: content ?? this.content,
+      postType: postType ?? this.postType,
+      category: category ?? this.category,
+      subjectCode: subjectCode ?? this.subjectCode,
+      attachments: attachments ?? this.attachments,
+      tags: tags ?? this.tags,
+      likedUsers: likedUsers ?? this.likedUsers,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
         postId,

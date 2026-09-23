@@ -72,6 +72,7 @@ class PostModel extends PostEntity {
     };
   }
 
+  @override
   PostModel copyWith({
     String? postId,
     String? authorId,

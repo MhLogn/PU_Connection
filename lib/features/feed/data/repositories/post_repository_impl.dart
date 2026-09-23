@@ -107,6 +107,20 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<void> updatePost(PostEntity post) async {
+    final docRef = _postsRef.doc(post.postId);
+    await docRef.update({
+      'content': post.content,
+      'category': post.category,
+      'subjectCode': post.subjectCode,
+      'attachments': post.attachments.map((a) => a.toMap()).toList(),
+      'tags': post.tags,
+      'postType': post.postType,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
   Stream<List<CommentEntity>> getComments(String postId) {
     return _postsRef
         .doc(postId)
