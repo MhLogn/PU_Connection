@@ -1393,6 +1393,114 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhắn tin cho tác giả'**
   String get message_author;
+
+  /// No description provided for @chat_messages_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn'**
+  String get chat_messages_title;
+
+  /// No description provided for @start_chatting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu trò chuyện'**
+  String get start_chatting;
+
+  /// No description provided for @direct_chat_1_1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin trực tiếp (1-1)'**
+  String get direct_chat_1_1;
+
+  /// No description provided for @direct_chat_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm và nhắn tin cho bạn bè, sinh viên Phenikaa'**
+  String get direct_chat_subtitle;
+
+  /// No description provided for @create_group_chat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo nhóm trò chuyện'**
+  String get create_group_chat;
+
+  /// No description provided for @create_group_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo nhóm học tập, đồ án hoặc sinh hoạt CLB'**
+  String get create_group_subtitle;
+
+  /// No description provided for @enter_group_name.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt tên nhóm trò chuyện...'**
+  String get enter_group_name;
+
+  /// No description provided for @group_name_placeholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt tên nhóm (vd: K17 CNTT, Đồ án tốt nghiệp...)'**
+  String get group_name_placeholder;
+
+  /// No description provided for @search_group_members_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm sinh viên thêm vào nhóm...'**
+  String get search_group_members_hint;
+
+  /// No description provided for @group_info_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin nhóm'**
+  String get group_info_title;
+
+  /// No description provided for @group_members_list.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách thành viên'**
+  String get group_members_list;
+
+  /// No description provided for @group_leader_badge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trưởng nhóm'**
+  String get group_leader_badge;
+
+  /// No description provided for @leave_group_button.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời khỏi nhóm trò chuyện'**
+  String get leave_group_button;
+
+  /// No description provided for @leave_group_confirm_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời khỏi nhóm'**
+  String get leave_group_confirm_title;
+
+  /// No description provided for @leave_group_confirm_content.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn rời khỏi nhóm này không?'**
+  String get leave_group_confirm_content;
+
+  /// No description provided for @send_image_tooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi hình ảnh'**
+  String get send_image_tooltip;
+
+  /// No description provided for @take_photo_option.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh mới'**
+  String get take_photo_option;
+
+  /// No description provided for @choose_gallery_option.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh từ thư viện'**
+  String get choose_gallery_option;
 }
 
 class _AppLocalizationsDelegate

@@ -12,6 +12,10 @@ class ConversationModel extends ConversationEntity {
     super.lastMessageSenderId = '',
     super.lastMessageAt,
     super.unreadCounts = const {},
+    super.isGroup = false,
+    super.groupName = '',
+    super.groupAvatar = '',
+    super.adminId = '',
   });
 
   factory ConversationModel.fromMap(Map<String, dynamic> map, String id) {
@@ -49,6 +53,10 @@ class ConversationModel extends ConversationEntity {
       lastMessageSenderId: map['lastMessageSenderId'] as String? ?? '',
       lastMessageAt: parseDate(map['lastMessageAt']),
       unreadCounts: parseIntMap(map['unreadCounts']),
+      isGroup: map['isGroup'] as bool? ?? false,
+      groupName: map['groupName'] as String? ?? '',
+      groupAvatar: map['groupAvatar'] as String? ?? '',
+      adminId: map['adminId'] as String? ?? '',
     );
   }
 
@@ -67,6 +75,10 @@ class ConversationModel extends ConversationEntity {
       'lastMessageSenderId': lastMessageSenderId,
       'lastMessageAt': lastMessageAt != null ? Timestamp.fromDate(lastMessageAt!) : FieldValue.serverTimestamp(),
       'unreadCounts': unreadCounts,
+      'isGroup': isGroup,
+      'groupName': groupName,
+      'groupAvatar': groupAvatar,
+      'adminId': adminId,
     };
   }
 }

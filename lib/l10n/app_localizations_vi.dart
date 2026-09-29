@@ -675,4 +675,62 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get message_author => 'Nhắn tin cho tác giả';
+
+  @override
+  String get chat_messages_title => 'Tin nhắn';
+
+  @override
+  String get start_chatting => 'Bắt đầu trò chuyện';
+
+  @override
+  String get direct_chat_1_1 => 'Nhắn tin trực tiếp (1-1)';
+
+  @override
+  String get direct_chat_subtitle =>
+      'Tìm kiếm và nhắn tin cho bạn bè, sinh viên Phenikaa';
+
+  @override
+  String get create_group_chat => 'Tạo nhóm trò chuyện';
+
+  @override
+  String get create_group_subtitle =>
+      'Tạo nhóm học tập, đồ án hoặc sinh hoạt CLB';
+
+  @override
+  String get enter_group_name => 'Đặt tên nhóm trò chuyện...';
+
+  @override
+  String get group_name_placeholder =>
+      'Đặt tên nhóm (vd: K17 CNTT, Đồ án tốt nghiệp...)';
+
+  @override
+  String get search_group_members_hint => 'Tìm kiếm sinh viên thêm vào nhóm...';
+
+  @override
+  String get group_info_title => 'Thông tin nhóm';
+
+  @override
+  String get group_members_list => 'Danh sách thành viên';
+
+  @override
+  String get group_leader_badge => 'Trưởng nhóm';
+
+  @override
+  String get leave_group_button => 'Rời khỏi nhóm trò chuyện';
+
+  @override
+  String get leave_group_confirm_title => 'Rời khỏi nhóm';
+
+  @override
+  String get leave_group_confirm_content =>
+      'Bạn có chắc chắn muốn rời khỏi nhóm này không?';
+
+  @override
+  String get send_image_tooltip => 'Gửi hình ảnh';
+
+  @override
+  String get take_photo_option => 'Chụp ảnh mới';
+
+  @override
+  String get choose_gallery_option => 'Chọn ảnh từ thư viện';
 }

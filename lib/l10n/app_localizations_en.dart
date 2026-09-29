@@ -674,4 +674,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get message_author => 'Message Author';
+
+  @override
+  String get chat_messages_title => 'Messages';
+
+  @override
+  String get start_chatting => 'Start Chatting';
+
+  @override
+  String get direct_chat_1_1 => 'Direct Message (1-1)';
+
+  @override
+  String get direct_chat_subtitle =>
+      'Search and chat with Phenikaa friends & students';
+
+  @override
+  String get create_group_chat => 'Create Group Chat';
+
+  @override
+  String get create_group_subtitle =>
+      'Create study groups, project teams, or club chats';
+
+  @override
+  String get enter_group_name => 'Enter group chat name...';
+
+  @override
+  String get group_name_placeholder =>
+      'Group name (e.g. CS K17, Capstone Project...)';
+
+  @override
+  String get search_group_members_hint => 'Search students to add to group...';
+
+  @override
+  String get group_info_title => 'Group Info';
+
+  @override
+  String get group_members_list => 'Member List';
+
+  @override
+  String get group_leader_badge => 'Group Leader';
+
+  @override
+  String get leave_group_button => 'Leave Group Chat';
+
+  @override
+  String get leave_group_confirm_title => 'Leave Group';
+
+  @override
+  String get leave_group_confirm_content =>
+      'Are you sure you want to leave this group chat?';
+
+  @override
+  String get send_image_tooltip => 'Send image';
+
+  @override
+  String get take_photo_option => 'Take photo';
+
+  @override
+  String get choose_gallery_option => 'Choose from gallery';
 }

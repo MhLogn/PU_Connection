@@ -26,6 +26,7 @@ class ChatState extends Equatable {
     List<ConversationEntity>? conversations,
     List<MessageEntity>? currentMessages,
     String? activeConversationId,
+    bool resetActiveConversation = false,
     bool? isSending,
     String? errorMessage,
   }) {
@@ -33,7 +34,9 @@ class ChatState extends Equatable {
       status: status ?? this.status,
       conversations: conversations ?? this.conversations,
       currentMessages: currentMessages ?? this.currentMessages,
-      activeConversationId: activeConversationId ?? this.activeConversationId,
+      activeConversationId: resetActiveConversation
+          ? null
+          : (activeConversationId ?? this.activeConversationId),
       isSending: isSending ?? this.isSending,
       errorMessage: errorMessage,
     );

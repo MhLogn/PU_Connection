@@ -10,6 +10,10 @@ class ConversationEntity extends Equatable {
   final String lastMessageSenderId;
   final DateTime? lastMessageAt;
   final Map<String, int> unreadCounts;
+  final bool isGroup;
+  final String groupName;
+  final String groupAvatar;
+  final String adminId;
 
   const ConversationEntity({
     required this.id,
@@ -21,6 +25,10 @@ class ConversationEntity extends Equatable {
     this.lastMessageSenderId = '',
     this.lastMessageAt,
     this.unreadCounts = const {},
+    this.isGroup = false,
+    this.groupName = '',
+    this.groupAvatar = '',
+    this.adminId = '',
   });
 
   String getOtherParticipantId(String currentUserId) {
@@ -42,6 +50,27 @@ class ConversationEntity extends Equatable {
     return participantFaculties[otherId] ?? '';
   }
 
+  String getDisplayName(String currentUserId) {
+    if (isGroup) {
+      return groupName.isNotEmpty ? groupName : 'Nhóm trò chuyện';
+    }
+    return getOtherParticipantName(currentUserId);
+  }
+
+  String getDisplayAvatar(String currentUserId) {
+    if (isGroup) {
+      return groupAvatar;
+    }
+    return getOtherParticipantAvatar(currentUserId);
+  }
+
+  String getDisplaySubtitle(String currentUserId) {
+    if (isGroup) {
+      return '${participantIds.length} thành viên';
+    }
+    return getOtherParticipantFaculty(currentUserId);
+  }
+
   int getUnreadCount(String currentUserId) {
     return unreadCounts[currentUserId] ?? 0;
   }
@@ -56,6 +85,10 @@ class ConversationEntity extends Equatable {
     String? lastMessageSenderId,
     DateTime? lastMessageAt,
     Map<String, int>? unreadCounts,
+    bool? isGroup,
+    String? groupName,
+    String? groupAvatar,
+    String? adminId,
   }) {
     return ConversationEntity(
       id: id ?? this.id,
@@ -67,6 +100,10 @@ class ConversationEntity extends Equatable {
       lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCounts: unreadCounts ?? this.unreadCounts,
+      isGroup: isGroup ?? this.isGroup,
+      groupName: groupName ?? this.groupName,
+      groupAvatar: groupAvatar ?? this.groupAvatar,
+      adminId: adminId ?? this.adminId,
     );
   }
 
@@ -81,5 +118,9 @@ class ConversationEntity extends Equatable {
         lastMessageSenderId,
         lastMessageAt,
         unreadCounts,
+        isGroup,
+        groupName,
+        groupAvatar,
+        adminId,
       ];
 }

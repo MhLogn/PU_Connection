@@ -46,6 +46,9 @@ Future<void> initDI() async {
       ));
 
   sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl());
-  sl.registerFactory(() => ChatCubit(chatRepository: sl()));
+  sl.registerFactory(() => ChatCubit(
+        chatRepository: sl(),
+        cloudinaryService: sl(),
+      ));
 }
 

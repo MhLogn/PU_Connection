@@ -19,6 +19,24 @@ abstract class ChatRepository {
     required String otherUserAvatar,
     required String otherUserFaculty,
   });
+  Future<String> createGroupConversation({
+    required String groupName,
+    String groupAvatar = '',
+    required String creatorId,
+    required String creatorName,
+    String creatorAvatar = '',
+    String creatorFaculty = '',
+    required List<Map<String, String>> members,
+  });
+  Future<void> leaveGroup({
+    required String conversationId,
+    required String userId,
+  });
+  Future<void> updateGroupInfo({
+    required String conversationId,
+    String? groupName,
+    String? groupAvatar,
+  });
   Future<void> markAsRead({
     required String conversationId,
     required String currentUserId,

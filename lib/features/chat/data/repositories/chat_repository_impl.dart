@@ -162,4 +162,106 @@ class ChatRepositoryImpl implements ChatRepository {
       'unreadCounts.$currentUserId': 0,
     }, SetOptions(merge: true));
   }
+
+  @override
+  Future<String> createGroupConversation({
+    required String groupName,
+    String groupAvatar = '',
+    required String creatorId,
+    required String creatorName,
+    String creatorAvatar = '',
+    String creatorFaculty = '',
+    required List<Map<String, String>> members,
+  }) async {
+    final convRef = _firestore
+        .collection(FirebaseConstants.chatsCollection)
+        .doc();
+
+    final participantIds = <String>[creatorId];
+    final participantNames = <String, String>{creatorId: creatorName};
+    final participantAvatars = <String, String>{creatorId: creatorAvatar};
+    final participantFaculties = <String, String>{creatorId: creatorFaculty};
+    final unreadCounts = <String, int>{creatorId: 0};
+
+    for (final member in members) {
+      final mId = member['id'] ?? '';
+      if (mId.isNotEmpty && !participantIds.contains(mId)) {
+        participantIds.add(mId);
+        participantNames[mId] = member['name'] ?? 'Sinh viên Phenikaa';
+        participantAvatars[mId] = member['avatar'] ?? '';
+        participantFaculties[mId] = member['faculty'] ?? '';
+        unreadCounts[mId] = 0;
+      }
+    }
+
+    final welcomeText = '$creatorName đã tạo nhóm "$groupName"';
+
+    final batch = _firestore.batch();
+    batch.set(convRef, {
+      'participantIds': participantIds,
+      'participantNames': participantNames,
+      'participantAvatars': participantAvatars,
+      'participantFaculties': participantFaculties,
+      'isGroup': true,
+      'groupName': groupName,
+      'groupAvatar': groupAvatar,
+      'adminId': creatorId,
+      'lastMessage': welcomeText,
+      'lastMessageSenderId': creatorId,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'unreadCounts': unreadCounts,
+    });
+
+    final msgRef = convRef
+        .collection(FirebaseConstants.messagesSubcollection)
+        .doc();
+
+    final systemMsg = MessageModel(
+      messageId: msgRef.id,
+      senderId: creatorId,
+      senderName: creatorName,
+      senderAvatar: creatorAvatar,
+      content: welcomeText,
+      createdAt: DateTime.now(),
+      isRead: true,
+    );
+    batch.set(msgRef, systemMsg.toMap());
+
+    await batch.commit();
+    return convRef.id;
+  }
+
+  @override
+  Future<void> leaveGroup({
+    required String conversationId,
+    required String userId,
+  }) async {
+    final convRef = _firestore
+        .collection(FirebaseConstants.chatsCollection)
+        .doc(conversationId);
+
+    await convRef.update({
+      'participantIds': FieldValue.arrayRemove([userId]),
+      'unreadCounts.$userId': FieldValue.delete(),
+    });
+  }
+
+  @override
+  Future<void> updateGroupInfo({
+    required String conversationId,
+    String? groupName,
+    String? groupAvatar,
+  }) async {
+    final convRef = _firestore
+        .collection(FirebaseConstants.chatsCollection)
+        .doc(conversationId);
+
+    final Map<String, dynamic> updateData = {};
+    if (groupName != null) updateData['groupName'] = groupName;
+    if (groupAvatar != null) updateData['groupAvatar'] = groupAvatar;
+
+    if (updateData.isNotEmpty) {
+      await convRef.update(updateData);
+    }
+  }
 }
