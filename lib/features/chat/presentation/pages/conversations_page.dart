@@ -7,6 +7,7 @@ import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../cubit/chat_cubit.dart';
 import '../cubit/chat_state.dart';
+import '../widgets/create_group_bottom_sheet.dart';
 import '../widgets/new_chat_bottom_sheet.dart';
 import 'chat_detail_page.dart';
 
@@ -36,12 +37,91 @@ class _ConversationsPageState extends State<ConversationsPage> {
     super.dispose();
   }
 
-  void _openNewChatModal() {
+  void _openChatActionSheet() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  'Bắt đầu trò chuyện',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.person_add_rounded, color: AppTheme.primaryColor(context)),
+                ),
+                title: const Text('Nhắn tin trực tiếp (1-1)', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Tìm kiếm và nhắn tin cho bạn bè, sinh viên Phenikaa', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openDirectChatModal();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentColor(context).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.groups_rounded, color: AppTheme.accentColor(context)),
+                ),
+                title: const Text('Tạo nhóm trò chuyện', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Tạo nhóm học tập, đồ án hoặc sinh hoạt CLB', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openCreateGroupModal();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openDirectChatModal() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => const NewChatBottomSheet(),
+    );
+  }
+
+  void _openCreateGroupModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const CreateGroupBottomSheet(),
     );
   }
 
@@ -65,12 +145,12 @@ class _ConversationsPageState extends State<ConversationsPage> {
           IconButton(
             icon: const Icon(Icons.rate_review_outlined),
             tooltip: 'Nhắn tin mới',
-            onPressed: _openNewChatModal,
+            onPressed: _openChatActionSheet,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _openNewChatModal,
+        onPressed: _openChatActionSheet,
         backgroundColor: AppTheme.accentColor(context),
         foregroundColor: Colors.white,
         tooltip: 'Soạn tin nhắn mới',
@@ -80,9 +160,9 @@ class _ConversationsPageState extends State<ConversationsPage> {
         builder: (context, state) {
           final conversations = state.conversations.where((conv) {
             if (_searchQuery.isEmpty) return true;
-            final otherName = conv.getOtherParticipantName(currentUserId).toLowerCase();
+            final displayName = conv.getDisplayName(currentUserId).toLowerCase();
             final lastMsg = conv.lastMessage.toLowerCase();
-            return otherName.contains(_searchQuery) || lastMsg.contains(_searchQuery);
+            return displayName.contains(_searchQuery) || lastMsg.contains(_searchQuery);
           }).toList();
 
           return Column(
@@ -112,7 +192,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Tìm kiếm cuộc trò chuyện, bạn bè...',
+                      hintText: 'Tìm kiếm cuộc trò chuyện, nhóm...',
                       hintStyle: TextStyle(
                         fontSize: 13.5,
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -204,7 +284,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
               Text(
                 _searchQuery.isNotEmpty
                     ? 'Thử tìm kiếm với tên hoặc từ khóa khác'
-                    : 'Hãy kết nối và trò chuyện với bạn bè, sinh viên cùng khoa!',
+                    : 'Hãy kết nối, trò chuyện với bạn bè hoặc tạo nhóm học tập ngay hôm nay!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -213,7 +293,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
-                onPressed: _openNewChatModal,
+                onPressed: _openChatActionSheet,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: const Text('Bắt đầu trò chuyện'),
                 style: ElevatedButton.styleFrom(
@@ -235,6 +315,8 @@ class _ConversationsPageState extends State<ConversationsPage> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final conv = conversations[index];
+        final isGroup = conv.isGroup;
+        final displayName = conv.getDisplayName(currentUserId);
         final otherId = conv.getOtherParticipantId(currentUserId);
         final otherName = conv.getOtherParticipantName(currentUserId);
         final otherFaculty = conv.getOtherParticipantFaculty(currentUserId);
@@ -245,14 +327,29 @@ class _ConversationsPageState extends State<ConversationsPage> {
             ? timeago.format(conv.lastMessageAt!, locale: localeCode)
             : '';
 
-        final initials = otherName.isNotEmpty
-            ? otherName.trim().split(' ').last[0].toUpperCase()
-            : 'P';
+        final initials = displayName.isNotEmpty
+            ? (isGroup
+                ? displayName.trim()[0].toUpperCase()
+                : displayName.trim().split(' ').last[0].toUpperCase())
+            : (isGroup ? 'N' : 'P');
 
         final isMeLastSender = conv.lastMessageSenderId == currentUserId;
-        final displayLastMessage = conv.lastMessage.isNotEmpty
-            ? (isMeLastSender ? 'Bạn: ${conv.lastMessage}' : conv.lastMessage)
-            : 'Chưa có tin nhắn';
+        String displayLastMessage;
+        if (conv.lastMessage.isEmpty) {
+          displayLastMessage = 'Chưa có tin nhắn';
+        } else if (isMeLastSender) {
+          displayLastMessage = 'Bạn: ${conv.lastMessage}';
+        } else if (isGroup) {
+          final senderName = conv.participantNames[conv.lastMessageSenderId];
+          final shortSenderName = senderName != null && senderName.isNotEmpty
+              ? senderName.split(' ').last
+              : '';
+          displayLastMessage = shortSenderName.isNotEmpty
+              ? '$shortSenderName: ${conv.lastMessage}'
+              : conv.lastMessage;
+        } else {
+          displayLastMessage = conv.lastMessage;
+        }
 
         return Container(
           decoration: BoxDecoration(
@@ -283,10 +380,12 @@ class _ConversationsPageState extends State<ConversationsPage> {
                   MaterialPageRoute(
                     builder: (_) => ChatDetailPage(
                       conversationId: conv.id,
-                      otherUserId: otherId,
-                      otherUserName: otherName,
-                      otherUserAvatar: otherAvatar,
-                      otherUserFaculty: otherFaculty,
+                      isGroup: isGroup,
+                      groupName: isGroup ? conv.groupName : '',
+                      otherUserId: isGroup ? '' : otherId,
+                      otherUserName: isGroup ? conv.groupName : otherName,
+                      otherUserAvatar: isGroup ? conv.groupAvatar : otherAvatar,
+                      otherUserFaculty: isGroup ? '' : otherFaculty,
                       participantIds: conv.participantIds,
                     ),
                   ),
@@ -300,29 +399,34 @@ class _ConversationsPageState extends State<ConversationsPage> {
                       children: [
                         CircleAvatar(
                           radius: 24,
-                          backgroundColor: AppTheme.blueContainer(context),
-                          child: Text(
-                            initials,
-                            style: TextStyle(
-                              color: AppTheme.primaryColor(context),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          backgroundColor: isGroup
+                              ? AppTheme.primaryColor(context)
+                              : AppTheme.blueContainer(context),
+                          child: isGroup
+                              ? const Icon(Icons.groups_rounded, color: Colors.white, size: 24)
+                              : Text(
+                                  initials,
+                                  style: TextStyle(
+                                    color: AppTheme.primaryColor(context),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
+                        if (!isGroup)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 13,
+                              height: 13,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colorScheme.surface, width: 2),
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 13,
-                            height: 13,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: colorScheme.surface, width: 2),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(width: 12),
@@ -335,7 +439,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  otherName,
+                                  displayName,
                                   style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: hasUnread ? FontWeight.bold : FontWeight.w600,
@@ -359,7 +463,35 @@ class _ConversationsPageState extends State<ConversationsPage> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              if (otherFaculty.isNotEmpty) ...[
+                              if (isGroup) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentColor(context).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.group_rounded,
+                                        size: 11,
+                                        color: AppTheme.accentColor(context),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        '${conv.participantIds.length} TV',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.accentColor(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ] else if (otherFaculty.isNotEmpty) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                                   margin: const EdgeInsets.only(right: 6),
