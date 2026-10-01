@@ -4,6 +4,7 @@ import '../theme/theme_cubit.dart';
 import '../localization/locale_cubit.dart';
 import '../services/cloudinary_service.dart';
 import '../services/gemini_service.dart';
+import '../services/notification_service.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
@@ -25,6 +26,10 @@ Future<void> initDI() async {
 
   sl.registerLazySingleton(() => CloudinaryService());
   sl.registerLazySingleton(() => GeminiService());
+
+  final notificationService = NotificationService(prefs: sl());
+  await notificationService.init();
+  sl.registerLazySingleton<NotificationService>(() => notificationService);
 
   sl.registerFactory(() => ThemeCubit(sharedPreferences: sl()));
   sl.registerFactory(() => LocaleCubit(sharedPreferences: sl()));

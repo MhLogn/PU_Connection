@@ -17,6 +17,8 @@ import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../onboarding/presentation/widgets/notification_permission_sheet.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -28,6 +30,14 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
   final Set<int> _loadedTabs = {0};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationPermissionSheet.checkAndShowPrompt(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1490,6 +1500,37 @@ class _StudentProfileView extends StatelessWidget {
             subtitle: Text(languageName, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showLanguagePickerModal(context),
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF10B981), size: 20),
+            ),
+            title: Text(l10n.notifications_settings_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text(l10n.notifications_settings_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: IconButton(
+              icon: Icon(Icons.send_rounded, size: 20, color: AppTheme.primaryColor(context)),
+              tooltip: l10n.test_notification_btn,
+              onPressed: () async {
+                await sl<NotificationService>().sendTestNotification();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã gửi thông báo thử nghiệm! Vui lòng kiểm tra thanh thông báo thiết bị.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            ),
+            onTap: () => NotificationPermissionSheet.checkAndShowPrompt(context, force: true),
           ),
           Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(

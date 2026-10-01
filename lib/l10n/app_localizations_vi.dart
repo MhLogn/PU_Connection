@@ -733,4 +733,42 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get choose_gallery_option => 'Chọn ảnh từ thư viện';
+
+  @override
+  String get notification_permission_title => 'Bật Thông Báo PU Connection';
+
+  @override
+  String get notification_permission_subtitle =>
+      'Đừng bỏ lỡ các tin tức quan trọng từ trường Phenikaa và bạn bè của bạn';
+
+  @override
+  String get notification_benefit_chat =>
+      'Nhận tin nhắn tức thì từ bạn bè và nhóm học tập';
+
+  @override
+  String get notification_benefit_docs =>
+      'Cập nhật bài viết mới và tài liệu học phần';
+
+  @override
+  String get notification_benefit_events =>
+      'Nhắc nhở lịch sự kiện campus và sinh hoạt CLB';
+
+  @override
+  String get enable_notifications_btn => 'Cho phép nhận thông báo';
+
+  @override
+  String get maybe_later_btn => 'Để sau';
+
+  @override
+  String get notifications_settings_title => 'Thông báo ứng dụng';
+
+  @override
+  String get notifications_settings_desc =>
+      'Nhận thông báo tin nhắn và sự kiện trên thiết bị';
+
+  @override
+  String get test_notification_btn => 'Thử nghiệm gửi thông báo';
+
+  @override
+  String get notification_permission_granted => 'Đã bật thông báo thành công!';
 }

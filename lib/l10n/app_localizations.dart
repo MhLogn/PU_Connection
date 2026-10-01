@@ -1501,6 +1501,72 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chọn ảnh từ thư viện'**
   String get choose_gallery_option;
+
+  /// No description provided for @notification_permission_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật Thông Báo PU Connection'**
+  String get notification_permission_title;
+
+  /// No description provided for @notification_permission_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đừng bỏ lỡ các tin tức quan trọng từ trường Phenikaa và bạn bè của bạn'**
+  String get notification_permission_subtitle;
+
+  /// No description provided for @notification_benefit_chat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận tin nhắn tức thì từ bạn bè và nhóm học tập'**
+  String get notification_benefit_chat;
+
+  /// No description provided for @notification_benefit_docs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật bài viết mới và tài liệu học phần'**
+  String get notification_benefit_docs;
+
+  /// No description provided for @notification_benefit_events.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắc nhở lịch sự kiện campus và sinh hoạt CLB'**
+  String get notification_benefit_events;
+
+  /// No description provided for @enable_notifications_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép nhận thông báo'**
+  String get enable_notifications_btn;
+
+  /// No description provided for @maybe_later_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để sau'**
+  String get maybe_later_btn;
+
+  /// No description provided for @notifications_settings_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo ứng dụng'**
+  String get notifications_settings_title;
+
+  /// No description provided for @notifications_settings_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo tin nhắn và sự kiện trên thiết bị'**
+  String get notifications_settings_desc;
+
+  /// No description provided for @test_notification_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử nghiệm gửi thông báo'**
+  String get test_notification_btn;
+
+  /// No description provided for @notification_permission_granted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bật thông báo thành công!'**
+  String get notification_permission_granted;
 }
 
 class _AppLocalizationsDelegate

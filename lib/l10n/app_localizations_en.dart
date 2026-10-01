@@ -732,4 +732,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get choose_gallery_option => 'Choose from gallery';
+
+  @override
+  String get notification_permission_title =>
+      'Enable PU Connection Notifications';
+
+  @override
+  String get notification_permission_subtitle =>
+      'Don\'t miss important updates from Phenikaa University and your peers';
+
+  @override
+  String get notification_benefit_chat =>
+      'Receive instant messages from friends and study groups';
+
+  @override
+  String get notification_benefit_docs =>
+      'Get notified about new posts and course materials';
+
+  @override
+  String get notification_benefit_events =>
+      'Reminders for campus events and club activities';
+
+  @override
+  String get enable_notifications_btn => 'Allow Notifications';
+
+  @override
+  String get maybe_later_btn => 'Maybe Later';
+
+  @override
+  String get notifications_settings_title => 'App Notifications';
+
+  @override
+  String get notifications_settings_desc =>
+      'Receive messages and event notifications on device';
+
+  @override
+  String get test_notification_btn => 'Send Test Notification';
+
+  @override
+  String get notification_permission_granted =>
+      'Notifications enabled successfully!';
 }

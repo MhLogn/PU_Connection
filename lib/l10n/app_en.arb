@@ -255,5 +255,16 @@
   "leave_group_confirm_content": "Are you sure you want to leave this group chat?",
   "send_image_tooltip": "Send image",
   "take_photo_option": "Take photo",
-  "choose_gallery_option": "Choose from gallery"
+  "choose_gallery_option": "Choose from gallery",
+  "notification_permission_title": "Enable PU Connection Notifications",
+  "notification_permission_subtitle": "Don't miss important updates from Phenikaa University and your peers",
+  "notification_benefit_chat": "Receive instant messages from friends and study groups",
+  "notification_benefit_docs": "Get notified about new posts and course materials",
+  "notification_benefit_events": "Reminders for campus events and club activities",
+  "enable_notifications_btn": "Allow Notifications",
+  "maybe_later_btn": "Maybe Later",
+  "notifications_settings_title": "App Notifications",
+  "notifications_settings_desc": "Receive messages and event notifications on device",
+  "test_notification_btn": "Send Test Notification",
+  "notification_permission_granted": "Notifications enabled successfully!"
 }

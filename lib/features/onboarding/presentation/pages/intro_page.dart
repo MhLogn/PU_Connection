@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../widgets/notification_permission_sheet.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -28,7 +29,10 @@ class _IntroPageState extends State<IntroPage> {
         await prefs.setBool('has_seen_intro', true);
       } catch (_) {}
       if (mounted) {
-        context.go('/login');
+        await NotificationPermissionSheet.checkAndShowPrompt(context);
+        if (mounted) {
+          context.go('/login');
+        }
       }
     } else {
       _pageController.nextPage(

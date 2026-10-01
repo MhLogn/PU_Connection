@@ -255,5 +255,16 @@
   "leave_group_confirm_content": "Bạn có chắc chắn muốn rời khỏi nhóm này không?",
   "send_image_tooltip": "Gửi hình ảnh",
   "take_photo_option": "Chụp ảnh mới",
-  "choose_gallery_option": "Chọn ảnh từ thư viện"
+  "choose_gallery_option": "Chọn ảnh từ thư viện",
+  "notification_permission_title": "Bật Thông Báo PU Connection",
+  "notification_permission_subtitle": "Đừng bỏ lỡ các tin tức quan trọng từ trường Phenikaa và bạn bè của bạn",
+  "notification_benefit_chat": "Nhận tin nhắn tức thì từ bạn bè và nhóm học tập",
+  "notification_benefit_docs": "Cập nhật bài viết mới và tài liệu học phần",
+  "notification_benefit_events": "Nhắc nhở lịch sự kiện campus và sinh hoạt CLB",
+  "enable_notifications_btn": "Cho phép nhận thông báo",
+  "maybe_later_btn": "Để sau",
+  "notifications_settings_title": "Thông báo ứng dụng",
+  "notifications_settings_desc": "Nhận thông báo tin nhắn và sự kiện trên thiết bị",
+  "test_notification_btn": "Thử nghiệm gửi thông báo",
+  "notification_permission_granted": "Đã bật thông báo thành công!"
 }
