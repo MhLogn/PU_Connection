@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/cloudinary_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -13,6 +14,9 @@ class ChatCubit extends Cubit<ChatState> {
   final CloudinaryService _cloudinaryService;
   StreamSubscription<List<ConversationEntity>>? _convSubscription;
   StreamSubscription<List<MessageEntity>>? _msgSubscription;
+
+  final Map<String, DateTime> _lastNotifiedMessageTimes = {};
+  bool _isFirstConvLoad = true;
 
   ChatCubit({
     required ChatRepository chatRepository,
@@ -34,6 +38,45 @@ class ChatCubit extends Cubit<ChatState> {
         .getConversationsStream(currentUserId)
         .listen(
       (conversations) {
+        if (!_isFirstConvLoad) {
+          for (final conv in conversations) {
+            final lastTime = conv.lastMessageAt;
+            final prevTime = _lastNotifiedMessageTimes[conv.id];
+
+            final isFromOther = conv.lastMessageSenderId.isNotEmpty &&
+                conv.lastMessageSenderId != currentUserId;
+            final isNotActive = state.activeConversationId != conv.id;
+
+            if (lastTime != null && isFromOther && isNotActive) {
+              if (prevTime == null || lastTime.isAfter(prevTime)) {
+                _lastNotifiedMessageTimes[conv.id] = lastTime;
+
+                final senderName = conv.isGroup
+                    ? '${conv.participantNames[conv.lastMessageSenderId] ?? "Thành viên"} (${conv.groupName.isNotEmpty ? conv.groupName : "Nhóm"})'
+                    : conv.getOtherParticipantName(currentUserId);
+
+                try {
+                  if (sl.isRegistered<NotificationService>()) {
+                    sl<NotificationService>().showNotification(
+                      id: conv.id.hashCode,
+                      title: 'Tin nhắn mới từ $senderName',
+                      body: conv.lastMessage,
+                      payload: 'chat:${conv.id}',
+                    );
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+        }
+
+        for (final conv in conversations) {
+          if (conv.lastMessageAt != null) {
+            _lastNotifiedMessageTimes[conv.id] = conv.lastMessageAt!;
+          }
+        }
+        _isFirstConvLoad = false;
+
         emit(state.copyWith(
           status: ChatStatus.loaded,
           conversations: conversations,

@@ -10,6 +10,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/gemini_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../feed/presentation/pages/feed_page.dart';
+import '../../../feed/presentation/cubit/feed_cubit.dart';
 import '../../../documents/presentation/pages/docs_hub_page.dart';
 import '../../../documents/presentation/cubit/document_cubit.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
@@ -36,6 +37,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NotificationPermissionSheet.checkAndShowPrompt(context);
+      final authState = context.read<AuthCubit>().state;
+      if (authState is Authenticated) {
+        context.read<FeedCubit>().updateCurrentUserId(authState.user.uid);
+        context.read<ChatCubit>().initConversations(authState.user.uid);
+      }
     });
   }
 
@@ -62,6 +68,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       listener: (context, state) {
         if (state is Unauthenticated) {
           context.go('/login');
+        } else if (state is Authenticated) {
+          context.read<FeedCubit>().updateCurrentUserId(state.user.uid);
+          context.read<ChatCubit>().initConversations(state.user.uid);
         }
       },
       child: Scaffold(

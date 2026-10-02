@@ -84,5 +84,21 @@ void main() {
       expect(fromMap.subjectCode, 'MATH-101');
       expect(fromMap.attachments.first.name, 'De_thi_giai_tich.pdf');
     });
+
+    test('PostModel correctly handles tagged users serialization', () {
+      final taggedPost = post.copyWith(
+        taggedUserIds: ['user_789', 'user_999'],
+        taggedUserNames: {'user_789': 'Trần Thị Mai', 'user_999': 'Lê Hoàng Nam'},
+      );
+
+      final map = taggedPost.toMap();
+      expect(map['taggedUserIds'], ['user_789', 'user_999']);
+      expect(map['taggedUserNames'], {'user_789': 'Trần Thị Mai', 'user_999': 'Lê Hoàng Nam'});
+
+      final reconstructed = PostModel.fromMap(map, 'post_tagged');
+      expect(reconstructed.taggedUserIds.length, 2);
+      expect(reconstructed.taggedUserNames['user_789'], 'Trần Thị Mai');
+      expect(reconstructed.taggedUserNames['user_999'], 'Lê Hoàng Nam');
+    });
   });
 }

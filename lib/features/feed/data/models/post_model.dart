@@ -15,6 +15,8 @@ class PostModel extends PostEntity {
     super.subjectCode,
     super.attachments,
     super.tags,
+    super.taggedUserIds,
+    super.taggedUserNames,
     super.likedUsers,
     super.likeCount,
     super.commentCount,
@@ -37,6 +39,12 @@ class PostModel extends PostEntity {
           .map((item) => PostAttachment.fromMap(Map<String, dynamic>.from(item as Map)))
           .toList(),
       tags: List<String>.from(map['tags'] as List? ?? []),
+      taggedUserIds: List<String>.from(map['taggedUserIds'] as List? ?? []),
+      taggedUserNames: (map['taggedUserNames'] is Map)
+          ? Map<String, String>.from((map['taggedUserNames'] as Map).map(
+              (key, value) => MapEntry(key.toString(), value.toString()),
+            ))
+          : const {},
       likedUsers: List<String>.from(map['likedUsers'] as List? ?? []),
       likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
       commentCount: (map['commentCount'] as num?)?.toInt() ?? 0,
@@ -64,6 +72,8 @@ class PostModel extends PostEntity {
       'subjectCode': subjectCode,
       'attachments': attachments.map((a) => a.toMap()).toList(),
       'tags': tags,
+      'taggedUserIds': taggedUserIds,
+      'taggedUserNames': taggedUserNames,
       'likedUsers': likedUsers,
       'likeCount': likeCount,
       'commentCount': commentCount,
@@ -86,6 +96,8 @@ class PostModel extends PostEntity {
     String? subjectCode,
     List<PostAttachment>? attachments,
     List<String>? tags,
+    List<String>? taggedUserIds,
+    Map<String, String>? taggedUserNames,
     List<String>? likedUsers,
     int? likeCount,
     int? commentCount,
@@ -104,6 +116,8 @@ class PostModel extends PostEntity {
       subjectCode: subjectCode ?? this.subjectCode,
       attachments: attachments ?? this.attachments,
       tags: tags ?? this.tags,
+      taggedUserIds: taggedUserIds ?? this.taggedUserIds,
+      taggedUserNames: taggedUserNames ?? this.taggedUserNames,
       likedUsers: likedUsers ?? this.likedUsers,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,

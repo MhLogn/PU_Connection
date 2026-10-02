@@ -64,6 +64,8 @@ class PostRepositoryImpl implements PostRepository {
       subjectCode: post.subjectCode,
       attachments: post.attachments,
       tags: post.tags,
+      taggedUserIds: post.taggedUserIds,
+      taggedUserNames: post.taggedUserNames,
       likedUsers: const [],
       likeCount: 0,
       commentCount: 0,
@@ -115,6 +117,8 @@ class PostRepositoryImpl implements PostRepository {
       'subjectCode': post.subjectCode,
       'attachments': post.attachments.map((a) => a.toMap()).toList(),
       'tags': post.tags,
+      'taggedUserIds': post.taggedUserIds,
+      'taggedUserNames': post.taggedUserNames,
       'postType': post.postType,
       'updatedAt': FieldValue.serverTimestamp(),
     });

@@ -46,6 +46,8 @@ class PostEntity extends Equatable {
   final String? subjectCode; // Ví dụ: 'CNTT-225', 'CSDL-101'
   final List<PostAttachment> attachments;
   final List<String> tags;
+  final List<String> taggedUserIds;
+  final Map<String, String> taggedUserNames;
   final List<String> likedUsers;
   final int likeCount;
   final int commentCount;
@@ -64,6 +66,8 @@ class PostEntity extends Equatable {
     this.subjectCode,
     this.attachments = const [],
     this.tags = const [],
+    this.taggedUserIds = const [],
+    this.taggedUserNames = const {},
     this.likedUsers = const [],
     this.likeCount = 0,
     this.commentCount = 0,
@@ -85,6 +89,8 @@ class PostEntity extends Equatable {
     String? subjectCode,
     List<PostAttachment>? attachments,
     List<String>? tags,
+    List<String>? taggedUserIds,
+    Map<String, String>? taggedUserNames,
     List<String>? likedUsers,
     int? likeCount,
     int? commentCount,
@@ -103,6 +109,8 @@ class PostEntity extends Equatable {
       subjectCode: subjectCode ?? this.subjectCode,
       attachments: attachments ?? this.attachments,
       tags: tags ?? this.tags,
+      taggedUserIds: taggedUserIds ?? this.taggedUserIds,
+      taggedUserNames: taggedUserNames ?? this.taggedUserNames,
       likedUsers: likedUsers ?? this.likedUsers,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
@@ -124,6 +132,8 @@ class PostEntity extends Equatable {
         subjectCode,
         attachments,
         tags,
+        taggedUserIds,
+        taggedUserNames,
         likedUsers,
         likeCount,
         commentCount,

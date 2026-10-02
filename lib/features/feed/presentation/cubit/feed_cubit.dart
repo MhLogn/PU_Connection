@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/cloudinary_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/repositories/post_repository.dart';
@@ -14,6 +16,10 @@ class FeedCubit extends Cubit<FeedState> {
 
   String _currentCategory = 'Tất cả';
   String? _currentSubject;
+  String _currentUserId = '';
+  final Map<String, int> _lastSeenCommentCounts = {};
+  final Set<String> _knownPostIds = {};
+  bool _isFirstFeedLoad = true;
 
   FeedCubit({
     required PostRepository postRepository,
@@ -21,6 +27,10 @@ class FeedCubit extends Cubit<FeedState> {
   })  : _postRepository = postRepository,
         _cloudinaryService = cloudinaryService,
         super(FeedInitial());
+
+  void updateCurrentUserId(String uid) {
+    _currentUserId = uid;
+  }
 
   void loadFeed({String? category, String? subjectCode}) {
     if (category != null) _currentCategory = category;
@@ -34,17 +44,65 @@ class FeedCubit extends Cubit<FeedState> {
           subjectCode: _currentSubject,
         )
         .listen(
-          (posts) {
-            emit(FeedLoaded(
-              posts: posts,
-              selectedCategory: _currentCategory,
-              selectedSubject: _currentSubject,
-            ));
-          },
-          onError: (error) {
-            emit(FeedError(error.toString()));
-          },
-        );
+      (posts) {
+        if (!_isFirstFeedLoad && _currentUserId.isNotEmpty) {
+          for (final post in posts) {
+            // 1. Tag notification trigger
+            if (!_knownPostIds.contains(post.postId) &&
+                post.authorId != _currentUserId &&
+                post.taggedUserIds.contains(_currentUserId)) {
+              try {
+                if (sl.isRegistered<NotificationService>()) {
+                  sl<NotificationService>().showNotification(
+                    id: ('tag_${post.postId}').hashCode,
+                    title: '${post.authorName} đã gắn thẻ bạn',
+                    body: 'Trong bài viết: "${post.content.length > 50 ? '${post.content.substring(0, 50)}...' : post.content}"',
+                    payload: 'post:${post.postId}',
+                  );
+                }
+              } catch (_) {}
+            }
+
+            // 2. New comment on relevant post trigger (author or tagged user)
+            final isRelevant = post.authorId == _currentUserId ||
+                post.taggedUserIds.contains(_currentUserId);
+            if (isRelevant) {
+              final prevCount = _lastSeenCommentCounts[post.postId];
+              if (prevCount != null && post.commentCount > prevCount) {
+                final isAuthor = post.authorId == _currentUserId;
+                try {
+                  if (sl.isRegistered<NotificationService>()) {
+                    sl<NotificationService>().showNotification(
+                      id: ('comment_${post.postId}').hashCode,
+                      title: isAuthor
+                          ? 'Bình luận mới trên bài viết của bạn'
+                          : 'Bình luận mới trên bài viết bạn được gắn thẻ',
+                      body: 'Bài viết "${post.content.length > 40 ? '${post.content.substring(0, 40)}...' : post.content}" có bình luận mới.',
+                      payload: 'post:${post.postId}',
+                    );
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+        }
+
+        for (final post in posts) {
+          _knownPostIds.add(post.postId);
+          _lastSeenCommentCounts[post.postId] = post.commentCount;
+        }
+        _isFirstFeedLoad = false;
+
+        emit(FeedLoaded(
+          posts: posts,
+          selectedCategory: _currentCategory,
+          selectedSubject: _currentSubject,
+        ));
+      },
+      onError: (error) {
+        emit(FeedError(error.toString()));
+      },
+    );
   }
 
   void filterByCategory(String category) {
@@ -103,6 +161,8 @@ class FeedCubit extends Cubit<FeedState> {
     required String content,
     required String category,
     String? subjectCode,
+    List<String> taggedUserIds = const [],
+    Map<String, String> taggedUserNames = const {},
     List<File> imageFiles = const [],
     List<File> docFiles = const [],
   }) async {
@@ -147,6 +207,8 @@ class FeedCubit extends Cubit<FeedState> {
         subjectCode: subjectCode?.trim().isEmpty == true ? null : subjectCode?.trim(),
         attachments: attachments,
         tags: _extractTags(content),
+        taggedUserIds: taggedUserIds,
+        taggedUserNames: taggedUserNames,
       );
 
       await _postRepository.createPost(newPost);
@@ -160,6 +222,8 @@ class FeedCubit extends Cubit<FeedState> {
     required String content,
     required String category,
     String? subjectCode,
+    List<String>? taggedUserIds,
+    Map<String, String>? taggedUserNames,
     List<PostAttachment> existingAttachments = const [],
     List<File> newImageFiles = const [],
     List<File> newDocFiles = const [],
@@ -204,6 +268,8 @@ class FeedCubit extends Cubit<FeedState> {
         subjectCode: subjectCode?.trim().isEmpty == true ? null : subjectCode?.trim(),
         attachments: attachments,
         tags: _extractTags(content),
+        taggedUserIds: taggedUserIds ?? const [],
+        taggedUserNames: taggedUserNames ?? const {},
       );
 
       await _postRepository.updatePost(updatedPost);

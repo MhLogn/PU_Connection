@@ -9,6 +9,7 @@ import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/post_entity.dart';
 import '../cubit/feed_cubit.dart';
+import 'tag_students_bottom_sheet.dart';
 
 class CreatePostBottomSheet extends StatefulWidget {
   final PostEntity? postToEdit;
@@ -31,6 +32,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final List<File> _selectedImages = [];
   final List<File> _selectedDocs = [];
   final List<PostAttachment> _existingAttachments = [];
+  final List<Map<String, String>> _taggedStudents = [];
 
   bool get isEditing => widget.postToEdit != null;
 
@@ -50,6 +52,27 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       _subjectCodeController.text = post.subjectCode ?? '';
       _selectedCategory = _categories.contains(post.category) ? post.category : 'Thảo luận';
       _existingAttachments.addAll(post.attachments);
+      if (post.taggedUserNames.isNotEmpty) {
+        for (final entry in post.taggedUserNames.entries) {
+          _taggedStudents.add({
+            'id': entry.key,
+            'name': entry.value,
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _showTagStudentsModal() async {
+    final result = await TagStudentsBottomSheet.show(
+      context,
+      initiallyTagged: _taggedStudents,
+    );
+    if (result != null) {
+      setState(() {
+        _taggedStudents.clear();
+        _taggedStudents.addAll(result);
+      });
     }
   }
 
@@ -179,6 +202,15 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
     setState(() => _isUploading = true);
 
+    final taggedUserIds = _taggedStudents
+        .map((s) => s['id'] ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final taggedUserNames = {
+      for (final s in _taggedStudents)
+        if ((s['id'] ?? '').isNotEmpty) s['id']!: s['name'] ?? 'Sinh viên'
+    };
+
     try {
       if (isEditing) {
         await context.read<FeedCubit>().updatePost(
@@ -186,6 +218,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               content: content,
               category: _selectedCategory,
               subjectCode: _subjectCodeController.text.trim(),
+              taggedUserIds: taggedUserIds,
+              taggedUserNames: taggedUserNames,
               existingAttachments: _existingAttachments,
               newImageFiles: _selectedImages,
               newDocFiles: _selectedDocs,
@@ -211,6 +245,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               content: content,
               category: _selectedCategory,
               subjectCode: _subjectCodeController.text.trim(),
+              taggedUserIds: taggedUserIds,
+              taggedUserNames: taggedUserNames,
               imageFiles: _selectedImages,
               docFiles: _selectedDocs,
             );
@@ -566,6 +602,62 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 }).toList(),
               ),
             ],
+            // Tagged students row
+            if (_taggedStudents.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.people_alt_rounded, size: 14, color: Color(0xFF10B981)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Gắn thẻ cùng với (${_taggedStudents.length}):',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: _taggedStudents.map((s) {
+                        return Chip(
+                          backgroundColor: colorScheme.surface,
+                          avatar: CircleAvatar(
+                            radius: 10,
+                            backgroundColor: AppTheme.primaryColor(context),
+                            child: Text(
+                              (s['name'] ?? 'P')[0].toUpperCase(),
+                              style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          label: Text(
+                            s['name'] ?? '',
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                          ),
+                          deleteIcon: const Icon(Icons.close, size: 14),
+                          onDeleted: () => setState(() => _taggedStudents.remove(s)),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
 
             // Action buttons row
@@ -591,6 +683,17 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   tooltip: l10n.attach_file,
                   icon: const Icon(Icons.attach_file_rounded, size: 20),
                   onPressed: _isUploading ? null : _pickDocument,
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.12),
+                    foregroundColor: const Color(0xFF10B981),
+                    padding: const EdgeInsets.all(10),
+                  ),
+                  tooltip: 'Gắn thẻ bạn bè',
+                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
+                  onPressed: _isUploading ? null : _showTagStudentsModal,
                 ),
                 const Spacer(),
                 ElevatedButton(
