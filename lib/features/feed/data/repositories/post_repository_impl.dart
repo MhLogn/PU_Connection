@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/firebase_constants.dart';
+import '../../../../core/models/paginated_result.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/repositories/post_repository.dart';
@@ -13,6 +14,81 @@ class PostRepositoryImpl implements PostRepository {
 
   CollectionReference get _postsRef =>
       _firestore.collection(FirebaseConstants.postsCollection);
+
+  @override
+  Future<PaginatedResult<PostEntity>> getFeedPostsPaged({
+    String? faculty,
+    String? subjectCode,
+    String? category,
+    dynamic lastDocument,
+    int limit = 15,
+  }) async {
+    Query query = _postsRef.orderBy('createdAt', descending: true);
+
+    final hasCategory = category != null && category.isNotEmpty && category != 'Tất cả';
+    final hasSubject = subjectCode != null && subjectCode.isNotEmpty;
+    final hasFaculty = faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
+
+    if (hasCategory) {
+      query = query.where('category', isEqualTo: category);
+    }
+    if (hasSubject) {
+      query = query.where('subjectCode', isEqualTo: subjectCode);
+    }
+    if (hasFaculty) {
+      query = query.where('authorFaculty', isEqualTo: faculty);
+    }
+
+    if (lastDocument is DocumentSnapshot) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    query = query.limit(limit);
+
+    try {
+      final snapshot = await query.get();
+      final posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      final hasMore = snapshot.docs.length >= limit;
+
+      return PaginatedResult<PostEntity>(
+        items: posts,
+        lastDocument: lastDoc,
+        hasMore: hasMore,
+      );
+    } catch (_) {
+      Query fallbackQuery = _postsRef.orderBy('createdAt', descending: true);
+      if (lastDocument is DocumentSnapshot) {
+        fallbackQuery = fallbackQuery.startAfterDocument(lastDocument);
+      }
+      fallbackQuery = fallbackQuery.limit(limit * 2);
+
+      final snapshot = await fallbackQuery.get();
+      var posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+
+      if (hasCategory) {
+        posts = posts.where((p) => p.category == category).toList();
+      }
+      if (hasSubject) {
+        posts = posts.where((p) =>
+            p.subjectCode != null &&
+            p.subjectCode!.toLowerCase() == subjectCode.toLowerCase()).toList();
+      }
+      if (hasFaculty) {
+        posts = posts.where((p) =>
+            p.authorFaculty.toLowerCase() == faculty.toLowerCase()).toList();
+      }
+
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      final hasMore = snapshot.docs.length >= (limit * 2);
+
+      return PaginatedResult<PostEntity>(
+        items: posts,
+        lastDocument: lastDoc,
+        hasMore: hasMore,
+      );
+    }
+  }
 
   @override
   Stream<List<PostEntity>> getFeedPosts({

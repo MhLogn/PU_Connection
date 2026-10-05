@@ -1,6 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pu_connection/core/models/paginated_result.dart';
+import 'package:pu_connection/core/services/cloudinary_service.dart';
 import 'package:pu_connection/features/feed/data/models/post_model.dart';
+import 'package:pu_connection/features/feed/domain/entities/comment_entity.dart';
 import 'package:pu_connection/features/feed/domain/entities/post_entity.dart';
+import 'package:pu_connection/features/feed/domain/repositories/post_repository.dart';
+import 'package:pu_connection/features/feed/presentation/cubit/feed_cubit.dart';
+import 'package:pu_connection/features/feed/presentation/cubit/feed_state.dart';
 
 void main() {
   group('PostAttachment Tests', () {
@@ -101,4 +107,99 @@ void main() {
       expect(reconstructed.taggedUserNames['user_999'], 'Lê Hoàng Nam');
     });
   });
+
+  group('FeedCubit Pagination Tests', () {
+    late _MockPostRepository mockRepo;
+    late FeedCubit feedCubit;
+
+    setUp(() {
+      mockRepo = _MockPostRepository();
+      feedCubit = FeedCubit(
+        postRepository: mockRepo,
+        cloudinaryService: CloudinaryService(),
+      );
+    });
+
+    tearDown(() {
+      feedCubit.close();
+    });
+
+    test('loadFeed fetches initial 15 items and sets hasMore correctly', () async {
+      await feedCubit.loadFeed();
+
+      expect(feedCubit.state, isA<FeedLoaded>());
+      final state = feedCubit.state as FeedLoaded;
+      expect(state.posts.length, 15);
+      expect(state.hasMore, true);
+      expect(state.isLoadingMore, false);
+    });
+
+    test('loadMorePosts appends next page and updates hasMore', () async {
+      await feedCubit.loadFeed();
+      await feedCubit.loadMorePosts();
+
+      final state = feedCubit.state as FeedLoaded;
+      expect(state.posts.length, 20); // 15 + 5 remaining
+      expect(state.hasMore, false); // Less than 15 returned, so hasMore is false
+    });
+  });
+}
+
+class _MockPostRepository implements PostRepository {
+  final List<PostEntity> _allPosts = List.generate(
+    20,
+    (i) => PostEntity(
+      postId: 'post_$i',
+      authorId: 'author_$i',
+      authorName: 'Sinh viên $i',
+      content: 'Nội dung bài viết số $i',
+      category: 'Thảo luận',
+      createdAt: DateTime(2026, 1, 1).add(Duration(minutes: i)),
+    ),
+  );
+
+  @override
+  Future<PaginatedResult<PostEntity>> getFeedPostsPaged({
+    String? faculty,
+    String? subjectCode,
+    String? category,
+    dynamic lastDocument,
+    int limit = 15,
+  }) async {
+    int startIndex = 0;
+    if (lastDocument != null && lastDocument is int) {
+      startIndex = lastDocument;
+    }
+    final endIndex = (startIndex + limit).clamp(0, _allPosts.length);
+    final slice = _allPosts.sublist(startIndex, endIndex);
+
+    return PaginatedResult<PostEntity>(
+      items: slice,
+      lastDocument: endIndex,
+      hasMore: endIndex < _allPosts.length,
+    );
+  }
+
+  @override
+  Stream<List<PostEntity>> getFeedPosts({String? faculty, String? subjectCode, String? category}) {
+    return Stream.value(_allPosts);
+  }
+
+  @override
+  Future<void> createPost(PostEntity post) async {}
+
+  @override
+  Future<void> toggleLikePost({required String postId, required String userId, required bool isCurrentlyLiked}) async {}
+
+  @override
+  Future<void> deletePost(String postId) async {}
+
+  @override
+  Future<void> updatePost(PostEntity post) async {}
+
+  @override
+  Stream<List<CommentEntity>> getComments(String postId) => Stream.value([]);
+
+  @override
+  Future<void> addComment(String postId, CommentEntity comment) async {}
 }

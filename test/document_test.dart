@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pu_connection/core/models/paginated_result.dart';
 import 'package:pu_connection/features/documents/domain/entities/document_entity.dart';
 import 'package:pu_connection/features/documents/data/models/document_model.dart';
 import 'package:pu_connection/features/documents/domain/repositories/document_repository.dart';
@@ -40,6 +41,31 @@ class MockDocumentRepository implements DocumentRepository {
       createdAt: DateTime(2026, 1, 2),
     ),
   ];
+
+  @override
+  Future<PaginatedResult<DocumentEntity>> getDocumentsPaged({
+    String? faculty,
+    String? searchQuery,
+    dynamic lastDocument,
+    int limit = 15,
+  }) async {
+    var result = _docs;
+    if (faculty != null && faculty != 'Tất cả') {
+      result = result.where((d) => d.faculty == faculty).toList();
+    }
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
+      result = result.where((d) =>
+          d.title.toLowerCase().contains(q) ||
+          d.code.toLowerCase().contains(q) ||
+          d.faculty.toLowerCase().contains(q)).toList();
+    }
+    return PaginatedResult<DocumentEntity>(
+      items: result,
+      lastDocument: null,
+      hasMore: false,
+    );
+  }
 
   @override
   Stream<List<DocumentEntity>> getDocuments({String? faculty, String? searchQuery}) {
@@ -195,6 +221,15 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       expect(cubit.state.successMessage, 'Đã xóa tài liệu thành công');
+    });
+
+    test('loadMoreDocuments does not trigger when hasMore is false', () async {
+      await cubit.loadDocuments();
+      expect(cubit.state.hasMore, false);
+
+      await cubit.loadMoreDocuments();
+      expect(cubit.state.isLoadingMore, false);
+      expect(cubit.state.documents.length, 2);
     });
   });
 }

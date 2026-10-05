@@ -8,7 +8,6 @@ import 'document_state.dart';
 
 class DocumentCubit extends Cubit<DocumentState> {
   final DocumentRepository _documentRepository;
-  StreamSubscription<List<DocumentEntity>>? _docsSubscription;
 
   DocumentCubit({
     required DocumentRepository documentRepository,
@@ -19,36 +18,77 @@ class DocumentCubit extends Cubit<DocumentState> {
     loadDocuments();
   }
 
-  void loadDocuments({String? faculty, String? query}) {
+  Future<void> loadDocuments({
+    String? faculty,
+    String? query,
+    bool refresh = false,
+  }) async {
     final targetFaculty = faculty ?? state.selectedFaculty;
     final targetQuery = query ?? state.searchQuery;
 
-    emit(state.copyWith(
-      status: DocumentStatus.loading,
-      selectedFaculty: targetFaculty,
-      searchQuery: targetQuery,
-    ));
+    if (!refresh) {
+      emit(state.copyWith(
+        status: DocumentStatus.loading,
+        selectedFaculty: targetFaculty,
+        searchQuery: targetQuery,
+        clearLastDocument: true,
+        hasMore: true,
+      ));
+    }
 
-    _docsSubscription?.cancel();
-    _docsSubscription = _documentRepository
-        .getDocuments(
-          faculty: targetFaculty == 'Tất cả' ? null : targetFaculty,
-          searchQuery: targetQuery,
-        )
-        .listen(
-      (docs) {
-        emit(state.copyWith(
-          status: DocumentStatus.loaded,
-          documents: docs,
-        ));
-      },
-      onError: (error) {
-        emit(state.copyWith(
-          status: DocumentStatus.error,
-          errorMessage: error.toString(),
-        ));
-      },
-    );
+    try {
+      final result = await _documentRepository.getDocumentsPaged(
+        faculty: targetFaculty == 'Tất cả' ? null : targetFaculty,
+        searchQuery: targetQuery,
+        lastDocument: null,
+        limit: 15,
+      );
+
+      emit(state.copyWith(
+        status: DocumentStatus.loaded,
+        documents: result.items,
+        selectedFaculty: targetFaculty,
+        searchQuery: targetQuery,
+        lastDocument: result.lastDocument,
+        hasMore: result.hasMore,
+        isLoadingMore: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        status: DocumentStatus.error,
+        errorMessage: error.toString(),
+      ));
+    }
+  }
+
+  Future<void> loadMoreDocuments() async {
+    if (state.isLoadingMore || !state.hasMore || state.status == DocumentStatus.loading) {
+      return;
+    }
+
+    emit(state.copyWith(isLoadingMore: true));
+
+    try {
+      final result = await _documentRepository.getDocumentsPaged(
+        faculty: state.selectedFaculty == 'Tất cả' ? null : state.selectedFaculty,
+        searchQuery: state.searchQuery,
+        lastDocument: state.lastDocument,
+        limit: 15,
+      );
+
+      final existingIds = state.documents.map((d) => d.id).toSet();
+      final newUniqueItems =
+          result.items.where((d) => !existingIds.contains(d.id)).toList();
+
+      emit(state.copyWith(
+        documents: [...state.documents, ...newUniqueItems],
+        lastDocument: result.lastDocument,
+        hasMore: result.hasMore && newUniqueItems.isNotEmpty,
+        isLoadingMore: false,
+      ));
+    } catch (_) {
+      emit(state.copyWith(isLoadingMore: false));
+    }
   }
 
   void filterByFaculty(String faculty) {
@@ -71,6 +111,7 @@ class DocumentCubit extends Cubit<DocumentState> {
         isUploading: false,
         successMessage: 'Tải tài liệu lên thành công!',
       ));
+      await loadDocuments(refresh: true);
       return true;
     } catch (e) {
       emit(state.copyWith(
@@ -130,7 +171,9 @@ class DocumentCubit extends Cubit<DocumentState> {
   Future<void> deleteDocument(String documentId) async {
     try {
       await _documentRepository.deleteDocument(documentId);
+      final updated = state.documents.where((d) => d.id != documentId).toList();
       emit(state.copyWith(
+        documents: updated,
         successMessage: 'Đã xóa tài liệu thành công',
       ));
     } catch (e) {
@@ -142,11 +185,5 @@ class DocumentCubit extends Cubit<DocumentState> {
 
   void clearMessages() {
     emit(state.copyWith(clearError: true, clearSuccess: true));
-  }
-
-  @override
-  Future<void> close() {
-    _docsSubscription?.cancel();
-    return super.close();
   }
 }

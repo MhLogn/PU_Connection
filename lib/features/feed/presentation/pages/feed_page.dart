@@ -31,6 +31,7 @@ class _FeedPageState extends State<FeedPage> {
   bool _isSearching = false;
   int _searchTab = 0; // 0: Posts, 1: Students
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _filterCategories = [
     'Tất cả',
@@ -69,6 +70,7 @@ class _FeedPageState extends State<FeedPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<FeedCubit>().loadFeed();
@@ -76,8 +78,18 @@ class _FeedPageState extends State<FeedPage> {
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 250) {
+      context.read<FeedCubit>().loadMorePosts();
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -810,8 +822,9 @@ class _FeedPageState extends State<FeedPage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => context.read<FeedCubit>().loadFeed(),
+        onRefresh: () async => context.read<FeedCubit>().loadFeed(refresh: true),
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             if (_isSearching)
               SliverToBoxAdapter(
@@ -1323,6 +1336,49 @@ class _FeedPageState extends State<FeedPage> {
                   );
                 }
 
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              },
+            ),
+            BlocBuilder<FeedCubit, FeedState>(
+              builder: (context, state) {
+                if (state is FeedLoaded) {
+                  if (state.isLoadingMore) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  if (!state.hasMore && state.posts.length >= 10) {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle_outline_rounded,
+                                  size: 16, color: colorScheme.outline),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Bạn đã xem hết bài viết',
+                                style: TextStyle(
+                                    fontSize: 12.5, color: colorScheme.outline),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                }
                 return const SliverToBoxAdapter(child: SizedBox.shrink());
               },
             ),

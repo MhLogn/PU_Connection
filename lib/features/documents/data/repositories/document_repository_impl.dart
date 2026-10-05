@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/firebase_constants.dart';
+import '../../../../core/models/paginated_result.dart';
 import '../../../../core/services/cloudinary_service.dart';
 import '../../domain/entities/document_entity.dart';
 import '../../domain/repositories/document_repository.dart';
@@ -23,6 +24,84 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
   CollectionReference get _docsRef =>
       _firestore.collection(FirebaseConstants.studyDocumentsCollection);
+
+  @override
+  Future<PaginatedResult<DocumentEntity>> getDocumentsPaged({
+    String? faculty,
+    String? searchQuery,
+    dynamic lastDocument,
+    int limit = 15,
+  }) async {
+    Query query = _docsRef.orderBy('createdAt', descending: true);
+
+    final hasFaculty = faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
+
+    if (hasFaculty) {
+      query = query.where('faculty', isEqualTo: faculty);
+    }
+
+    if (lastDocument is DocumentSnapshot) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    query = query.limit(limit);
+
+    try {
+      final snapshot = await query.get();
+      var docs = snapshot.docs.map((doc) => DocumentModel.fromFirestore(doc)).toList();
+
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        final q = searchQuery.trim().toLowerCase();
+        docs = docs.where((doc) {
+          final matchTitle = doc.title.toLowerCase().contains(q);
+          final matchCode = doc.code.toLowerCase().contains(q);
+          final matchFaculty = doc.faculty.toLowerCase().contains(q);
+          return matchTitle || matchCode || matchFaculty;
+        }).toList();
+      }
+
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      final hasMore = snapshot.docs.length >= limit;
+
+      return PaginatedResult<DocumentEntity>(
+        items: docs,
+        lastDocument: lastDoc,
+        hasMore: hasMore,
+      );
+    } catch (_) {
+      Query fallbackQuery = _docsRef.orderBy('createdAt', descending: true);
+      if (lastDocument is DocumentSnapshot) {
+        fallbackQuery = fallbackQuery.startAfterDocument(lastDocument);
+      }
+      fallbackQuery = fallbackQuery.limit(limit * 2);
+
+      final snapshot = await fallbackQuery.get();
+      var docs = snapshot.docs.map((doc) => DocumentModel.fromFirestore(doc)).toList();
+
+      if (hasFaculty) {
+        docs = docs.where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase()).toList();
+      }
+
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        final q = searchQuery.trim().toLowerCase();
+        docs = docs.where((doc) {
+          final matchTitle = doc.title.toLowerCase().contains(q);
+          final matchCode = doc.code.toLowerCase().contains(q);
+          final matchFaculty = doc.faculty.toLowerCase().contains(q);
+          return matchTitle || matchCode || matchFaculty;
+        }).toList();
+      }
+
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      final hasMore = snapshot.docs.length >= (limit * 2);
+
+      return PaginatedResult<DocumentEntity>(
+        items: docs,
+        lastDocument: lastDoc,
+        hasMore: hasMore,
+      );
+    }
+  }
 
   @override
   Stream<List<DocumentEntity>> getDocuments({

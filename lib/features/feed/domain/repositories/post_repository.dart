@@ -1,3 +1,4 @@
+import '../../../../core/models/paginated_result.dart';
 import '../entities/comment_entity.dart';
 import '../entities/post_entity.dart';
 
@@ -6,6 +7,14 @@ abstract class PostRepository {
     String? faculty,
     String? subjectCode,
     String? category,
+  });
+
+  Future<PaginatedResult<PostEntity>> getFeedPostsPaged({
+    String? faculty,
+    String? subjectCode,
+    String? category,
+    dynamic lastDocument,
+    int limit = 15,
   });
 
   Future<void> createPost(PostEntity post);

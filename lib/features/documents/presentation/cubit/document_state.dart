@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import '../../domain/entities/document_entity.dart';
 
 enum DocumentStatus { initial, loading, loaded, error }
@@ -14,6 +14,9 @@ class DocumentState extends Equatable {
   final double downloadProgress;
   final String? errorMessage;
   final String? successMessage;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final dynamic lastDocument;
 
   const DocumentState({
     this.status = DocumentStatus.initial,
@@ -26,6 +29,9 @@ class DocumentState extends Equatable {
     this.downloadProgress = 0.0,
     this.errorMessage,
     this.successMessage,
+    this.hasMore = true,
+    this.isLoadingMore = false,
+    this.lastDocument,
   });
 
   DocumentState copyWith({
@@ -42,6 +48,10 @@ class DocumentState extends Equatable {
     bool clearError = false,
     String? successMessage,
     bool clearSuccess = false,
+    bool? hasMore,
+    bool? isLoadingMore,
+    dynamic lastDocument,
+    bool clearLastDocument = false,
   }) {
     return DocumentState(
       status: status ?? this.status,
@@ -54,6 +64,9 @@ class DocumentState extends Equatable {
       downloadProgress: downloadProgress ?? this.downloadProgress,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      lastDocument: clearLastDocument ? null : (lastDocument ?? this.lastDocument),
     );
   }
 
@@ -69,5 +82,8 @@ class DocumentState extends Equatable {
         downloadProgress,
         errorMessage,
         successMessage,
+        hasMore,
+        isLoadingMore,
+        lastDocument,
       ];
 }

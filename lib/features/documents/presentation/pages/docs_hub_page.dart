@@ -18,6 +18,7 @@ class DocsHubPage extends StatefulWidget {
 
 class _DocsHubPageState extends State<DocsHubPage> {
   final _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _faculties = [
     'Tất cả',
@@ -32,13 +33,24 @@ class _DocsHubPageState extends State<DocsHubPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DocumentCubit>().init();
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
+      context.read<DocumentCubit>().loadMoreDocuments();
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -98,7 +110,7 @@ class _DocsHubPageState extends State<DocsHubPage> {
           ),
           body: RefreshIndicator(
             onRefresh: () async {
-              cubit.loadDocuments();
+              await cubit.loadDocuments(refresh: true);
             },
             child: Column(
               children: [
@@ -268,11 +280,52 @@ class _DocsHubPageState extends State<DocsHubPage> {
     final currentUserId = authState is Authenticated ? authState.user.uid : '';
     final currentUserStudentId = authState is Authenticated ? authState.user.studentId : '';
 
+    final showLoadingMore = state.isLoadingMore;
+    final showEndReached = !state.hasMore && state.documents.length >= 10;
+    final extraCount = (showLoadingMore || showEndReached) ? 1 : 0;
+
     return ListView.separated(
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-      itemCount: state.documents.length,
+      itemCount: state.documents.length + extraCount,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
+        if (index >= state.documents.length) {
+          if (showLoadingMore) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              ),
+            );
+          }
+          if (showEndReached) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline_rounded,
+                        size: 16, color: colorScheme.outline),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Đã hiển thị tất cả tài liệu',
+                      style: TextStyle(
+                          fontSize: 12.5, color: colorScheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }
+
         final doc = state.documents[index];
         final isDownloading = state.downloadingDocId == doc.id;
         final isOwner = (currentUserId.isNotEmpty && doc.authorId == currentUserId) ||

@@ -1,10 +1,18 @@
 import 'dart:io';
+import '../../../../core/models/paginated_result.dart';
 import '../entities/document_entity.dart';
 
 abstract class DocumentRepository {
   Stream<List<DocumentEntity>> getDocuments({
     String? faculty,
     String? searchQuery,
+  });
+
+  Future<PaginatedResult<DocumentEntity>> getDocumentsPaged({
+    String? faculty,
+    String? searchQuery,
+    dynamic lastDocument,
+    int limit = 15,
   });
 
   Future<DocumentEntity> uploadDocument({
