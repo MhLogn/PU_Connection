@@ -12,6 +12,7 @@ class FirebaseConstants {
   static const String messagesSubcollection = 'messages';
   static const String notificationsSubcollection = 'notifications';
   static const String eventsCollection = 'events';
+  static const String clubsCollection = 'clubs';
   static const String subjectsCollection = 'subjects';
   static const String topicsCollection = 'topics';
 

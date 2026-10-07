@@ -14,6 +14,7 @@ import 'core/routes/app_router.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/feed/presentation/cubit/feed_cubit.dart';
 import 'features/chat/presentation/cubit/chat_cubit.dart';
+import 'features/clubs/presentation/cubit/club_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class PUConnectionApp extends StatelessWidget {
         BlocProvider(create: (_) => sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<FeedCubit>()),
         BlocProvider(create: (_) => sl<ChatCubit>()),
+        BlocProvider(create: (_) => sl<ClubCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

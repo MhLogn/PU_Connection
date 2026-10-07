@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
@@ -21,6 +19,9 @@ import '../../../auth/data/models/user_model.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../onboarding/presentation/widgets/notification_permission_sheet.dart';
+import '../../../clubs/presentation/cubit/club_cubit.dart';
+import '../../../clubs/presentation/cubit/club_state.dart';
+import '../../../clubs/presentation/pages/club_detail_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -539,7 +540,7 @@ class _ClubsCommunityView extends StatefulWidget {
 }
 
 class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
-  String _selectedCategory = 'Tất cả';
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> _categories = [
     'Tất cả',
@@ -549,48 +550,11 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     'Tình nguyện',
   ];
 
-  final List<Map<String, dynamic>> _clubs = [
-    {
-      'name': 'CLB Tin Học Phenikaa PRO',
-      'category': 'Học thuật',
-      'members': 480,
-      'isJoined': true,
-      'desc': 'Cộng đồng đam mê lập trình phần mềm, an toàn thông tin & AI trường Phenikaa.',
-      'color': 0xFF0284C7,
-    },
-    {
-      'name': 'Phenikaa English Club (PEC)',
-      'category': 'Học thuật',
-      'members': 620,
-      'isJoined': false,
-      'desc': 'Môi trường giao tiếp tiếng Anh tự tin, workshop IELTS và săn học bổng du học.',
-      'color': 0xFF0284C7,
-    },
-    {
-      'name': 'Phenikaa Guitar Club (PGC)',
-      'category': 'Nghệ thuật',
-      'members': 350,
-      'isJoined': false,
-      'desc': 'Nơi hội tụ những tâm hồn yêu âm nhạc acoustic, biểu diễn trong các đêm gala trường.',
-      'color': 0xFFFF7A00,
-    },
-    {
-      'name': 'Phenikaa Basketball Club',
-      'category': 'Thể thao',
-      'members': 290,
-      'isJoined': false,
-      'desc': 'Luyện tập thể lực, thi đấu giao hữu các giải bóng rổ sinh viên toàn Hà Nội.',
-      'color': 0xFF0284C7,
-    },
-    {
-      'name': 'Đội Sinh Viên Tình Nguyện PU',
-      'category': 'Tình nguyện',
-      'members': 540,
-      'isJoined': false,
-      'desc': 'Tiếp sức mùa thi, Mùa hè xanh và các chiến dịch thiện nguyện vì cộng đồng.',
-      'color': 0xFFF76B1C,
-    },
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Color _getClubColor(BuildContext context, String category) {
     switch (category) {
@@ -624,369 +588,341 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     }
   }
 
-  void _showClubDetailModal(BuildContext context, Map<String, dynamic> club) {
-    final color = _getClubColor(context, club['category'] as String);
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) {
-          final currentJoined = club['isJoined'] as bool;
-
-          return Container(
-            height: MediaQuery.of(ctx).size.height * 0.72,
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 10, bottom: 4),
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.diversity_3_rounded, color: color, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.club_details,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.group_work_rounded, color: color, size: 36),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    club['name'] as String,
-                                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: color.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          _getCategoryLabel(club['category'] as String, l10n),
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${club['members']} ${l10n.club_members}',
-                                        style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(l10n.club_overview, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 6),
-                        Text(
-                          club['desc'] as String,
-                          style: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.8), height: 1.45),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(l10n.club_schedule, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 8),
-                        _buildClubInfoRow(Icons.schedule_rounded, 'Tối Thứ 4 & Chủ Nhật hàng tuần (18h30 - 20h30)', colorScheme),
-                        const SizedBox(height: 6),
-                        _buildClubInfoRow(Icons.location_on_outlined, 'Tòa A9 (Phòng Hội thảo 2) & Sân thể thao Phenikaa', colorScheme),
-                        const SizedBox(height: 18),
-                        Text(l10n.club_benefits, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 8),
-                        _buildClubInfoRow(Icons.verified_outlined, 'Cộng điểm rèn luyện (ĐRL) tiêu chí Hoạt động phong trào', colorScheme),
-                        const SizedBox(height: 6),
-                        _buildClubInfoRow(Icons.card_membership_rounded, 'Cấp chứng nhận thành viên và cơ hội thi đấu cấp toàn quốc', colorScheme),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _toggleJoinClub(club);
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            club['isJoined']
-                                ? l10n.join_success
-                                : '${l10n.leave_club}: "${club['name']}".',
-                          ),
-                          backgroundColor: club['isJoined'] ? Colors.green : Colors.grey.shade800,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: currentJoined ? Colors.red.shade700 : AppTheme.accentColor(context),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Text(
-                      currentJoined ? l10n.leave_club : l10n.join_club,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> _toggleJoinClub(Map<String, dynamic> club) async {
-    final currentJoined = club['isJoined'] as bool;
-    final authState = context.read<AuthCubit>().state;
-    final uid = authState is Authenticated ? authState.user.uid : '';
-    final clubId = club['id'] as String?;
-
-    setState(() {
-      club['isJoined'] = !currentJoined;
-      if (club['isJoined']) {
-        club['members'] = (club['members'] as int) + 1;
-      } else {
-        club['members'] = (club['members'] as int) - 1;
-      }
-    });
-
-    if (clubId != null && clubId.isNotEmpty && uid.isNotEmpty) {
-      final groupRef = FirebaseFirestore.instance.collection(FirebaseConstants.groupsCollection).doc(clubId);
-      if (!currentJoined) {
-        groupRef.update({
-          'members': FieldValue.arrayUnion([uid]),
-          'membersCount': FieldValue.increment(1),
-        }).catchError((_) {});
-      } else {
-        groupRef.update({
-          'members': FieldValue.arrayRemove([uid]),
-          'membersCount': FieldValue.increment(-1),
-        }).catchError((_) {});
-      }
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Học thuật':
+        return Icons.psychology_rounded;
+      case 'Nghệ thuật':
+        return Icons.music_note_rounded;
+      case 'Thể thao':
+        return Icons.sports_basketball_rounded;
+      case 'Tình nguyện':
+        return Icons.volunteer_activism_rounded;
+      default:
+        return Icons.group_work_rounded;
     }
-  }
-
-  Widget _buildClubInfoRow(IconData icon, String text, ColorScheme colorScheme) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.6)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 12.5, color: colorScheme.onSurface.withValues(alpha: 0.75)),
-          ),
-        ),
-      ],
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = AppTheme.isDark(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: AppBar(
-        title: Text(l10n.clubs_title),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = cat == _selectedCategory;
-                return ChoiceChip(
-                  label: Text(_getCategoryLabel(cat, l10n)),
-                  selected: isSelected,
-                  selectedColor: AppTheme.primaryColor(context),
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? (AppTheme.isDark(context) ? Colors.black87 : Colors.white)
-                        : colorScheme.onSurface,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 12,
-                  ),
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedCategory = cat);
-                  },
-                );
-              },
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserId = authState is Authenticated ? authState.user.uid : '';
+
+    return BlocConsumer<ClubCubit, ClubState>(
+      listener: (context, state) {
+        if (state.actionSuccessMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.actionSuccessMessage!),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
             ),
+          );
+        } else if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final filteredClubs = state.filteredClubs;
+
+        return Scaffold(
+          backgroundColor: colorScheme.surfaceContainerLowest,
+          appBar: AppBar(
+            title: Text(l10n.clubs_title),
+            elevation: 0,
           ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection(FirebaseConstants.groupsCollection).snapshots(),
-              builder: (context, snapshot) {
-                List<Map<String, dynamic>> clubsToDisplay = _clubs;
-                final authState = context.watch<AuthCubit>().state;
-                final currentUserId = authState is Authenticated ? authState.user.uid : '';
-
-                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  clubsToDisplay = snapshot.data!.docs.map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    final membersList = List<String>.from(data['members'] as List? ?? []);
-                    return {
-                      'id': doc.id,
-                      'name': data['name'] ?? '',
-                      'category': data['category'] ?? 'Học thuật',
-                      'members': (data['membersCount'] as num?)?.toInt() ?? membersList.length,
-                      'isJoined': currentUserId.isNotEmpty && membersList.contains(currentUserId),
-                      'desc': data['desc'] ?? '',
-                      'color': (data['color'] as num?)?.toInt() ?? 0xFF0284C7,
-                    };
-                  }).toList();
-                }
-
-                final filteredClubs = clubsToDisplay.where((club) {
-                  return _selectedCategory == 'Tất cả' || club['category'] == _selectedCategory;
-                }).toList();
-
-                if (filteredClubs.isEmpty) {
-                  return Center(
-                    child: Text('Không tìm thấy CLB nào', style: TextStyle(color: colorScheme.outline)),
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  itemCount: filteredClubs.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final club = filteredClubs[index];
-                    final isJoined = club['isJoined'] as bool;
-                    final color = _getClubColor(context, club['category'] as String);
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+          body: Column(
+            children: [
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                child: Container(
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : AppTheme.borderLight,
+                      width: 1,
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Center(
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: colorScheme.onSurface, fontSize: 13.5),
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm câu lạc bộ, chủ nhiệm...',
+                        hintStyle: TextStyle(
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        icon: Icon(Icons.search_rounded, size: 18, color: AppTheme.oceanBlue),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close_rounded, size: 16),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  context.read<ClubCubit>().searchClubs('');
+                                },
+                              )
+                            : null,
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showClubDetailModal(context, club),
-                          borderRadius: BorderRadius.circular(18),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: color.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.1),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Icon(Icons.group_work_rounded, color: color, size: 24),
+                      onChanged: (val) {
+                        context.read<ClubCubit>().searchClubs(val);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              // Category Choice Chips
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _categories.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final cat = _categories[index];
+                    final isSelected = cat == state.selectedCategory;
+                    return ChoiceChip(
+                      label: Text(_getCategoryLabel(cat, l10n)),
+                      selected: isSelected,
+                      selectedColor: AppTheme.primaryColor(context),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? (AppTheme.isDark(context) ? Colors.black87 : Colors.white)
+                            : colorScheme.onSurface,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                      onSelected: (val) {
+                        if (val) context.read<ClubCubit>().filterCategory(cat);
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Club List
+              Expanded(
+                child: state.status == ClubStatus.loading && state.clubs.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredClubs.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.group_off_rounded,
+                                    size: 52,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.3),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Không tìm thấy câu lạc bộ nào phù hợp',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            itemCount: filteredClubs.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final club = filteredClubs[index];
+                              final isJoined = club.isMember(currentUserId);
+                              final color = _getClubColor(context, club.category);
+
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isJoined
+                                        ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                                        : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                                    width: isJoined ? 1.5 : 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => ClubDetailPage(club: club),
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            club['name'] as String,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                          ),
-                                          const SizedBox(height: 3),
                                           Row(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                padding: const EdgeInsets.all(10),
                                                 decoration: BoxDecoration(
-                                                  color: color.withValues(alpha: 0.12),
-                                                  borderRadius: BorderRadius.circular(6),
+                                                  color: color.withValues(alpha: isDark ? 0.22 : 0.12),
+                                                  borderRadius: BorderRadius.circular(14),
                                                 ),
-                                                child: Text(
-                                                  _getCategoryLabel(club['category'] as String, l10n),
-                                                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: color),
+                                                child: Icon(
+                                                  _getCategoryIcon(club.category),
+                                                  color: color,
+                                                  size: 24,
                                                 ),
                                               ),
-                                              const SizedBox(width: 8),
-                                              Icon(Icons.people_alt_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                              const SizedBox(width: 3),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      club.name,
+                                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Row(
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                          decoration: BoxDecoration(
+                                                            color: color.withValues(alpha: 0.12),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                          ),
+                                                          child: Text(
+                                                            _getCategoryLabel(club.category, l10n),
+                                                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: color),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Icon(Icons.people_alt_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                                        const SizedBox(width: 3),
+                                                        Text(
+                                                          '${club.effectiveMembersCount} ${l10n.club_members}',
+                                                          style: TextStyle(
+                                                            fontSize: 11.5,
+                                                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              isJoined
+                                                  ? OutlinedButton.icon(
+                                                      onPressed: () {
+                                                        Navigator.of(context).push(
+                                                          MaterialPageRoute(
+                                                            builder: (_) => ClubDetailPage(club: club),
+                                                          ),
+                                                        );
+                                                      },
+                                                      icon: const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
+                                                      label: Text(
+                                                        l10n.joined_club,
+                                                        style: const TextStyle(
+                                                          fontSize: 11.5,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Color(0xFF10B981),
+                                                        ),
+                                                      ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.08),
+                                                        side: BorderSide(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                      ),
+                                                    )
+                                                  : ElevatedButton.icon(
+                                                      onPressed: () {
+                                                        context.read<ClubCubit>().toggleJoinClub(
+                                                              club: club,
+                                                              userId: currentUserId,
+                                                            );
+                                                      },
+                                                      icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                                                      label: Text(
+                                                        l10n.join_club,
+                                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                                                      ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: AppTheme.primaryColor(context),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      ),
+                                                    ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            club.description,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                              height: 1.35,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.person_outline_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'CN: ${club.leaderName}',
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                               Text(
-                                                '${club['members']} ${l10n.club_members}',
+                                                'Chi tiết >',
                                                 style: TextStyle(
-                                                  fontSize: 11.5,
-                                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primaryColor(context),
                                                 ),
                                               ),
                                             ],
@@ -994,62 +930,16 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                         ],
                                       ),
                                     ),
-                                    isJoined
-                                        ? OutlinedButton.icon(
-                                            onPressed: () => _toggleJoinClub(club),
-                                            icon: Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.mintColor(context)),
-                                            label: Text(
-                                              l10n.joined_club,
-                                              style: TextStyle(
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppTheme.mintColor(context),
-                                              ),
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              backgroundColor: AppTheme.mintColor(context).withValues(alpha: 0.08),
-                                              side: BorderSide(color: AppTheme.mintColor(context).withValues(alpha: 0.4)),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            ),
-                                          )
-                                        : ElevatedButton.icon(
-                                            onPressed: () => _toggleJoinClub(club),
-                                            icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                                            label: Text(
-                                              l10n.join_club,
-                                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppTheme.primaryColor(context),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            ),
-                                          ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  club['desc'] as String,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
-                                    height: 1.35,
                                   ),
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
