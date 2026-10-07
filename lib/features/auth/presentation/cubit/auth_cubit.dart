@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/phenikaa_student_entity.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/notification_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -144,6 +146,14 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
+    final currentUser = state is Authenticated ? (state as Authenticated).user : null;
+    if (currentUser != null && sl.isRegistered<NotificationService>()) {
+      try {
+        await sl<NotificationService>()
+            .clearUserFcmToken(currentUser.uid)
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {}
+    }
     try {
       await _authRepository.signOut().timeout(const Duration(seconds: 3));
     } catch (_) {}

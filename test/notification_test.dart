@@ -41,5 +41,21 @@ void main() {
       expect(NotificationService.channelName, 'Thông báo PU Connection');
       expect(NotificationService.channelDesc.contains('Phenikaa'), true);
     });
+
+    test('FCM Topic constants are configured correctly', () {
+      expect(NotificationService.topicCampusNews, 'phenikaa_campus_news');
+      expect(NotificationService.topicEvents, 'phenikaa_events');
+    });
+
+    test('getFcmToken returns null gracefully when Firebase is not initialized in test', () async {
+      final token = await notificationService.getFcmToken();
+      expect(token, isNull);
+    });
+
+    test('syncUserFcmToken and clearUserFcmToken handle empty or uninitialized safely', () async {
+      await notificationService.syncUserFcmToken('');
+      await notificationService.clearUserFcmToken('');
+      expect(true, isTrue);
+    });
   });
 }

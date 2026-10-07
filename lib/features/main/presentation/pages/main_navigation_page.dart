@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,6 +42,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       if (authState is Authenticated) {
         context.read<FeedCubit>().updateCurrentUserId(authState.user.uid);
         context.read<ChatCubit>().initConversations(authState.user.uid);
+        sl<NotificationService>().syncUserFcmToken(authState.user.uid);
       }
     });
   }
@@ -71,6 +73,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         } else if (state is Authenticated) {
           context.read<FeedCubit>().updateCurrentUserId(state.user.uid);
           context.read<ChatCubit>().initConversations(state.user.uid);
+          sl<NotificationService>().syncUserFcmToken(state.user.uid);
         }
       },
       child: Scaffold(
@@ -1524,20 +1527,52 @@ class _StudentProfileView extends StatelessWidget {
             ),
             title: Text(l10n.notifications_settings_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(l10n.notifications_settings_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
-            trailing: IconButton(
-              icon: Icon(Icons.send_rounded, size: 20, color: AppTheme.primaryColor(context)),
-              tooltip: l10n.test_notification_btn,
-              onPressed: () async {
-                await sl<NotificationService>().sendTestNotification();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã gửi thông báo thử nghiệm! Vui lòng kiểm tra thanh thông báo thiết bị.'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.fingerprint_rounded, size: 20, color: AppTheme.accentColor(context)),
+                  tooltip: 'Sao chép FCM Token thiết bị',
+                  onPressed: () async {
+                    final token = await sl<NotificationService>().getFcmToken();
+                    if (context.mounted) {
+                      if (token != null && token.isNotEmpty) {
+                        await Clipboard.setData(ClipboardData(text: token));
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã sao chép FCM Token: ${token.substring(0, 12)}...'),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: const Color(0xFF10B981),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('FCM Token chưa sẵn sàng trên nền tảng này.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.send_rounded, size: 20, color: AppTheme.primaryColor(context)),
+                  tooltip: l10n.test_notification_btn,
+                  onPressed: () async {
+                    await sl<NotificationService>().sendTestNotification();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã gửi thông báo thử nghiệm! Vui lòng kiểm tra thanh thông báo thiết bị.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
             onTap: () => NotificationPermissionSheet.checkAndShowPrompt(context, force: true),
           ),

@@ -64,6 +64,7 @@ dependencies:
   cached_network_image: ^3.4.1
   timeago: ^3.7.0
   flutter_local_notifications: ^20.1.0
+  firebase_messaging: ^16.7.0
 
 
 dependency_overrides:
