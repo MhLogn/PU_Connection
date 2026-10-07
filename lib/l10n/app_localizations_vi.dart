@@ -771,4 +771,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notification_permission_granted => 'Đã bật thông báo thành công!';
+
+  @override
+  String get cancel_registration_confirm_title => 'Hủy đăng ký';
+
+  @override
+  String get cancel_registration_confirm_body =>
+      'Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện này không? Suất của bạn sẽ được giải phóng.';
+
+  @override
+  String get cancel_registration_success =>
+      'Đã hủy đăng ký sự kiện thành công.';
+
+  @override
+  String get register_event_full => 'Sự kiện đã hết chỗ';
 }

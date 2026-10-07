@@ -1567,6 +1567,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã bật thông báo thành công!'**
   String get notification_permission_granted;
+
+  /// No description provided for @cancel_registration_confirm_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy đăng ký'**
+  String get cancel_registration_confirm_title;
+
+  /// No description provided for @cancel_registration_confirm_body.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện này không? Suất của bạn sẽ được giải phóng.'**
+  String get cancel_registration_confirm_body;
+
+  /// No description provided for @cancel_registration_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy đăng ký sự kiện thành công.'**
+  String get cancel_registration_success;
+
+  /// No description provided for @register_event_full.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sự kiện đã hết chỗ'**
+  String get register_event_full;
 }
 
 class _AppLocalizationsDelegate

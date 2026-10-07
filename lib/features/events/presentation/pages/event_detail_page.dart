@@ -49,65 +49,114 @@ class _EventDetailPageState extends State<EventDetailPage> {
     }
   }
 
-  Future<void> _toggleRegistration(String studentId, String studentName, String faculty) async {
+  Future<void> _handleRegister(String studentId, String studentName, String faculty) async {
     if (studentId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng đăng nhập với mã sinh viên để đăng ký!')),
       );
       return;
     }
+    if (_currentEvent.isFull) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sự kiện đã hết chỗ!')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
-    final isRegistered = _currentEvent.isRegistered(studentId);
-
     try {
-      if (isRegistered) {
-        await _repository.unregisterFromEvent(
-          eventId: _currentEvent.id,
-          studentId: studentId,
+      await _repository.registerForEvent(
+        eventId: _currentEvent.id,
+        studentId: studentId,
+      );
+      setState(() {
+        final updated = List<String>.from(_currentEvent.registeredStudentIds)..add(studentId);
+        _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đăng ký thành công! Vé điện tử đã sẵn sàng.'),
+            backgroundColor: Colors.green,
+          ),
         );
-        setState(() {
-          final updated = List<String>.from(_currentEvent.registeredStudentIds)..remove(studentId);
-          _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã hủy đăng ký sự kiện.')),
-          );
-        }
-      } else {
-        if (_currentEvent.isFull) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sự kiện đã đủ số lượng người đăng ký!')),
-          );
-          return;
-        }
-
-        await _repository.registerForEvent(
-          eventId: _currentEvent.id,
+        EventTicketDialog.show(
+          context,
+          event: _currentEvent,
+          studentName: studentName,
           studentId: studentId,
+          faculty: faculty,
         );
-        setState(() {
-          final updated = List<String>.from(_currentEvent.registeredStudentIds)..add(studentId);
-          _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
-        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Có lỗi xảy ra: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đăng ký thành công! Vé điện tử đã sẵn sàng.'),
-              backgroundColor: Colors.green,
+  Future<void> _handleUnregister(String studentId) async {
+    if (studentId.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    // Show confirmation dialog before cancelling
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+            const SizedBox(width: 8),
+            Text(l10n.cancel_registration_confirm_title),
+          ],
+        ),
+        content: Text(
+          l10n.cancel_registration_confirm_body,
+          style: const TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-          );
-          // Auto open ticket
-          EventTicketDialog.show(
-            context,
-            event: _currentEvent,
-            studentName: studentName,
-            studentId: studentId,
-            faculty: faculty,
-          );
-        }
+            child: Text(l10n.cancel_registration),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _repository.unregisterFromEvent(
+        eventId: _currentEvent.id,
+        studentId: studentId,
+      );
+      setState(() {
+        final updated = List<String>.from(_currentEvent.registeredStudentIds)..remove(studentId);
+        _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.cancel_registration_success),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -170,7 +219,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
           top: false,
           child: Row(
             children: [
-              if (isRegistered) ...[
+              if (isRegistered) ...[ 
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _isLoading
@@ -192,18 +241,28 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                IconButton(
-                  onPressed: _isLoading ? null : () => _toggleRegistration(studentId, studentName, faculty),
-                  icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
-                  tooltip: l10n.cancel_registration,
+                const SizedBox(width: 10),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : () => _handleUnregister(studentId),
+                  icon: const Icon(Icons.cancel_outlined, size: 18, color: Colors.redAccent),
+                  label: Text(
+                    l10n.cancel_registration,
+                    style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent),
+                    minimumSize: const Size(0, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                 ),
               ] else ...[
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _isLoading || _currentEvent.isFull
                         ? null
-                        : () => _toggleRegistration(studentId, studentName, faculty),
+                        : () => _handleRegister(studentId, studentName, faculty),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentColor(context),
                       foregroundColor: Colors.white,
@@ -217,7 +276,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
                         : Text(
-                            _currentEvent.isFull ? 'Đã hết chỗ' : l10n.register_event,
+                            _currentEvent.isFull ? l10n.register_event_full : l10n.register_event,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                   ),

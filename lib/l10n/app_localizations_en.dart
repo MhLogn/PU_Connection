@@ -772,4 +772,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notification_permission_granted =>
       'Notifications enabled successfully!';
+
+  @override
+  String get cancel_registration_confirm_title => 'Cancel Registration';
+
+  @override
+  String get cancel_registration_confirm_body =>
+      'Are you sure you want to cancel your registration for this event? Your spot will be released.';
+
+  @override
+  String get cancel_registration_success =>
+      'Registration cancelled successfully.';
+
+  @override
+  String get register_event_full => 'This event is full';
 }

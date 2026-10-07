@@ -52,6 +52,72 @@ class _EventsPageState extends State<EventsPage> {
     super.dispose();
   }
 
+  Future<void> _handleUnregisterFromList(
+    BuildContext context, {
+    required EventEntity event,
+    required String studentId,
+  }) async {
+    if (studentId.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+            const SizedBox(width: 8),
+            Text(l10n.cancel_registration_confirm_title),
+          ],
+        ),
+        content: Text(
+          l10n.cancel_registration_confirm_body,
+          style: const TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(l10n.cancel_registration),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await _repository.unregisterFromEvent(
+        eventId: event.id,
+        studentId: studentId,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.cancel_registration_success),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Có lỗi xảy ra: $e')),
+        );
+      }
+    }
+  }
+
   Color _getColor(BuildContext context, String type) {
     switch (type) {
       case 'orange':
@@ -438,21 +504,43 @@ class _EventsPageState extends State<EventsPage> {
                   ],
                 ),
                 if (isRegistered)
-                  TextButton.icon(
-                    onPressed: () => EventTicketDialog.show(
-                      context,
-                      event: event,
-                      studentName: currentStudentName,
-                      studentId: currentStudentId,
-                      faculty: currentFaculty,
-                    ),
-                    icon: const Icon(Icons.qr_code_2_rounded, size: 16),
-                    label: Text(l10n.view_ticket),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.primaryColor(context),
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => EventTicketDialog.show(
+                          context,
+                          event: event,
+                          studentName: currentStudentName,
+                          studentId: currentStudentId,
+                          faculty: currentFaculty,
+                        ),
+                        icon: const Icon(Icons.qr_code_2_rounded, size: 16),
+                        label: Text(l10n.view_ticket),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primaryColor(context),
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _handleUnregisterFromList(
+                          context,
+                          event: event,
+                          studentId: currentStudentId,
+                        ),
+                        icon: const Icon(Icons.cancel_outlined, size: 14, color: Colors.redAccent),
+                        label: Text(
+                          l10n.cancel_registration,
+                          style: const TextStyle(color: Colors.redAccent, fontSize: 11.5),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        ),
+                      ),
+                    ],
                   )
                 else
                   Text(

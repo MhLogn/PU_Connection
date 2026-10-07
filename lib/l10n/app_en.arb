@@ -266,5 +266,9 @@
   "notifications_settings_title": "App Notifications",
   "notifications_settings_desc": "Receive messages and event notifications on device",
   "test_notification_btn": "Send Test Notification",
-  "notification_permission_granted": "Notifications enabled successfully!"
+  "notification_permission_granted": "Notifications enabled successfully!",
+  "cancel_registration_confirm_title": "Cancel Registration",
+  "cancel_registration_confirm_body": "Are you sure you want to cancel your registration for this event? Your spot will be released.",
+  "cancel_registration_success": "Registration cancelled successfully.",
+  "register_event_full": "This event is full"
 }

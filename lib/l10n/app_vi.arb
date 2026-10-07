@@ -266,5 +266,9 @@
   "notifications_settings_title": "Thông báo ứng dụng",
   "notifications_settings_desc": "Nhận thông báo tin nhắn và sự kiện trên thiết bị",
   "test_notification_btn": "Thử nghiệm gửi thông báo",
-  "notification_permission_granted": "Đã bật thông báo thành công!"
+  "notification_permission_granted": "Đã bật thông báo thành công!",
+  "cancel_registration_confirm_title": "Hủy đăng ký",
+  "cancel_registration_confirm_body": "Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện này không? Suất của bạn sẽ được giải phóng.",
+  "cancel_registration_success": "Đã hủy đăng ký sự kiện thành công.",
+  "register_event_full": "Sự kiện đã hết chỗ"
 }
