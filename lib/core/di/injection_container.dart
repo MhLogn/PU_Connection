@@ -20,6 +20,9 @@ import '../../features/chat/presentation/cubit/chat_cubit.dart';
 import '../../features/clubs/domain/repositories/club_repository.dart';
 import '../../features/clubs/data/repositories/club_repository_impl.dart';
 import '../../features/clubs/presentation/cubit/club_cubit.dart';
+import '../../features/friends/domain/repositories/friend_repository.dart';
+import '../../features/friends/data/repositories/friend_repository_impl.dart';
+import '../../features/friends/presentation/cubit/friendship_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -62,5 +65,9 @@ Future<void> initDI() async {
   // Clubs
   sl.registerLazySingleton<ClubRepository>(() => ClubRepositoryImpl());
   sl.registerFactory(() => ClubCubit(clubRepository: sl()));
+
+  // Friends & Relationships
+  sl.registerLazySingleton<FriendRepository>(() => FriendRepositoryImpl());
+  sl.registerFactory(() => FriendshipCubit(friendRepository: sl()));
 }
 

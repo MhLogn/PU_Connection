@@ -18,6 +18,10 @@ import '../../../feed/presentation/widgets/post_card.dart';
 import '../../../feed/presentation/widgets/post_comments_bottom_sheet.dart';
 import '../../../documents/data/models/document_model.dart';
 import '../../../documents/presentation/widgets/document_card.dart';
+import '../../../friends/domain/entities/friendship_status.dart';
+import '../../../friends/presentation/cubit/friendship_cubit.dart';
+import '../../../friends/presentation/cubit/friendship_state.dart';
+import '../../../friends/presentation/pages/friend_requests_page.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -41,99 +45,31 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isConnected = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _checkConnectionStatus();
+    _tabController = TabController(length: 4, vsync: this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is Authenticated) {
+        final currentUid = authState.user.uid;
+        context.read<FriendshipCubit>().initRelationship(
+              currentUserId: currentUid,
+              targetUserId: widget.userId,
+            );
+        if (currentUid == widget.userId) {
+          context.read<FriendshipCubit>().initReceivedRequests(currentUid);
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkConnectionStatus() async {
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! Authenticated) return;
-
-    final currentUid = authState.user.uid;
-    if (currentUid.isEmpty || widget.userId.isEmpty) return;
-
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection(FirebaseConstants.usersCollection)
-          .doc(currentUid)
-          .collection(FirebaseConstants.friendsSubcollection)
-          .doc(widget.userId)
-          .get();
-
-      if (mounted) {
-        setState(() {
-          _isConnected = doc.exists;
-        });
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _toggleConnection() async {
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! Authenticated) return;
-
-    final currentUid = authState.user.uid;
-    final targetUid = widget.userId;
-    if (currentUid == targetUid || targetUid.isEmpty) return;
-
-    final willConnect = !_isConnected;
-    setState(() => _isConnected = willConnect);
-
-    try {
-      final myFriendsRef = FirebaseFirestore.instance
-          .collection(FirebaseConstants.usersCollection)
-          .doc(currentUid)
-          .collection(FirebaseConstants.friendsSubcollection)
-          .doc(targetUid);
-
-      final targetFollowersRef = FirebaseFirestore.instance
-          .collection(FirebaseConstants.usersCollection)
-          .doc(targetUid)
-          .collection(FirebaseConstants.followersSubcollection)
-          .doc(currentUid);
-
-      if (willConnect) {
-        await myFriendsRef.set({
-          'userId': targetUid,
-          'connectedAt': FieldValue.serverTimestamp(),
-        });
-        await targetFollowersRef.set({
-          'userId': currentUid,
-          'connectedAt': FieldValue.serverTimestamp(),
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đã kết nối với ${widget.userName}!'),
-              backgroundColor: AppTheme.primaryColor(context),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        await myFriendsRef.delete();
-        await targetFollowersRef.delete();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đã hủy kết nối với ${widget.userName}.'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } catch (_) {}
   }
 
   Future<void> _startChat() async {
@@ -190,176 +126,436 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     }
   }
 
+  void _handleFriendAction({
+    required BuildContext context,
+    required FriendshipStatus status,
+    required UserEntity currentUser,
+    required UserEntity targetUser,
+  }) {
+    final cubit = context.read<FriendshipCubit>();
+
+    switch (status) {
+      case FriendshipStatus.none:
+        cubit.sendFriendRequest(
+          currentUserId: currentUser.uid,
+          currentUserName: currentUser.displayName,
+          currentUserAvatar: currentUser.avatarUrl,
+          currentUserFaculty: currentUser.faculty,
+          targetUserId: targetUser.uid,
+          targetUserName: targetUser.displayName,
+        );
+        break;
+
+      case FriendshipStatus.requestSent:
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hủy lời mời kết bạn?'),
+            content: Text('Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến ${targetUser.displayName}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Bỏ qua'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  cubit.cancelFriendRequest(
+                    currentUserId: currentUser.uid,
+                    targetUserId: targetUser.uid,
+                  );
+                },
+                child: const Text('Hủy lời mời'),
+              ),
+            ],
+          ),
+        );
+        break;
+
+      case FriendshipStatus.requestReceived:
+        showModalBottomSheet(
+          context: context,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Lời mời kết bạn từ ${targetUser.displayName}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: const Text('Chấp nhận kết bạn', style: TextStyle(fontWeight: FontWeight.bold)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      cubit.acceptFriendRequest(
+                        currentUserId: currentUser.uid,
+                        currentUserName: currentUser.displayName,
+                        currentUserAvatar: currentUser.avatarUrl,
+                        currentUserFaculty: currentUser.faculty,
+                        senderId: targetUser.uid,
+                        senderName: targetUser.displayName,
+                        senderAvatar: targetUser.avatarUrl,
+                        senderFaculty: targetUser.faculty,
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.close_rounded, color: Colors.red),
+                    title: const Text('Từ chối lời mời'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      cubit.declineFriendRequest(
+                        currentUserId: currentUser.uid,
+                        senderId: targetUser.uid,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        break;
+
+      case FriendshipStatus.friends:
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hủy kết bạn?'),
+            content: Text('Bạn có chắc chắn muốn hủy kết bạn với ${targetUser.displayName}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Hủy bỏ'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  cubit.unfriend(
+                    currentUserId: currentUser.uid,
+                    friendId: targetUser.uid,
+                  );
+                },
+                child: const Text('Hủy kết bạn'),
+              ),
+            ],
+          ),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthCubit>().state;
-    final currentUid = authState is Authenticated ? authState.user.uid : '';
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final currentUid = currentUser?.uid ?? '';
     final isSelf = currentUid.isNotEmpty && currentUid == widget.userId;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: widget.userId.isNotEmpty
-          ? FirebaseFirestore.instance
-              .collection(FirebaseConstants.usersCollection)
-              .doc(widget.userId)
-              .snapshots()
-          : null,
-      builder: (context, snapshot) {
-        UserEntity user;
-        if (snapshot.hasData && snapshot.data!.exists && snapshot.data!.data() != null) {
-          user = UserModel.fromFirestore(snapshot.data!);
-        } else {
-          // Fallback matching directory
-          String finalName = widget.userName.isNotEmpty ? widget.userName : 'Sinh viên Phenikaa';
-          String finalStudentId = widget.studentId;
-          String finalFaculty = widget.faculty.isNotEmpty ? widget.faculty : 'Công nghệ thông tin';
-          String finalMajor = 'Kỹ thuật phần mềm';
-          int finalCohort = 17;
-
-          final match = PhenikaaStudentDirectory.defaultStudents.where(
-            (s) =>
-                s.fullName.toLowerCase() == finalName.toLowerCase() ||
-                (finalStudentId.isNotEmpty && s.studentId == finalStudentId),
+    return BlocListener<FriendshipCubit, FriendshipState>(
+      listener: (context, fState) {
+        if (fState.message != null && fState.actionStatus == FriendshipActionStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(fState.message!),
+              backgroundColor: AppTheme.primaryColor(context),
+              duration: const Duration(seconds: 2),
+            ),
           );
-          if (match.isNotEmpty) {
-            finalName = match.first.fullName;
-            finalStudentId = match.first.studentId;
-            finalFaculty = match.first.faculty;
-            finalMajor = match.first.major;
-            finalCohort = match.first.cohort;
+          context.read<FriendshipCubit>().clearMessage();
+        }
+      },
+      child: StreamBuilder<DocumentSnapshot>(
+        stream: widget.userId.isNotEmpty
+            ? FirebaseFirestore.instance
+                .collection(FirebaseConstants.usersCollection)
+                .doc(widget.userId)
+                .snapshots()
+            : null,
+        builder: (context, snapshot) {
+          UserEntity user;
+          if (snapshot.hasData && snapshot.data!.exists && snapshot.data!.data() != null) {
+            user = UserModel.fromFirestore(snapshot.data!);
+          } else {
+            String finalName = widget.userName.isNotEmpty ? widget.userName : 'Sinh viên Phenikaa';
+            String finalStudentId = widget.studentId;
+            String finalFaculty = widget.faculty.isNotEmpty ? widget.faculty : 'Công nghệ thông tin';
+            String finalMajor = 'Kỹ thuật phần mềm';
+            int finalCohort = 17;
+
+            final match = PhenikaaStudentDirectory.defaultStudents.where(
+              (s) =>
+                  s.fullName.toLowerCase() == finalName.toLowerCase() ||
+                  (finalStudentId.isNotEmpty && s.studentId == finalStudentId),
+            );
+            if (match.isNotEmpty) {
+              finalName = match.first.fullName;
+              finalStudentId = match.first.studentId;
+              finalFaculty = match.first.faculty;
+              finalMajor = match.first.major;
+              finalCohort = match.first.cohort;
+            }
+
+            user = UserModel(
+              uid: widget.userId,
+              email: '$finalStudentId@st.phenikaa-uni.edu.vn',
+              studentId: finalStudentId,
+              displayName: finalName,
+              username: finalStudentId,
+              faculty: finalFaculty,
+              major: finalMajor,
+              cohort: finalCohort,
+              userType: 'student',
+              avatarUrl: widget.avatarUrl,
+              isVerified: true,
+            );
           }
 
-          user = UserModel(
-            uid: widget.userId,
-            email: '$finalStudentId@st.phenikaa-uni.edu.vn',
-            studentId: finalStudentId,
-            displayName: finalName,
-            username: finalStudentId,
-            faculty: finalFaculty,
-            major: finalMajor,
-            cohort: finalCohort,
-            userType: 'student',
-            avatarUrl: widget.avatarUrl,
-            isVerified: true,
-          );
-        }
-
-        return Scaffold(
-          backgroundColor: colorScheme.surfaceContainerLowest,
-          appBar: AppBar(
-            title: Text(user.displayName),
-            actions: [
-              if (!isSelf)
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: 'Chia sẻ hồ sơ',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Đã sao chép liên kết hồ sơ của ${user.displayName}!')),
-                    );
-                  },
-                ),
-            ],
-          ),
-          body: NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Digital Student Card
-                      _buildDigitalCard(context, user),
-                      const SizedBox(height: 16),
-
-                      // Action buttons: Nhắn tin & Kết nối
-                      if (!isSelf) ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: ElevatedButton.icon(
-                                onPressed: _startChat,
-                                icon: const Icon(Icons.chat_bubble_rounded, size: 18),
-                                label: const Text('Nhắn tin', style: TextStyle(fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor(context),
-                                  foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                ),
+          return Scaffold(
+            backgroundColor: colorScheme.surfaceContainerLowest,
+            appBar: AppBar(
+              title: Text(user.displayName),
+              actions: [
+                if (isSelf)
+                  BlocBuilder<FriendshipCubit, FriendshipState>(
+                    builder: (context, fState) {
+                      final reqCount = fState.receivedRequests.length;
+                      return Badge(
+                        isLabelVisible: reqCount > 0,
+                        label: Text('$reqCount'),
+                        child: IconButton(
+                          icon: const Icon(Icons.people_outline_rounded),
+                          tooltip: 'Lời mời kết bạn',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const FriendRequestsPage(),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              flex: 3,
-                              child: OutlinedButton.icon(
-                                onPressed: _toggleConnection,
-                                icon: Icon(
-                                  _isConnected ? Icons.check_circle_rounded : Icons.person_add_rounded,
-                                  size: 18,
-                                  color: _isConnected ? AppTheme.mintColor(context) : AppTheme.accentColor(context),
-                                ),
-                                label: Text(
-                                  _isConnected ? 'Đã kết nối' : 'Kết nối',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: _isConnected ? AppTheme.mintColor(context) : AppTheme.accentColor(context),
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  side: BorderSide(
-                                    color: _isConnected
-                                        ? AppTheme.mintColor(context).withValues(alpha: 0.5)
-                                        : AppTheme.accentColor(context).withValues(alpha: 0.5),
-                                    width: 1.5,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Metric counts
-                      _buildMetricsRow(context, user),
-                    ],
+                      );
+                    },
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: 'Chia sẻ hồ sơ',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Đã sao chép liên kết hồ sơ của ${user.displayName}!')),
+                      );
+                    },
                   ),
-                ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverTabBarDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: AppTheme.primaryColor(context),
-                    unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                    indicatorColor: AppTheme.primaryColor(context),
-                    indicatorWeight: 3,
-                    tabs: const [
-                      Tab(icon: Icon(Icons.article_outlined), text: 'Bài viết'),
-                      Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tài liệu'),
-                      Tab(icon: Icon(Icons.info_outline_rounded), text: 'Thông tin'),
-                    ],
-                  ),
-                  colorScheme.surface,
-                ),
-              ),
-            ],
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPostsTab(context, user, currentUid),
-                _buildDocumentsTab(context, user),
-                _buildAboutTab(context, user),
               ],
             ),
-          ),
+            body: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Digital Student Card
+                        _buildDigitalCard(context, user),
+                        const SizedBox(height: 16),
+
+                        // Action buttons: Nhắn tin, Kết bạn, Theo dõi
+                        if (!isSelf && currentUser != null) ...[
+                          _buildActionButtons(context, currentUser, user),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Metric counts: Posts, Friends, Followers, Following
+                        _buildMetricsRow(context, user),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverTabBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: AppTheme.primaryColor(context),
+                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                      indicatorColor: AppTheme.primaryColor(context),
+                      indicatorWeight: 3,
+                      tabs: const [
+                        Tab(icon: Icon(Icons.article_outlined), text: 'Bài viết'),
+                        Tab(icon: Icon(Icons.people_alt_outlined), text: 'Bạn bè'),
+                        Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tài liệu'),
+                        Tab(icon: Icon(Icons.info_outline_rounded), text: 'Thông tin'),
+                      ],
+                    ),
+                    colorScheme.surface,
+                  ),
+                ),
+              ],
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPostsTab(context, user, currentUid),
+                  _buildFriendsTab(context),
+                  _buildDocumentsTab(context, user),
+                  _buildAboutTab(context, user),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(
+    BuildContext context,
+    UserEntity currentUser,
+    UserEntity targetUser,
+  ) {
+    return BlocBuilder<FriendshipCubit, FriendshipState>(
+      builder: (context, fState) {
+        final rel = fState.relationship;
+        final status = rel.friendshipStatus;
+        final isFollowing = rel.isFollowing;
+
+        // Button visuals according to friendship status
+        String friendButtonText;
+        IconData friendButtonIcon;
+        Color friendButtonColor;
+
+        switch (status) {
+          case FriendshipStatus.none:
+            friendButtonText = 'Kết bạn';
+            friendButtonIcon = Icons.person_add_rounded;
+            friendButtonColor = AppTheme.primaryColor(context);
+            break;
+          case FriendshipStatus.requestSent:
+            friendButtonText = 'Đã gửi lời mời';
+            friendButtonIcon = Icons.schedule_send_rounded;
+            friendButtonColor = Colors.orange;
+            break;
+          case FriendshipStatus.requestReceived:
+            friendButtonText = 'Phản hồi';
+            friendButtonIcon = Icons.mark_email_unread_rounded;
+            friendButtonColor = Colors.green;
+            break;
+          case FriendshipStatus.friends:
+            friendButtonText = 'Bạn bè';
+            friendButtonIcon = Icons.check_circle_rounded;
+            friendButtonColor = AppTheme.mintColor(context);
+            break;
+        }
+
+        return Column(
+          children: [
+            Row(
+              children: [
+                // Button 1: Nhắn tin
+                Expanded(
+                  flex: 1,
+                  child: ElevatedButton.icon(
+                    onPressed: _startChat,
+                    icon: const Icon(Icons.chat_bubble_rounded, size: 17),
+                    label: const Text('Nhắn tin', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor(context),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Button 2: Kết bạn
+                Expanded(
+                  flex: 1,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _handleFriendAction(
+                      context: context,
+                      status: status,
+                      currentUser: currentUser,
+                      targetUser: targetUser,
+                    ),
+                    icon: Icon(friendButtonIcon, size: 17, color: friendButtonColor),
+                    label: Text(
+                      friendButtonText,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: friendButtonColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: friendButtonColor.withValues(alpha: 0.6), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Button 3: Theo dõi (Follow / Following)
+                InkWell(
+                  onTap: () {
+                    context.read<FriendshipCubit>().toggleFollow(
+                          currentUserId: currentUser.uid,
+                          targetUserId: targetUser.uid,
+                        );
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isFollowing
+                          ? AppTheme.accentColor(context).withValues(alpha: 0.15)
+                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isFollowing
+                            ? AppTheme.accentColor(context)
+                            : Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isFollowing ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                          size: 18,
+                          color: isFollowing ? AppTheme.accentColor(context) : null,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isFollowing ? 'Đang theo dõi' : 'Theo dõi',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isFollowing ? AppTheme.accentColor(context) : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       },
     );
@@ -431,10 +627,13 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               CircleAvatar(
                 radius: 28,
                 backgroundColor: AppTheme.accentColor(context),
-                child: Text(
-                  user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
+                backgroundImage: user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                child: user.avatarUrl.isEmpty
+                    ? Text(
+                        user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                      )
+                    : null,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -481,38 +680,57 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
   }
 
   Widget _buildMetricsRow(BuildContext context, UserEntity user) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildSingleMetric(
-            context,
-            title: 'Khóa học',
-            value: 'K${user.cohort != 0 ? user.cohort : 17}',
-            icon: Icons.school_rounded,
-            color: AppTheme.primaryColor(context),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildSingleMetric(
-            context,
-            title: 'Trạng thái',
-            value: 'Chính quy',
-            icon: Icons.verified_user_rounded,
-            color: AppTheme.mintColor(context),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildSingleMetric(
-            context,
-            title: 'Độ tin cậy',
-            value: '100%',
-            icon: Icons.thumb_up_alt_rounded,
-            color: AppTheme.accentColor(context),
-          ),
-        ),
-      ],
+    return BlocBuilder<FriendshipCubit, FriendshipState>(
+      builder: (context, fState) {
+        final rel = fState.relationship;
+        final friendsCount = rel.friendsCount > 0 ? rel.friendsCount : user.friendsCount;
+        final followersCount = rel.followersCount;
+        final followingCount = rel.followingCount;
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildSingleMetric(
+                context,
+                title: 'Bài viết',
+                value: '${user.postsCount}',
+                icon: Icons.article_rounded,
+                color: AppTheme.primaryColor(context),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildSingleMetric(
+                context,
+                title: 'Bạn bè',
+                value: '$friendsCount',
+                icon: Icons.people_rounded,
+                color: AppTheme.mintColor(context),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildSingleMetric(
+                context,
+                title: 'Follower',
+                value: '$followersCount',
+                icon: Icons.groups_rounded,
+                color: AppTheme.accentColor(context),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildSingleMetric(
+                context,
+                title: 'Following',
+                value: '$followingCount',
+                icon: Icons.person_pin_rounded,
+                color: Colors.purple,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -525,21 +743,23 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 2),
           Text(
             title,
-            style: TextStyle(fontSize: 10.5, color: colorScheme.onSurface.withValues(alpha: 0.55)),
+            style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -637,6 +857,87 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       }
                     }
                   : null,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFriendsTab(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return BlocBuilder<FriendshipCubit, FriendshipState>(
+      builder: (context, fState) {
+        final friends = fState.friendsList;
+
+        if (friends.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline_rounded, size: 54, color: colorScheme.outlineVariant),
+                const SizedBox(height: 12),
+                Text(
+                  'Chưa có bạn bè nào',
+                  style: TextStyle(color: colorScheme.outline),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: friends.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final friend = friends[index];
+            final fId = friend['userId'] as String? ?? '';
+            final fName = friend['displayName'] as String? ?? 'Sinh viên Phenikaa';
+            final fAvatar = friend['avatarUrl'] as String? ?? '';
+            final fFaculty = friend['faculty'] as String? ?? '';
+
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+              ),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: AppTheme.primaryColor(context),
+                  backgroundImage: fAvatar.isNotEmpty ? NetworkImage(fAvatar) : null,
+                  child: fAvatar.isEmpty
+                      ? Text(
+                          fName.isNotEmpty ? fName[0].toUpperCase() : '?',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        )
+                      : null,
+                ),
+                title: Text(fName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text(
+                  fFaculty.isNotEmpty ? fFaculty : 'Đại học Phenikaa',
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UserProfilePage(
+                        userId: fId,
+                        userName: fName,
+                        faculty: fFaculty,
+                        avatarUrl: fAvatar,
+                      ),
+                    ),
+                  );
+                },
+              ),
             );
           },
         );
