@@ -22,6 +22,10 @@ import '../../../friends/domain/entities/friendship_status.dart';
 import '../../../friends/presentation/cubit/friendship_cubit.dart';
 import '../../../friends/presentation/cubit/friendship_state.dart';
 import '../../../friends/presentation/pages/friend_requests_page.dart';
+import '../../../moderation/domain/entities/blocked_user_entity.dart';
+import '../../../moderation/domain/entities/report_target_type.dart';
+import '../../../moderation/presentation/cubit/moderation_cubit.dart';
+import '../../../moderation/presentation/widgets/report_bottom_sheet.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -348,7 +352,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       );
                     },
                   )
-                else
+                else ...[
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
                     tooltip: 'Chia sẻ hồ sơ',
@@ -358,6 +362,78 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       );
                     },
                   ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    onSelected: (value) {
+                      if (value == 'report') {
+                        ReportBottomSheet.show(
+                          context,
+                          targetId: user.uid,
+                          targetType: ReportTargetType.user,
+                          targetAuthorId: user.uid,
+                          targetAuthorName: user.displayName,
+                        );
+                      } else if (value == 'block') {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Chặn người dùng này?'),
+                            content: Text(
+                              'Bạn sẽ không còn nhìn thấy bài viết, bình luận và không thể nhắn tin với ${user.displayName}.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Hủy'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  context.read<ModerationCubit>().blockUser(
+                                        currentUserId: currentUid,
+                                        blockedUser: BlockedUserEntity(
+                                          userId: user.uid,
+                                          userName: user.displayName,
+                                          userAvatar: user.avatarUrl,
+                                          userFaculty: user.faculty,
+                                          blockedAt: DateTime.now(),
+                                        ),
+                                      );
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Chặn'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            Icon(Icons.report_problem_outlined, color: Colors.orange, size: 20),
+                            SizedBox(width: 10),
+                            Text('Báo cáo người dùng'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'block',
+                        child: Row(
+                          children: [
+                            Icon(Icons.block_rounded, color: Colors.red, size: 20),
+                            SizedBox(width: 10),
+                            Text('Chặn người dùng này', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
             body: NestedScrollView(
@@ -1017,6 +1093,34 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               _buildInfoTile(Icons.book_outlined, 'Chuyên ngành', user.major.isNotEmpty ? user.major : 'Kỹ thuật phần mềm'),
               _buildInfoTile(Icons.calendar_today_outlined, 'Khóa đào tạo', 'K${user.cohort != 0 ? user.cohort : 17} (2023 - 2027)'),
               _buildInfoTile(Icons.email_outlined, 'Email liên hệ', user.email),
+              if (user.currentSubjects.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 14),
+                const Text('Môn học đang theo học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: user.currentSubjects.map((sub) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.blueContainer(context),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        sub,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryColor(context),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ],
           ),
         ),

@@ -15,13 +15,16 @@ import '../../../documents/presentation/cubit/document_cubit.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/domain/entities/user_entity.dart';
-import '../../../auth/data/models/user_model.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../onboarding/presentation/widgets/notification_permission_sheet.dart';
 import '../../../clubs/presentation/cubit/club_cubit.dart';
 import '../../../clubs/presentation/cubit/club_state.dart';
 import '../../../clubs/presentation/pages/club_detail_page.dart';
+import '../../../auth/presentation/pages/edit_profile_page.dart';
+import '../../../auth/presentation/pages/change_password_dialog.dart';
+import '../../../moderation/presentation/cubit/moderation_cubit.dart';
+import '../../../moderation/presentation/pages/blocked_users_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -43,6 +46,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       if (authState is Authenticated) {
         context.read<FeedCubit>().updateCurrentUserId(authState.user.uid);
         context.read<ChatCubit>().initConversations(authState.user.uid);
+        context.read<ModerationCubit>().init(authState.user.uid);
         sl<NotificationService>().syncUserFcmToken(authState.user.uid);
       }
     });
@@ -74,6 +78,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         } else if (state is Authenticated) {
           context.read<FeedCubit>().updateCurrentUserId(state.user.uid);
           context.read<ChatCubit>().initConversations(state.user.uid);
+          context.read<ModerationCubit>().init(state.user.uid);
           sl<NotificationService>().syncUserFcmToken(state.user.uid);
         }
       },
@@ -982,7 +987,10 @@ class _StudentProfileView extends StatelessWidget {
                     _buildDigitalStudentCard(context, user),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
-                      onPressed: () => _showEditProfileModal(context, user),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => EditProfilePage(user: user)),
+                      ),
                       icon: Icon(Icons.edit_outlined, size: 16, color: AppTheme.primaryColor(context)),
                       label: Text(
                         'Chỉnh sửa thông tin cá nhân',
@@ -996,6 +1004,10 @@ class _StudentProfileView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     _buildAcademicOverviewCard(context),
+                    if (user.currentSubjects.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      _buildCurrentSubjectsCard(context, user),
+                    ],
                     const SizedBox(height: 16),
                     _buildSettingsSection(context, colorScheme),
                     const SizedBox(height: 20),
@@ -1137,10 +1149,13 @@ class _StudentProfileView extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: AppTheme.accentColor(context),
-                child: Text(
-                  user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
+                backgroundImage: user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                child: user.avatarUrl.isEmpty
+                    ? Text(
+                        user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      )
+                    : null,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -1242,6 +1257,60 @@ class _StudentProfileView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCurrentSubjectsCard(BuildContext context, UserEntity user) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.collections_bookmark_rounded, size: 18, color: AppTheme.mintColor(context)),
+              const SizedBox(width: 8),
+              const Text(
+                'Môn học kỳ này',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const Spacer(),
+              Text(
+                '${user.currentSubjects.length} môn',
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: user.currentSubjects.map((subject) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueContainer(context),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  subject,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryColor(context),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1473,6 +1542,45 @@ class _StudentProfileView extends StatelessWidget {
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.lock_reset_rounded, color: Colors.orange, size: 20),
+            ),
+            title: const Text('Đổi mật khẩu', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Cập nhật mật khẩu bảo vệ tài khoản', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => ChangePasswordDialog.show(context),
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.block_flipped, color: Colors.red, size: 20),
+            ),
+            title: const Text('Người dùng đã chặn', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Quản lý danh sách tài khoản bạn đã chặn', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BlockedUsersPage()),
+              );
+            },
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
                 color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -1630,133 +1738,6 @@ class _StudentProfileView extends StatelessWidget {
               child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditProfileModal(BuildContext context, UserEntity user) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final nameCtrl = TextEditingController(text: user.displayName);
-    final bioCtrl = TextEditingController(text: user.bio);
-    final facultyCtrl = TextEditingController(text: user.faculty);
-    final majorCtrl = TextEditingController(text: user.major);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Chỉnh sửa hồ sơ cá nhân',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Họ và tên',
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: bioCtrl,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: 'Tiểu sử (Bio)',
-                  hintText: 'Giới thiệu ngắn về bản thân, sở thích...',
-                  prefixIcon: const Icon(Icons.edit_note_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: facultyCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Khoa / Viện',
-                  prefixIcon: const Icon(Icons.school_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: majorCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Ngành học',
-                  prefixIcon: const Icon(Icons.book_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  final newName = nameCtrl.text.trim();
-                  if (newName.isEmpty) return;
-
-                  final updated = UserModel(
-                    uid: user.uid,
-                    email: user.email,
-                    studentId: user.studentId,
-                    displayName: newName,
-                    username: user.username,
-                    avatarUrl: user.avatarUrl,
-                    coverUrl: user.coverUrl,
-                    bio: bioCtrl.text.trim(),
-                    faculty: facultyCtrl.text.trim(),
-                    major: majorCtrl.text.trim(),
-                    cohort: user.cohort,
-                    userType: user.userType,
-                    isVerified: user.isVerified,
-                    currentSubjects: user.currentSubjects,
-                    friendsCount: user.friendsCount,
-                    postsCount: user.postsCount,
-                    createdAt: user.createdAt,
-                  );
-
-                  Navigator.pop(ctx);
-                  await context.read<AuthCubit>().updateUserProfile(updated);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã cập nhật thông tin hồ sơ thành công!')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor(context),
-                  foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              ),
-            ],
-          ),
         ),
       ),
     );

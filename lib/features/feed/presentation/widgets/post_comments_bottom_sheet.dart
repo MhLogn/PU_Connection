@@ -6,6 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
+import '../../../moderation/domain/entities/report_target_type.dart';
+import '../../../moderation/presentation/widgets/report_bottom_sheet.dart';
 import '../cubit/feed_cubit.dart';
 
 class PostCommentsBottomSheet extends StatefulWidget {
@@ -573,12 +575,40 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                         ],
                       ),
                     ),
-                    Text(
-                      timeStr,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurface.withValues(alpha: 0.45),
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          timeStr,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colorScheme.onSurface.withValues(alpha: 0.45),
+                          ),
+                        ),
+                        if (comment.authorId != widget.currentUserId) ...[
+                          const SizedBox(width: 4),
+                          InkWell(
+                            onTap: () {
+                              ReportBottomSheet.show(
+                                context,
+                                targetId: comment.commentId,
+                                targetType: ReportTargetType.comment,
+                                targetAuthorId: comment.authorId,
+                                targetAuthorName: comment.authorName,
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: Icon(
+                                Icons.flag_outlined,
+                                size: 13,
+                                color: colorScheme.onSurface.withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

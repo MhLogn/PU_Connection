@@ -23,6 +23,9 @@ import '../../features/clubs/presentation/cubit/club_cubit.dart';
 import '../../features/friends/domain/repositories/friend_repository.dart';
 import '../../features/friends/data/repositories/friend_repository_impl.dart';
 import '../../features/friends/presentation/cubit/friendship_cubit.dart';
+import '../../features/moderation/domain/repositories/moderation_repository.dart';
+import '../../features/moderation/data/repositories/moderation_repository_impl.dart';
+import '../../features/moderation/presentation/cubit/moderation_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -69,5 +72,9 @@ Future<void> initDI() async {
   // Friends & Relationships
   sl.registerLazySingleton<FriendRepository>(() => FriendRepositoryImpl());
   sl.registerFactory(() => FriendshipCubit(friendRepository: sl()));
+
+  // Content Moderation & Blocking
+  sl.registerLazySingleton<ModerationRepository>(() => ModerationRepositoryImpl());
+  sl.registerFactory(() => ModerationCubit(moderationRepository: sl()));
 }
 

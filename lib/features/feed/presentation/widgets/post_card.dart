@@ -12,6 +12,11 @@ import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../../../documents/domain/entities/document_entity.dart';
 import '../../../documents/presentation/pages/pdf_viewer_page.dart';
 import '../../domain/entities/post_entity.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../moderation/domain/entities/blocked_user_entity.dart';
+import '../../../moderation/domain/entities/report_target_type.dart';
+import '../../../moderation/presentation/cubit/moderation_cubit.dart';
+import '../../../moderation/presentation/widgets/report_bottom_sheet.dart';
 
 class PostCard extends StatelessWidget {
   final PostEntity post;
@@ -85,6 +90,14 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    try {
+      final moderationState = context.watch<ModerationCubit>().state;
+      if (moderationState.blockedUserIds.contains(post.authorId) ||
+          moderationState.hiddenPostIds.contains(post.postId)) {
+        return const SizedBox.shrink();
+      }
+    } catch (_) {}
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
@@ -295,13 +308,110 @@ class PostCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                ] else if (onChatPressed != null) ...[
-                  IconButton(
-                    icon: Icon(Icons.chat_bubble_outline_rounded, size: 19, color: AppTheme.primaryColor(context)),
-                    tooltip: l10n.message_author,
+                ] else ...[
+                  if (onChatPressed != null) ...[
+                    IconButton(
+                      icon: Icon(Icons.chat_bubble_outline_rounded, size: 19, color: AppTheme.primaryColor(context)),
+                      tooltip: l10n.message_author,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: onChatPressed,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_horiz_rounded, size: 22, color: colorScheme.outline),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: onChatPressed,
+                    tooltip: 'Tùy chọn bài viết',
+                    onSelected: (val) {
+                      if (val == 'report') {
+                        ReportBottomSheet.show(
+                          context,
+                          targetId: post.postId,
+                          targetType: ReportTargetType.post,
+                          targetAuthorId: post.authorId,
+                          targetAuthorName: post.authorName,
+                        );
+                      } else if (val == 'hide') {
+                        try {
+                          context.read<ModerationCubit>().hidePostOptimistically(post.postId);
+                        } catch (_) {}
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã ẩn bài viết khỏi bảng tin của bạn.'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      } else if (val == 'block') {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Chặn người dùng này?'),
+                            content: Text(
+                              'Bạn sẽ không còn nhìn thấy bài viết từ ${post.authorName} trên bảng tin.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Hủy'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  try {
+                                    context.read<ModerationCubit>().blockUser(
+                                          currentUserId: currentUserId,
+                                          blockedUser: BlockedUserEntity(
+                                            userId: post.authorId,
+                                            userName: post.authorName,
+                                            userAvatar: post.authorAvatar,
+                                            userFaculty: post.authorFaculty,
+                                            blockedAt: DateTime.now(),
+                                          ),
+                                        );
+                                  } catch (_) {}
+                                },
+                                child: const Text('Chặn'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'hide',
+                        child: Row(
+                          children: [
+                            Icon(Icons.visibility_off_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Ẩn bài viết này', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            Icon(Icons.report_problem_outlined, size: 18, color: Colors.orange),
+                            SizedBox(width: 8),
+                            Text('Báo cáo bài viết', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'block',
+                        child: Row(
+                          children: [
+                            Icon(Icons.block_rounded, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Chặn người dùng này', style: TextStyle(color: Colors.red, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],

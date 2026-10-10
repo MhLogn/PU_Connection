@@ -556,6 +556,32 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (_) {}
   }
 
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('Vui lòng đăng nhập để thực hiện đổi mật khẩu.');
+    }
+
+    if (newPassword.length < 6) {
+      throw Exception('Mật khẩu mới phải có ít nhất 6 ký tự.');
+    }
+
+    try {
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(cred);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleFirebaseAuthError(e);
+    }
+  }
+
   String _handleFirebaseAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'operation-not-allowed':

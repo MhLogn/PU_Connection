@@ -22,4 +22,8 @@ abstract class AuthRepository {
   Stream<UserEntity?> get authStateChanges;
   Future<UserEntity?> getUserProfile(String uid);
   Future<void> updateUserProfile(UserEntity user);
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
