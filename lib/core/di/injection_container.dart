@@ -26,6 +26,9 @@ import '../../features/friends/presentation/cubit/friendship_cubit.dart';
 import '../../features/moderation/domain/repositories/moderation_repository.dart';
 import '../../features/moderation/data/repositories/moderation_repository_impl.dart';
 import '../../features/moderation/presentation/cubit/moderation_cubit.dart';
+import '../../features/notifications/domain/repositories/in_app_notification_repository.dart';
+import '../../features/notifications/data/repositories/in_app_notification_repository_impl.dart';
+import '../../features/notifications/presentation/cubit/in_app_notifications_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -76,5 +79,11 @@ Future<void> initDI() async {
   // Content Moderation & Blocking
   sl.registerLazySingleton<ModerationRepository>(() => ModerationRepositoryImpl());
   sl.registerFactory(() => ModerationCubit(moderationRepository: sl()));
+
+  // In-App Notification Center
+  sl.registerLazySingleton<InAppNotificationRepository>(
+      () => InAppNotificationRepositoryImpl());
+  sl.registerFactory(
+      () => InAppNotificationsCubit(repository: sl()));
 }
 

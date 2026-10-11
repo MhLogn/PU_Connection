@@ -25,6 +25,9 @@ import '../../../auth/presentation/pages/edit_profile_page.dart';
 import '../../../auth/presentation/pages/change_password_dialog.dart';
 import '../../../moderation/presentation/cubit/moderation_cubit.dart';
 import '../../../moderation/presentation/pages/blocked_users_page.dart';
+import '../../../notifications/presentation/cubit/in_app_notifications_cubit.dart';
+import '../../../notifications/presentation/cubit/in_app_notifications_state.dart';
+import '../../../notifications/presentation/pages/notifications_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -47,6 +50,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         context.read<FeedCubit>().updateCurrentUserId(authState.user.uid);
         context.read<ChatCubit>().initConversations(authState.user.uid);
         context.read<ModerationCubit>().init(authState.user.uid);
+        context.read<InAppNotificationsCubit>().init(authState.user.uid);
         sl<NotificationService>().syncUserFcmToken(authState.user.uid);
       }
     });
@@ -79,6 +83,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           context.read<FeedCubit>().updateCurrentUserId(state.user.uid);
           context.read<ChatCubit>().initConversations(state.user.uid);
           context.read<ModerationCubit>().init(state.user.uid);
+          context.read<InAppNotificationsCubit>().init(state.user.uid);
           sl<NotificationService>().syncUserFcmToken(state.user.uid);
         }
       },
@@ -1534,6 +1539,45 @@ class _StudentProfileView extends StatelessWidget {
               ],
             ),
             onTap: () => NotificationPermissionSheet.checkAndShowPrompt(context, force: true),
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.notifications_rounded, color: Color(0xFF0284C7), size: 20),
+            ),
+            title: const Text('Trung tâm thông báo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Xem và quản lý tất cả thông báo trường học', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
+              builder: (context, notifState) {
+                if (notifState.unreadCount > 0) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentColor(context),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      notifState.unreadCount.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }
+                return const Icon(Icons.chevron_right_rounded);
+              },
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+            },
           ),
           Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ListTile(

@@ -19,6 +19,9 @@ import '../widgets/post_comments_bottom_sheet.dart';
 import '../../../chat/presentation/pages/conversations_page.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
+import '../../../notifications/presentation/cubit/in_app_notifications_cubit.dart';
+import '../../../notifications/presentation/cubit/in_app_notifications_state.dart';
+import '../../../notifications/presentation/pages/notifications_page.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -146,211 +149,7 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   void _showNotificationsModal(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final notifications = [
-      {
-        'sender': 'Phòng Đào tạo',
-        'title': 'Đăng ký học phần HK2 (2025-2026)',
-        'content': 'Hệ thống mở cổng đăng ký tín chỉ đợt 1 từ ngày 15/09 cho sinh viên K16, K17. Sinh viên lưu ý hoàn tất đóng học phí đúng hạn.',
-        'time': '2 giờ trước',
-        'isNew': true,
-        'icon': Icons.calendar_month_rounded,
-        'color': AppTheme.primaryColor(context),
-      },
-      {
-        'sender': 'Phòng Công tác Sinh viên',
-        'title': 'Xét Học bổng Khuyến khích Học tập Kỳ 1',
-        'content': 'Công bố danh sách dự kiến sinh viên đạt học bổng Xuất sắc và Giỏi. Thời gian phản hồi đến hết ngày 18/09.',
-        'time': '1 ngày trước',
-        'isNew': true,
-        'icon': Icons.military_tech_rounded,
-        'color': AppTheme.accentColor(context),
-      },
-      {
-        'sender': 'Đoàn Thanh Niên Phenikaa',
-        'title': 'Khai mạc Hội thao Phenikaa Youth Games 2026',
-        'content': 'Hội thao toàn trường với 6 môn thi đấu chính thức. Đăng ký tham gia tại văn phòng Đoàn Tòa A9.',
-        'time': '2 ngày trước',
-        'isNew': false,
-        'icon': Icons.sports_basketball_rounded,
-        'color': AppTheme.mintColor(context),
-      },
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(ctx).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 6),
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.notifications_active_rounded, color: AppTheme.accentColor(context), size: 22),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Thông Báo Trường Phenikaa',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection(FirebaseConstants.notificationsSubcollection)
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  List<Map<String, dynamic>> displayNotifications = notifications;
-                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                    displayNotifications = snapshot.data!.docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final sender = data['sender'] as String? ?? 'Trường ĐH Phenikaa';
-                      final title = data['title'] as String? ?? '';
-                      final content = data['content'] as String? ?? '';
-                      final time = data['time'] as String? ?? 'Gần đây';
-                      final isNew = data['isNew'] as bool? ?? false;
-
-                      IconData icon = Icons.notifications_rounded;
-                      Color color = AppTheme.primaryColor(context);
-
-                      if (sender.contains('Đào tạo')) {
-                        icon = Icons.calendar_month_rounded;
-                        color = AppTheme.primaryColor(context);
-                      } else if (sender.contains('Sinh viên') || sender.contains('Học bổng')) {
-                        icon = Icons.military_tech_rounded;
-                        color = AppTheme.accentColor(context);
-                      } else if (sender.contains('Đoàn') || sender.contains('Hội')) {
-                        icon = Icons.sports_basketball_rounded;
-                        color = AppTheme.mintColor(context);
-                      }
-
-                      return {
-                        'sender': sender,
-                        'title': title,
-                        'content': content,
-                        'time': time,
-                        'isNew': isNew,
-                        'icon': icon,
-                        'color': color,
-                      };
-                    }).toList();
-                  }
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: displayNotifications.length,
-                    separatorBuilder: (_, __) => const Divider(height: 20),
-                    itemBuilder: (_, index) {
-                      final notif = displayNotifications[index];
-                      final isNew = notif['isNew'] as bool;
-                      final color = notif['color'] as Color;
-
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: color.withValues(alpha: 0.15),
-                            child: Icon(notif['icon'] as IconData, color: color, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      notif['sender'] as String,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: color,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        if (isNew) ...[
-                                          Container(
-                                            width: 7,
-                                            height: 7,
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.accentColor(context),
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                        ],
-                                        Text(
-                                          notif['time'] as String,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: colorScheme.onSurface.withValues(alpha: 0.5),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  notif['title'] as String,
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  notif['content'] as String,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    NotificationsPage.showAsBottomSheet(context);
   }
 
   void _openEventsPage({String? category}) {
@@ -814,10 +613,46 @@ class _FeedPageState extends State<FeedPage> {
               ),
             ],
           ),
-          IconButton(
-            icon: Icon(Icons.notifications_none_rounded, color: colorScheme.onSurface),
-            tooltip: l10n.notifications,
-            onPressed: () => _showNotificationsModal(context),
+          BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
+            builder: (context, notifState) {
+              final unread = notifState.unreadCount;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      unread > 0 ? Icons.notifications_rounded : Icons.notifications_none_rounded,
+                      color: unread > 0 ? AppTheme.accentColor(context) : colorScheme.onSurface,
+                    ),
+                    tooltip: l10n.notifications,
+                    onPressed: () => _showNotificationsModal(context),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentColor(context),
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          unread > 9 ? '9+' : unread.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
