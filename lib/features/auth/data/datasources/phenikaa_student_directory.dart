@@ -102,4 +102,11 @@ class PhenikaaStudentDirectory {
       isActivated: false,
     ),
   ];
+
+  static PhenikaaStudentModel? getStudentById(String studentId) {
+    for (final s in defaultStudents) {
+      if (s.studentId == studentId) return s;
+    }
+    return null;
+  }
 }

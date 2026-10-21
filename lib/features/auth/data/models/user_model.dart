@@ -16,10 +16,14 @@ class UserModel extends UserEntity {
     super.cohort,
     super.userType,
     super.isVerified,
+    super.isBanned,
     super.currentSubjects,
     super.friendsCount,
     super.postsCount,
     super.createdAt,
+    super.gpa,
+    super.creditsEarned,
+    super.trainingPoints,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
@@ -37,12 +41,16 @@ class UserModel extends UserEntity {
       cohort: (map['cohort'] as num?)?.toInt() ?? 0,
       userType: map['userType'] as String? ?? 'student',
       isVerified: map['isVerified'] as bool? ?? false,
+      isBanned: map['isBanned'] as bool? ?? false,
       currentSubjects: List<String>.from(map['currentSubjects'] as List? ?? []),
       friendsCount: (map['friendsCount'] as num?)?.toInt() ?? 0,
       postsCount: (map['postsCount'] as num?)?.toInt() ?? 0,
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
+      gpa: (map['gpa'] as num?)?.toDouble() ?? 0.0,
+      creditsEarned: (map['creditsEarned'] as num?)?.toInt() ?? 0,
+      trainingPoints: (map['trainingPoints'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -66,14 +74,19 @@ class UserModel extends UserEntity {
       'cohort': cohort,
       'userType': userType,
       'isVerified': isVerified,
+      'isBanned': isBanned,
       'currentSubjects': currentSubjects,
       'friendsCount': friendsCount,
       'postsCount': postsCount,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+      'gpa': gpa,
+      'creditsEarned': creditsEarned,
+      'trainingPoints': trainingPoints,
     };
   }
 
+  @override
   UserModel copyWith({
     String? uid,
     String? email,
@@ -88,10 +101,14 @@ class UserModel extends UserEntity {
     int? cohort,
     String? userType,
     bool? isVerified,
+    bool? isBanned,
     List<String>? currentSubjects,
     int? friendsCount,
     int? postsCount,
     DateTime? createdAt,
+    double? gpa,
+    int? creditsEarned,
+    int? trainingPoints,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -107,10 +124,14 @@ class UserModel extends UserEntity {
       cohort: cohort ?? this.cohort,
       userType: userType ?? this.userType,
       isVerified: isVerified ?? this.isVerified,
+      isBanned: isBanned ?? this.isBanned,
       currentSubjects: currentSubjects ?? this.currentSubjects,
       friendsCount: friendsCount ?? this.friendsCount,
       postsCount: postsCount ?? this.postsCount,
       createdAt: createdAt ?? this.createdAt,
+      gpa: gpa ?? this.gpa,
+      creditsEarned: creditsEarned ?? this.creditsEarned,
+      trainingPoints: trainingPoints ?? this.trainingPoints,
     );
   }
 }

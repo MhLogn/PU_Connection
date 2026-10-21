@@ -526,12 +526,12 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           case FriendshipStatus.requestReceived:
             friendButtonText = 'Phản hồi';
             friendButtonIcon = Icons.mark_email_unread_rounded;
-            friendButtonColor = Colors.green;
+            friendButtonColor = AppTheme.primaryColor(context);
             break;
           case FriendshipStatus.friends:
             friendButtonText = 'Bạn bè';
             friendButtonIcon = Icons.check_circle_rounded;
-            friendButtonColor = AppTheme.mintColor(context);
+            friendButtonColor = AppTheme.primaryColor(context);
             break;
         }
 
@@ -703,7 +703,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               CircleAvatar(
                 radius: 28,
                 backgroundColor: AppTheme.accentColor(context),
-                backgroundImage: user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                backgroundImage: AppTheme.imageProvider(user.avatarUrl),
                 child: user.avatarUrl.isEmpty
                     ? Text(
                         user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
@@ -781,7 +781,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 title: 'Bạn bè',
                 value: '$friendsCount',
                 icon: Icons.people_rounded,
-                color: AppTheme.mintColor(context),
+                color: AppTheme.primaryColor(context),
               ),
             ),
             const SizedBox(width: 6),
@@ -986,7 +986,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 leading: CircleAvatar(
                   radius: 22,
                   backgroundColor: AppTheme.primaryColor(context),
-                  backgroundImage: fAvatar.isNotEmpty ? NetworkImage(fAvatar) : null,
+                  backgroundImage: AppTheme.imageProvider(fAvatar),
                   child: fAvatar.isEmpty
                       ? Text(
                           fName.isNotEmpty ? fName[0].toUpperCase() : '?',
