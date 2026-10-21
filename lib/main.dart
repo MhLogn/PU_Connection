@@ -18,6 +18,8 @@ import 'features/clubs/presentation/cubit/club_cubit.dart';
 import 'features/friends/presentation/cubit/friendship_cubit.dart';
 import 'features/moderation/presentation/cubit/moderation_cubit.dart';
 import 'features/notifications/presentation/cubit/in_app_notifications_cubit.dart';
+import 'features/saved_posts/presentation/cubit/saved_posts_cubit.dart';
+import 'features/study_groups/presentation/cubit/study_group_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +54,8 @@ class PUConnectionApp extends StatelessWidget {
         BlocProvider(create: (_) => sl<FriendshipCubit>()),
         BlocProvider(create: (_) => sl<ModerationCubit>()),
         BlocProvider(create: (_) => sl<InAppNotificationsCubit>()),
+        BlocProvider(create: (_) => sl<SavedPostsCubit>()),
+        BlocProvider(create: (_) => sl<StudyGroupCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

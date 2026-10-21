@@ -1,6 +1,34 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class AppTheme {
+  /// Trả về ImageProvider an toàn tương thích cả URL mạng (http/https), Local File (FileImage) lẫn Data URI (base64)
+  static ImageProvider? imageProvider(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final clean = url.trim();
+    if (clean.startsWith('data:image/')) {
+      try {
+        final base64Part = clean.split(',').last;
+        return MemoryImage(base64Decode(base64Part));
+      } catch (_) {
+        return null;
+      }
+    }
+    if (clean.startsWith('/') ||
+        clean.contains(r':\') ||
+        clean.contains(':/') ||
+        clean.startsWith('file://')) {
+      try {
+        final filePath = clean.replaceFirst('file://', '');
+        final file = File(filePath);
+        if (file.existsSync()) {
+          return FileImage(file);
+        }
+      } catch (_) {}
+    }
+    return NetworkImage(clean);
+  }
   // Brand Identity Colors (Ocean Blue, White & Phenikaa Orange Accents)
   // Xanh nước biển (vibrant ocean azure - không quá đậm, tươi tắn như mạng xã hội hiện đại)
   static const Color oceanBlue = Color(0xFF0284C7); // Sky 600

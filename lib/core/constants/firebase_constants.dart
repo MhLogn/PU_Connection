@@ -22,6 +22,7 @@ class FirebaseConstants {
   static const String followingSubcollection = 'following';
   static const String blockedUsersSubcollection = 'blocked_users';
   static const String reportsCollection = 'reports';
+  static const String studyGroupsCollection = 'study_groups';
 
   static const String studentEmailDomain = '@st.phenikaa-uni.edu.vn';
   static const String staffEmailDomain = '@phenikaa-uni.edu.vn';

@@ -4,6 +4,7 @@ import '../../features/onboarding/presentation/pages/intro_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/main/presentation/pages/main_navigation_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
+import '../../features/admin/presentation/pages/admin_portal_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -14,5 +15,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/preference', redirect: (context, state) => '/login'),
     GoRoute(path: '/home', builder: (context, state) => const MainNavigationPage()),
     GoRoute(path: '/chat', builder: (context, state) => const ConversationsPage()),
+    GoRoute(path: '/admin', builder: (context, state) => const AdminPortalPage()),
   ],
 );

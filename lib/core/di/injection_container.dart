@@ -5,6 +5,8 @@ import '../localization/locale_cubit.dart';
 import '../services/cloudinary_service.dart';
 import '../services/gemini_service.dart';
 import '../services/notification_service.dart';
+import '../services/offline_cache_service.dart';
+import '../services/bad_words_filter_service.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
@@ -29,6 +31,15 @@ import '../../features/moderation/presentation/cubit/moderation_cubit.dart';
 import '../../features/notifications/domain/repositories/in_app_notification_repository.dart';
 import '../../features/notifications/data/repositories/in_app_notification_repository_impl.dart';
 import '../../features/notifications/presentation/cubit/in_app_notifications_cubit.dart';
+import '../../features/saved_posts/domain/repositories/saved_posts_repository.dart';
+import '../../features/saved_posts/data/repositories/saved_posts_repository_impl.dart';
+import '../../features/saved_posts/presentation/cubit/saved_posts_cubit.dart';
+import '../../features/study_groups/domain/repositories/study_group_repository.dart';
+import '../../features/study_groups/data/repositories/study_group_repository_impl.dart';
+import '../../features/study_groups/presentation/cubit/study_group_cubit.dart';
+import '../../features/admin/domain/repositories/admin_repository.dart';
+import '../../features/admin/data/repositories/admin_repository_impl.dart';
+import '../../features/admin/presentation/cubit/admin_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -38,6 +49,8 @@ Future<void> initDI() async {
 
   sl.registerLazySingleton(() => CloudinaryService());
   sl.registerLazySingleton(() => GeminiService());
+  sl.registerLazySingleton(() => OfflineCacheService(prefs: sl()));
+  sl.registerLazySingleton(() => BadWordsFilterService());
 
   final notificationService = NotificationService(prefs: sl());
   await notificationService.init();
@@ -46,7 +59,7 @@ Future<void> initDI() async {
   sl.registerFactory(() => ThemeCubit(sharedPreferences: sl()));
   sl.registerFactory(() => LocaleCubit(sharedPreferences: sl()));
 
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(prefs: sl()));
   sl.registerFactory(() => AuthCubit(authRepository: sl()));
 
   sl.registerLazySingleton<PostRepository>(() => PostRepositoryImpl());
@@ -85,5 +98,23 @@ Future<void> initDI() async {
       () => InAppNotificationRepositoryImpl());
   sl.registerFactory(
       () => InAppNotificationsCubit(repository: sl()));
+
+  // Saved Posts (Bookmarks)
+  sl.registerLazySingleton<SavedPostsRepository>(
+      () => SavedPostsRepositoryImpl());
+  sl.registerFactory(
+      () => SavedPostsCubit(repository: sl()));
+
+  // Study Group Matchmaker
+  sl.registerLazySingleton<StudyGroupRepository>(
+      () => StudyGroupRepositoryImpl());
+  sl.registerFactory(
+      () => StudyGroupCubit(repository: sl()));
+
+  // Admin Portal & Moderation Management
+  sl.registerLazySingleton<AdminRepository>(
+      () => AdminRepositoryImpl());
+  sl.registerFactory(
+      () => AdminCubit(adminRepository: sl()));
 }
 
