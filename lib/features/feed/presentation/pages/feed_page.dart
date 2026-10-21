@@ -19,9 +19,12 @@ import '../widgets/post_comments_bottom_sheet.dart';
 import '../../../chat/presentation/pages/conversations_page.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
+import '../../../chat/presentation/cubit/chat_state.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_cubit.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_state.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../study_groups/presentation/pages/study_groups_page.dart';
+import '../../../main/presentation/pages/main_navigation_page.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -46,28 +49,20 @@ class _FeedPageState extends State<FeedPage> {
   ];
 
   final List<Map<String, dynamic>> _highlights = [
+    {'title': 'Nhóm học', 'icon': Icons.diversity_3_rounded, 'type': 'blue', 'route': 'study_groups'},
+    {'title': 'CLB Sinh viên', 'icon': Icons.groups_rounded, 'type': 'orange', 'route': 'clubs'},
     {'title': 'Học bổng K17', 'icon': Icons.school_rounded, 'type': 'blue', 'category': 'Học thuật'},
     {'title': 'Hội thao PU', 'icon': Icons.sports_soccer_rounded, 'type': 'orange', 'category': 'Thể thao'},
-    {'title': 'Hackathon IT', 'icon': Icons.code_rounded, 'type': 'mint', 'category': 'Học thuật'},
-    {'title': 'Acoustic Night', 'icon': Icons.music_note_rounded, 'type': 'violet', 'category': 'Văn nghệ'},
-    {'title': 'CLB Tình nguyện', 'icon': Icons.volunteer_activism_rounded, 'type': 'coral', 'category': 'Tình nguyện'},
+    {'title': 'Hackathon IT', 'icon': Icons.code_rounded, 'type': 'blue', 'category': 'Học thuật'},
+    {'title': 'Acoustic Night', 'icon': Icons.music_note_rounded, 'type': 'orange', 'category': 'Văn nghệ'},
     {'title': 'Sự kiện PU', 'icon': Icons.celebration_rounded, 'type': 'blue', 'category': 'Tất cả'},
   ];
 
   Color _getHighlightColor(BuildContext context, String type) {
-    switch (type) {
-      case 'orange':
-        return AppTheme.accentColor(context);
-      case 'mint':
-        return AppTheme.mintColor(context);
-      case 'violet':
-        return AppTheme.violetColor(context);
-      case 'coral':
-        return AppTheme.coralColor(context);
-      case 'blue':
-      default:
-        return AppTheme.primaryColor(context);
+    if (type == 'orange') {
+      return AppTheme.accentColor(context);
     }
+    return AppTheme.primaryColor(context);
   }
 
   @override
@@ -586,32 +581,46 @@ class _FeedPageState extends State<FeedPage> {
               });
             },
           ),
-          Stack(
-            alignment: Alignment.topRight,
-            children: [
-              IconButton(
-                icon: Icon(Icons.forum_outlined, color: colorScheme.onSurface),
-                tooltip: 'Tin nhắn',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ConversationsPage()),
-                  );
-                },
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.orangeAccent,
-                    shape: BoxShape.circle,
+          BlocBuilder<ChatCubit, ChatState>(
+            builder: (context, chatState) {
+              final authUser = context.read<AuthCubit>().state is Authenticated
+                  ? (context.read<AuthCubit>().state as Authenticated).user
+                  : null;
+              final currentUserId = authUser?.uid ?? '';
+              final totalUnread = chatState.conversations.fold<int>(
+                0,
+                (total, conv) => total + (conv.unreadCounts[currentUserId] ?? 0),
+              );
+
+              return Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.forum_outlined, color: colorScheme.onSurface),
+                    tooltip: 'Tin nhắn',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ConversationsPage()),
+                      );
+                    },
                   ),
-                ),
-              ),
-            ],
+                  if (totalUnread > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.orangeAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
             builder: (context, notifState) {
@@ -779,7 +788,18 @@ class _FeedPageState extends State<FeedPage> {
                       final item = _highlights[index];
                       final color = _getHighlightColor(context, item['type'] as String);
                       return GestureDetector(
-                        onTap: () => _openEventsPage(category: item['category'] as String?),
+                        onTap: () {
+                          if (item['route'] == 'study_groups') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const StudyGroupsPage()),
+                            );
+                          } else if (item['route'] == 'clubs') {
+                            MainNavigationPage.of(context)?.navigateToTab(3);
+                          } else {
+                            _openEventsPage(category: item['category'] as String?);
+                          }
+                        },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [

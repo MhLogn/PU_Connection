@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
@@ -182,6 +184,16 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       return;
     }
 
+    // Tiền kiểm tra từ ngữ nhạy cảm (Bad Words Filter) trước khi đăng bài
+    final fullTextToCheck = '$content ${_subjectCodeController.text.trim()}';
+    if (sl.isRegistered<BadWordsFilterService>()) {
+      final checkResult = sl<BadWordsFilterService>().check(fullTextToCheck);
+      if (!checkResult.isValid) {
+        _showBadWordsWarningDialog(context, checkResult);
+        return;
+      }
+    }
+
     final authState = context.read<AuthCubit>().state;
     String uid = '';
     String name = 'Sinh viên Phenikaa';
@@ -274,6 +286,108 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         );
       }
     }
+  }
+
+  void _showBadWordsWarningDialog(BuildContext context, BadWordsCheckResult result) {
+    final isDark = AppTheme.isDark(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.shield_outlined,
+            color: Color(0xFFEF4444),
+            size: 34,
+          ),
+        ),
+        title: const Text(
+          'Từ ngữ không phù hợp',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hệ thống tự động phát hiện một số từ ngữ không phù hợp với chuẩn mực môi trường văn hóa đại học Phenikaa:',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: result.detectedWords.map((word) {
+                  return Chip(
+                    label: Text(
+                      word,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
+                    backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                    padding: EdgeInsets.zero,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Vui lòng loại bỏ hoặc điều chỉnh các từ ngữ trên trước khi đăng bài.',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor(context),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Đã hiểu & Chỉnh sửa',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -609,20 +723,20 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25)),
+                  border: Border.all(color: AppTheme.primaryColor(context).withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.people_alt_rounded, size: 14, color: Color(0xFF10B981)),
+                        Icon(Icons.people_alt_rounded, size: 14, color: AppTheme.primaryColor(context)),
                         const SizedBox(width: 6),
                         Text(
                           'Gắn thẻ cùng với (${_taggedStudents.length}):',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor(context)),
                         ),
                       ],
                     ),
@@ -687,8 +801,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
                   style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.12),
-                    foregroundColor: const Color(0xFF10B981),
+                    backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                    foregroundColor: AppTheme.primaryColor(context),
                     padding: const EdgeInsets.all(10),
                   ),
                   tooltip: 'Gắn thẻ bạn bè',

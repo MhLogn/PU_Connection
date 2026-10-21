@@ -223,6 +223,8 @@ class FeedCubit extends Cubit<FeedState> {
     required String authorStudentId,
     required String authorFaculty,
     required String content,
+    String? replyToCommentId,
+    String? replyToAuthorName,
   }) async {
     final comment = CommentEntity(
       commentId: '',
@@ -233,6 +235,8 @@ class FeedCubit extends Cubit<FeedState> {
       authorFaculty: authorFaculty,
       content: content,
       createdAt: DateTime.now(),
+      replyToCommentId: replyToCommentId,
+      replyToAuthorName: replyToAuthorName,
     );
 
     // Optimistic update of comment count in state
@@ -416,6 +420,59 @@ class FeedCubit extends Cubit<FeedState> {
     final exp = RegExp(r'#(\w+)');
     final matches = exp.allMatches(content);
     return matches.map((m) => m.group(0)!).toList();
+  }
+
+  Future<void> toggleLikeComment({
+    required String postId,
+    required String commentId,
+    required String userId,
+    required bool isCurrentlyLiked,
+  }) async {
+    try {
+      await _postRepository.toggleLikeComment(
+        postId: postId,
+        commentId: commentId,
+        userId: userId,
+        isCurrentlyLiked: isCurrentlyLiked,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> deleteComment({
+    required String postId,
+    required String commentId,
+  }) async {
+    try {
+      await _postRepository.deleteComment(
+        postId: postId,
+        commentId: commentId,
+      );
+      if (state is FeedLoaded) {
+        final current = state as FeedLoaded;
+        final updatedPosts = current.posts.map((p) {
+          if (p.postId == postId) {
+            final newCount = (p.commentCount > 0) ? p.commentCount - 1 : 0;
+            return p.copyWith(commentCount: newCount);
+          }
+          return p;
+        }).toList();
+        emit(current.copyWith(posts: updatedPosts));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> editComment({
+    required String postId,
+    required String commentId,
+    required String newContent,
+  }) async {
+    try {
+      await _postRepository.editComment(
+        postId: postId,
+        commentId: commentId,
+        newContent: newContent,
+      );
+    } catch (_) {}
   }
 
   @override

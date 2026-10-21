@@ -17,6 +17,8 @@ import '../../../moderation/domain/entities/blocked_user_entity.dart';
 import '../../../moderation/domain/entities/report_target_type.dart';
 import '../../../moderation/presentation/cubit/moderation_cubit.dart';
 import '../../../moderation/presentation/widgets/report_bottom_sheet.dart';
+import '../../../saved_posts/presentation/cubit/saved_posts_cubit.dart';
+import '../../../saved_posts/presentation/cubit/saved_posts_state.dart';
 
 class PostCard extends StatelessWidget {
   final PostEntity post;
@@ -46,11 +48,9 @@ class PostCard extends StatelessWidget {
     switch (category) {
       case 'Hỏi bài':
       case 'Tìm nhóm':
+      case 'Thông báo':
         return AppTheme.accentColor(context);
       case 'Thảo luận':
-        return AppTheme.violetColor(context);
-      case 'Thông báo':
-        return AppTheme.coralColor(context);
       case 'Tài liệu':
       default:
         return AppTheme.primaryColor(context);
@@ -494,10 +494,10 @@ class PostCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                    color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
                     width: 0.8,
                   ),
                 ),
@@ -506,10 +506,10 @@ class PostCard extends StatelessWidget {
                   spacing: 5,
                   runSpacing: 4,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.person_pin_rounded,
                       size: 15,
-                      color: Color(0xFF10B981),
+                      color: AppTheme.primaryColor(context),
                     ),
                     Text(
                       'cùng với ',
@@ -539,7 +539,7 @@ class PostCard extends StatelessWidget {
                             color: colorScheme.surface,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                              color: AppTheme.primaryColor(context).withValues(alpha: 0.35),
                               width: 0.7,
                             ),
                           ),
@@ -587,28 +587,53 @@ class PostCard extends StatelessWidget {
             Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
             const SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildActionButton(
-                  icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                  iconColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: post.likeCount > 0 ? '${post.likeCount}' : l10n.like,
-                  textColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
-                  onTap: onLikePressed,
+                Expanded(
+                  flex: 10,
+                  child: _buildActionButton(
+                    icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    iconColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
+                    label: post.likeCount > 0 ? '${post.likeCount}' : l10n.like,
+                    textColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
+                    onTap: onLikePressed,
+                  ),
                 ),
-                _buildActionButton(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: post.commentCount > 0 ? '${post.commentCount}' : l10n.comment,
-                  textColor: colorScheme.onSurface.withValues(alpha: 0.7),
-                  onTap: onCommentPressed ?? () {},
+                Expanded(
+                  flex: 14,
+                  child: _buildActionButton(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                    label: post.commentCount > 0 ? '${post.commentCount}' : l10n.comment,
+                    textColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                    onTap: onCommentPressed ?? () {},
+                  ),
                 ),
-                _buildActionButton(
-                  icon: Icons.share_outlined,
-                  iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                  label: l10n.share,
-                  textColor: colorScheme.onSurface.withValues(alpha: 0.7),
-                  onTap: onSharePressed ?? () {},
+                Expanded(
+                  flex: 9,
+                  child: _buildActionButton(
+                    icon: Icons.share_outlined,
+                    iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                    label: l10n.share,
+                    textColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                    onTap: onSharePressed ?? () {},
+                  ),
+                ),
+                Expanded(
+                  flex: 9,
+                  child: BlocBuilder<SavedPostsCubit, SavedPostsState>(
+                    builder: (context, savedState) {
+                      final isSaved = savedState.isSaved(post.postId);
+                      return _buildActionButton(
+                        icon: isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                        iconColor: isSaved ? AppTheme.primaryColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
+                        label: isSaved ? 'Đã lưu' : 'Lưu',
+                        textColor: isSaved ? AppTheme.primaryColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
+                        onTap: () {
+                          context.read<SavedPostsCubit>().toggleSavePost(post.postId);
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -633,20 +658,21 @@ class PostCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: avatarUrl.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: avatarUrl,
+          child: Builder(
+            builder: (context) {
+              final imgProvider = AppTheme.imageProvider(avatarUrl);
+              if (imgProvider != null) {
+                return Image(
+                  image: imgProvider,
                   width: 38,
                   height: 38,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => CircleAvatar(
-                    radius: 19,
-                    backgroundColor: AppTheme.blueContainer(context),
-                    child: Icon(Icons.person, size: 19, color: AppTheme.primaryColor(context)),
-                  ),
-                  errorWidget: (_, __, ___) => _buildInitialsAvatar(context, name),
-                )
-              : _buildInitialsAvatar(context, name),
+                  errorBuilder: (_, __, ___) => _buildInitialsAvatar(context, name),
+                );
+              }
+              return _buildInitialsAvatar(context, name);
+            },
+          ),
         ),
       ),
     );
@@ -893,17 +919,24 @@ class PostCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 19, color: iconColor),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: textColor,
+            Icon(icon, size: 16.5, color: iconColor),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  letterSpacing: -0.2,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

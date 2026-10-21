@@ -32,4 +32,22 @@ abstract class PostRepository {
   Stream<List<CommentEntity>> getComments(String postId);
 
   Future<void> addComment(String postId, CommentEntity comment);
+
+  Future<void> toggleLikeComment({
+    required String postId,
+    required String commentId,
+    required String userId,
+    required bool isCurrentlyLiked,
+  });
+
+  Future<void> deleteComment({
+    required String postId,
+    required String commentId,
+  });
+
+  Future<void> editComment({
+    required String postId,
+    required String commentId,
+    required String newContent,
+  });
 }

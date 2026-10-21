@@ -148,7 +148,48 @@ class PostRepositoryImpl implements PostRepository {
       createdAt: DateTime.now(),
     );
 
-    await _postsRef.add(model.toMap());
+    final docRef = await _postsRef.add(model.toMap());
+
+    // Tự động đồng bộ các tệp tài liệu đính kèm (pdf, doc, ppt, xls, zip...) sang Kho tài liệu
+    final docAttachments = post.attachments.where((a) => a.type.toLowerCase() != 'image').toList();
+    if (docAttachments.isNotEmpty) {
+      final docsRef = _firestore.collection(FirebaseConstants.studyDocumentsCollection);
+      for (final att in docAttachments) {
+        try {
+          final cleanTitle = att.name.isNotEmpty
+              ? att.name.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '')
+              : (post.content.trim().isNotEmpty
+                  ? (post.content.trim().split('\n').first)
+                  : 'Tài liệu chia sẻ');
+
+          final subjectCode = post.subjectCode?.trim().isNotEmpty == true
+              ? post.subjectCode!.trim().toUpperCase()
+              : 'CHUNG';
+
+          final faculty = post.authorFaculty.trim().isNotEmpty
+              ? post.authorFaculty.trim()
+              : 'Công nghệ thông tin';
+
+          await docsRef.add({
+            'title': cleanTitle.length > 80 ? '${cleanTitle.substring(0, 80)}...' : cleanTitle,
+            'code': subjectCode,
+            'faculty': faculty,
+            'fileUrl': att.url,
+            'fileType': att.type.toLowerCase(),
+            'fileSize': 'Đính kèm Feed',
+            'authorId': post.authorId,
+            'authorName': post.authorName,
+            'authorStudentId': post.authorStudentId,
+            'downloads': 0,
+            'rating': 5.0,
+            'description': 'Đồng bộ từ bài viết Bảng tin: "${post.content.length > 120 ? '${post.content.substring(0, 120)}...' : post.content}"',
+            'originPostId': docRef.id,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        } catch (_) {}
+      }
+    }
 
     try {
       await _firestore
@@ -182,6 +223,17 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<void> deletePost(String postId) async {
     await _postsRef.doc(postId).delete();
+
+    // Dọn dẹp các tài liệu đã được đồng bộ từ bài viết này
+    try {
+      final snap = await _firestore
+          .collection(FirebaseConstants.studyDocumentsCollection)
+          .where('originPostId', isEqualTo: postId)
+          .get();
+      for (final doc in snap.docs) {
+        await doc.reference.delete();
+      }
+    } catch (_) {}
   }
 
   @override
@@ -224,5 +276,66 @@ class PostRepositoryImpl implements PostRepository {
         'commentCount': FieldValue.increment(1),
       });
     } catch (_) {}
+  }
+
+  @override
+  Future<void> toggleLikeComment({
+    required String postId,
+    required String commentId,
+    required String userId,
+    required bool isCurrentlyLiked,
+  }) async {
+    final commentRef = _postsRef
+        .doc(postId)
+        .collection(FirebaseConstants.commentsSubcollection)
+        .doc(commentId);
+
+    if (isCurrentlyLiked) {
+      await commentRef.update({
+        'likeCount': FieldValue.increment(-1),
+        'likedUserIds': FieldValue.arrayRemove([userId]),
+      });
+    } else {
+      await commentRef.update({
+        'likeCount': FieldValue.increment(1),
+        'likedUserIds': FieldValue.arrayUnion([userId]),
+      });
+    }
+  }
+
+  @override
+  Future<void> deleteComment({
+    required String postId,
+    required String commentId,
+  }) async {
+    final postRef = _postsRef.doc(postId);
+    await postRef
+        .collection(FirebaseConstants.commentsSubcollection)
+        .doc(commentId)
+        .delete();
+
+    try {
+      await postRef.update({
+        'commentCount': FieldValue.increment(-1),
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> editComment({
+    required String postId,
+    required String commentId,
+    required String newContent,
+  }) async {
+    final commentRef = _postsRef
+        .doc(postId)
+        .collection(FirebaseConstants.commentsSubcollection)
+        .doc(commentId);
+
+    await commentRef.update({
+      'content': newContent,
+      'isEdited': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }
