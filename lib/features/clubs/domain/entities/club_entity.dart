@@ -40,9 +40,13 @@ class ClubEntity extends Equatable {
     this.colorValue = 0xFF0284C7,
   });
 
-  bool isMember(String userId) {
-    if (userId.isEmpty) return false;
-    return memberIds.contains(userId);
+  bool isMember(String userId, [String? secondaryId]) {
+    if (userId.isEmpty && (secondaryId == null || secondaryId.isEmpty)) return false;
+    if (userId.isNotEmpty && memberIds.contains(userId)) return true;
+    if (secondaryId != null && secondaryId.isNotEmpty && memberIds.contains(secondaryId)) {
+      return true;
+    }
+    return false;
   }
 
   int get effectiveMembersCount =>

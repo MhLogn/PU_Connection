@@ -20,16 +20,25 @@ class ClubState extends Equatable {
     this.actionSuccessMessage,
   });
 
-  List<ClubEntity> get filteredClubs {
+  List<ClubEntity> getFilteredClubs([String? userId, String? studentId]) {
     return clubs.where((club) {
       final matchesCategory = selectedCategory == 'Tất cả' ||
-          club.category == selectedCategory;
+          (selectedCategory == 'Đã tham gia'
+              ? club.isMember(userId ?? '', studentId)
+              : club.category == selectedCategory);
       final matchesQuery = searchQuery.isEmpty ||
           club.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
           club.description.toLowerCase().contains(searchQuery.toLowerCase()) ||
           club.leaderName.toLowerCase().contains(searchQuery.toLowerCase());
       return matchesCategory && matchesQuery;
     }).toList();
+  }
+
+  List<ClubEntity> get filteredClubs => getFilteredClubs();
+
+  List<ClubEntity> getJoinedClubs(String userId, [String? studentId]) {
+    if (userId.isEmpty && (studentId == null || studentId.isEmpty)) return [];
+    return clubs.where((club) => club.isMember(userId, studentId)).toList();
   }
 
   ClubState copyWith({

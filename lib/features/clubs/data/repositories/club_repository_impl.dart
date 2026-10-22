@@ -22,7 +22,16 @@ class ClubRepositoryImpl implements ClubRepository {
     return null;
   }
 
-  static final List<ClubEntity> _memoryClubs = List<ClubEntity>.from(defaultClubs);
+  static bool enableSeedClubs = false;
+  static List<ClubEntity> get seedClubs => enableSeedClubs ? defaultClubs : const <ClubEntity>[];
+  static final List<ClubEntity> _memoryClubs = List<ClubEntity>.from(seedClubs);
+
+  static void resetMemory() {
+    _memoryClubs.clear();
+    if (enableSeedClubs) {
+      _memoryClubs.addAll(defaultClubs);
+    }
+  }
 
   static List<ClubEntity> get defaultClubs => const [
     ClubEntity(
@@ -103,7 +112,7 @@ class ClubRepositoryImpl implements ClubRepository {
       ],
       contactEmail: 'pbc@st.phenikaa-uni.edu.vn',
       contactPhone: '0933 666 777',
-      colorValue: 0xFFE11D48,
+      colorValue: 0xFFFF7A00,
     ),
     ClubEntity(
       id: 'club_volunteer_green',
@@ -123,7 +132,7 @@ class ClubRepositoryImpl implements ClubRepository {
       ],
       contactEmail: 'tinhnguyen@st.phenikaa-uni.edu.vn',
       contactPhone: '0904 111 222',
-      colorValue: 0xFF10B981,
+      colorValue: 0xFF0284C7,
     ),
   ];
 
@@ -147,10 +156,10 @@ class ClubRepositoryImpl implements ClubRepository {
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isEmpty) {
-        return defaultClubs;
+        return seedClubs;
       }
-      return snapshot.docs.map((doc) => ClubModel.fromFirestore(doc)).toList();
-    }).handleError((_) => defaultClubs);
+      return snapshot.docs.map<ClubEntity>((doc) => ClubModel.fromFirestore(doc)).toList();
+    }).handleError((_) => seedClubs);
   }
 
   @override
@@ -169,11 +178,8 @@ class ClubRepositoryImpl implements ClubRepository {
     }
 
     // Fallback to default
-    try {
-      return defaultClubs.firstWhere((c) => c.id == clubId);
-    } catch (_) {
-      return null;
-    }
+    final matches = seedClubs.where((c) => c.id == clubId);
+    return matches.isNotEmpty ? matches.first : null;
   }
 
   @override
@@ -188,10 +194,8 @@ class ClubRepositoryImpl implements ClubRepository {
         final doc = await docRef.get();
         if (!doc.exists) {
           // Initialize doc with default attributes
-          final defaultClub = defaultClubs.firstWhere(
-            (c) => c.id == clubId,
-            orElse: () => defaultClubs.first,
-          );
+          final matches = defaultClubs.where((c) => c.id == clubId);
+          final defaultClub = matches.isNotEmpty ? matches.first : defaultClubs.first;
           final members = Set<String>.from(defaultClub.memberIds)..add(userId);
           await docRef.set({
             'name': defaultClub.name,

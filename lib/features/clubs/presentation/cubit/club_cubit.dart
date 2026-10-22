@@ -44,17 +44,21 @@ class ClubCubit extends Cubit<ClubState> {
   Future<void> toggleJoinClub({
     required ClubEntity club,
     required String userId,
+    String? secondaryId,
   }) async {
-    if (userId.isEmpty) {
+    if (userId.isEmpty && (secondaryId == null || secondaryId.isEmpty)) {
       emit(state.copyWith(errorMessage: 'Vui lòng đăng nhập để tham gia CLB'));
       return;
     }
 
-    final isCurrentlyMember = club.isMember(userId);
+    final isCurrentlyMember = club.isMember(userId, secondaryId);
 
     try {
       if (isCurrentlyMember) {
         await _clubRepository.leaveClub(clubId: club.id, userId: userId);
+        if (secondaryId != null && secondaryId.isNotEmpty) {
+          await _clubRepository.leaveClub(clubId: club.id, userId: secondaryId);
+        }
         emit(state.copyWith(
           actionSuccessMessage: 'Đã rời câu lạc bộ "${club.name}"',
         ));
@@ -67,6 +71,10 @@ class ClubCubit extends Cubit<ClubState> {
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Thao tác không thành công: $e'));
     }
+  }
+
+  void clearMessages() {
+    emit(state.copyWith(clearActionMessage: true));
   }
 
   @override

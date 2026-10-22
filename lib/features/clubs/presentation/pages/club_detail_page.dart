@@ -20,15 +20,12 @@ class ClubDetailPage extends StatelessWidget {
   Color _getCategoryColor(BuildContext context, String category) {
     switch (category) {
       case 'Học thuật':
+      case 'Tình nguyện':
         return AppTheme.primaryColor(context);
       case 'Nghệ thuật':
-        return AppTheme.accentColor(context);
       case 'Thể thao':
-        return AppTheme.coralColor(context);
-      case 'Tình nguyện':
-        return AppTheme.mintColor(context);
       default:
-        return AppTheme.violetColor(context);
+        return AppTheme.accentColor(context);
     }
   }
 
@@ -56,7 +53,9 @@ class ClubDetailPage extends StatelessWidget {
     final color = _getCategoryColor(context, club.category);
 
     final authState = context.watch<AuthCubit>().state;
-    final currentUserId = authState is Authenticated ? authState.user.uid : '';
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final currentUserId = currentUser?.uid ?? '';
+    final currentStudentId = currentUser?.studentId ?? '';
 
     return BlocConsumer<ClubCubit, ClubState>(
       listener: (context, state) {
@@ -64,10 +63,11 @@ class ClubDetailPage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.actionSuccessMessage!),
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppTheme.primaryColor(context),
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.read<ClubCubit>().clearMessages();
         } else if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -76,15 +76,14 @@ class ClubDetailPage extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.read<ClubCubit>().clearMessages();
         }
       },
       builder: (context, state) {
         // Find latest updated club instance from state if available
-        final currentClub = state.clubs.firstWhere(
-          (c) => c.id == club.id,
-          orElse: () => club,
-        );
-        final isJoined = currentClub.isMember(currentUserId);
+        final matchingClubs = state.clubs.where((c) => c.id == club.id);
+        final currentClub = matchingClubs.isNotEmpty ? matchingClubs.first : club;
+        final isJoined = currentClub.isMember(currentUserId, currentStudentId);
 
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainerLowest,
@@ -137,8 +136,8 @@ class ClubDetailPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          color.withValues(alpha: isDark ? 0.8 : 0.9),
-                          Color(currentClub.colorValue).withValues(alpha: 0.7),
+                          AppTheme.primaryColor(context),
+                          const Color(0xFF0369A1),
                           const Color(0xFF0C4A6E),
                         ],
                         begin: Alignment.topLeft,
@@ -212,9 +211,13 @@ class ClubDetailPage extends StatelessWidget {
                               children: [
                                 const Icon(Icons.school_outlined, size: 14, color: Colors.white70),
                                 const SizedBox(width: 6),
-                                Text(
-                                  'Đại học Phenikaa • Chủ nhiệm: ${currentClub.leaderName}',
-                                  style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                                Expanded(
+                                  child: Text(
+                                    'Đại học Phenikaa • Chủ nhiệm: ${currentClub.leaderName}',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -241,7 +244,7 @@ class ClubDetailPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isJoined
-                                ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                                ? AppTheme.accentColor(context).withValues(alpha: 0.5)
                                 : colorScheme.outlineVariant.withValues(alpha: 0.4),
                           ),
                           boxShadow: [
@@ -257,13 +260,13 @@ class ClubDetailPage extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: (isJoined ? const Color(0xFF10B981) : color)
+                                color: (isJoined ? AppTheme.accentColor(context) : color)
                                     .withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 isJoined ? Icons.verified_user_rounded : Icons.group_add_rounded,
-                                color: isJoined ? const Color(0xFF10B981) : color,
+                                color: isJoined ? AppTheme.accentColor(context) : color,
                                 size: 28,
                               ),
                             ),
@@ -277,7 +280,7 @@ class ClubDetailPage extends StatelessWidget {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14.5,
-                                      color: isJoined ? const Color(0xFF10B981) : colorScheme.onSurface,
+                                      color: isJoined ? AppTheme.accentColor(context) : colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -343,7 +346,7 @@ class ClubDetailPage extends StatelessWidget {
                             _buildInfoTile(
                               context,
                               icon: Icons.location_on_rounded,
-                              iconColor: AppTheme.coralColor(context),
+                              iconColor: AppTheme.accentColor(context),
                               title: 'Địa điểm tổ chức',
                               subtitle: currentClub.location,
                             ),
@@ -369,7 +372,7 @@ class ClubDetailPage extends StatelessWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18),
+                                  Icon(Icons.check_circle_rounded, color: AppTheme.accentColor(context), size: 18),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
@@ -413,7 +416,7 @@ class ClubDetailPage extends StatelessWidget {
                               _buildInfoTile(
                                 context,
                                 icon: Icons.email_rounded,
-                                iconColor: const Color(0xFF0284C7),
+                                iconColor: AppTheme.primaryColor(context),
                                 title: 'Email liên hệ',
                                 subtitle: currentClub.contactEmail,
                               ),
@@ -423,7 +426,7 @@ class ClubDetailPage extends StatelessWidget {
                               _buildInfoTile(
                                 context,
                                 icon: Icons.phone_rounded,
-                                iconColor: const Color(0xFF10B981),
+                                iconColor: AppTheme.accentColor(context),
                                 title: 'Số điện thoại hỗ trợ',
                                 subtitle: currentClub.contactPhone,
                               ),
@@ -458,7 +461,12 @@ class ClubDetailPage extends StatelessWidget {
                 child: isJoined
                     ? OutlinedButton.icon(
                         onPressed: () {
-                          _showLeaveConfirmDialog(context, currentClub, currentUserId);
+                          _showLeaveConfirmDialog(
+                            context,
+                            currentClub,
+                            currentUserId,
+                            currentStudentId,
+                          );
                         },
                         icon: const Icon(Icons.exit_to_app_rounded, color: Colors.redAccent, size: 20),
                         label: Text(
@@ -479,6 +487,7 @@ class ClubDetailPage extends StatelessWidget {
                           context.read<ClubCubit>().toggleJoinClub(
                                 club: currentClub,
                                 userId: currentUserId,
+                                secondaryId: currentStudentId,
                               );
                         },
                         icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 20),
@@ -492,6 +501,7 @@ class ClubDetailPage extends StatelessWidget {
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor(context),
+                          foregroundColor: isDark ? Colors.black87 : Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
@@ -504,7 +514,12 @@ class ClubDetailPage extends StatelessWidget {
     );
   }
 
-  void _showLeaveConfirmDialog(BuildContext context, ClubEntity club, String userId) {
+  void _showLeaveConfirmDialog(
+    BuildContext context,
+    ClubEntity club,
+    String userId,
+    String secondaryId,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -531,6 +546,7 @@ class ClubDetailPage extends StatelessWidget {
               context.read<ClubCubit>().toggleJoinClub(
                     club: club,
                     userId: userId,
+                    secondaryId: secondaryId,
                   );
             },
             style: ElevatedButton.styleFrom(
