@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/localization/locale_cubit.dart';
@@ -28,32 +32,90 @@ import '../../../moderation/presentation/pages/blocked_users_page.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_cubit.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_state.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../friends/presentation/pages/friend_list_page.dart';
+import '../../../saved_posts/presentation/cubit/saved_posts_cubit.dart';
+import '../../../saved_posts/presentation/cubit/saved_posts_state.dart';
+import '../../../saved_posts/presentation/pages/saved_posts_page.dart';
+import '../../../study_groups/presentation/pages/study_groups_page.dart';
+import '../../../admin/presentation/pages/admin_portal_page.dart';
+import '../../../auth/presentation/pages/user_profile_page.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
+  static MainNavigationPageState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MainNavigationPageState>();
+  }
+
   @override
-  State<MainNavigationPage> createState() => _MainNavigationPageState();
+  State<MainNavigationPage> createState() => MainNavigationPageState();
 }
 
-class _MainNavigationPageState extends State<MainNavigationPage> {
+class MainNavigationPageState extends State<MainNavigationPage> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final Set<int> _loadedTabs = {0};
+
+  void navigateToTab(int index) {
+    if (mounted) {
+      setState(() {
+        _currentIndex = index;
+        _loadedTabs.add(index);
+      });
+    }
+  }
+
+  void _updateOnlineStatus(bool isOnline) {
+    try {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is Authenticated && authState.user.uid.isNotEmpty) {
+        FirebaseFirestore.instance
+            .collection(FirebaseConstants.usersCollection)
+            .doc(authState.user.uid)
+            .update({
+          'isOnline': isOnline,
+          'lastActive': FieldValue.serverTimestamp(),
+        }).catchError((_) {});
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _updateOnlineStatus(true);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _updateOnlineStatus(false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NotificationPermissionSheet.checkAndShowPrompt(context);
       final authState = context.read<AuthCubit>().state;
       if (authState is Authenticated) {
+        _updateOnlineStatus(true);
         context.read<FeedCubit>().updateCurrentUserId(authState.user.uid);
         context.read<ChatCubit>().initConversations(authState.user.uid);
         context.read<ModerationCubit>().init(authState.user.uid);
         context.read<InAppNotificationsCubit>().init(authState.user.uid);
+        context.read<SavedPostsCubit>().init(authState.user.uid);
         sl<NotificationService>().syncUserFcmToken(authState.user.uid);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _updateOnlineStatus(false);
+    super.dispose();
   }
 
   @override
@@ -84,6 +146,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           context.read<ChatCubit>().initConversations(state.user.uid);
           context.read<ModerationCubit>().init(state.user.uid);
           context.read<InAppNotificationsCubit>().init(state.user.uid);
+          context.read<SavedPostsCubit>().init(state.user.uid);
           sl<NotificationService>().syncUserFcmToken(state.user.uid);
         }
       },
@@ -179,18 +242,58 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
     if (!_initialized) {
       _initialized = true;
       final l10n = AppLocalizations.of(context)!;
+      _loadHistory(l10n.bot_welcome_msg);
+    }
+  }
+
+  Future<void> _loadHistory(String defaultWelcome) async {
+    try {
+      final prefs = sl<SharedPreferences>();
+      final jsonStr = prefs.getString('pu_bot_chat_history');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final decoded = jsonDecode(jsonStr);
+        if (decoded is List && decoded.isNotEmpty) {
+          _messages.clear();
+          for (final item in decoded) {
+            _messages.add({
+              'role': item['role']?.toString() ?? 'bot',
+              'text': item['text']?.toString() ?? '',
+            });
+          }
+          if (mounted) setState(() {});
+          _scrollToBottom();
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (_messages.isEmpty) {
       _messages.add({
         'role': 'bot',
-        'text': l10n.bot_welcome_msg,
+        'text': defaultWelcome,
       });
+      if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _saveHistory() async {
+    try {
+      final prefs = sl<SharedPreferences>();
+      final limited = _messages.take(40).toList();
+      await prefs.setString('pu_bot_chat_history', jsonEncode(limited));
+    } catch (_) {}
   }
 
   List<String> _getSuggestions(AppLocalizations l10n) => [
     '💰 ${l10n.bot_quick_scholarship}',
+    '📐 Ôn thi môn Giải tích 2',
+    '💻 Đề cương Lập trình C++',
     '📝 ${l10n.bot_quick_regulations}',
+    '🌐 Miễn học phần Tiếng Anh (TOEIC)',
+    '🌟 Cách tính điểm rèn luyện (ĐRL)',
     '📚 ${l10n.bot_quick_library}',
     '🏢 ${l10n.bot_quick_dorm}',
+    '📞 Danh bạ phòng ban Tòa A1',
   ];
 
   @override
@@ -220,6 +323,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
         _isTyping = false;
         _messages.add({'role': 'bot', 'text': reply});
       });
+      _saveHistory();
       _scrollToBottom();
     }
   }
@@ -256,8 +360,12 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: l10n.bot_reset_chat,
-            onPressed: () {
+            onPressed: () async {
               sl<GeminiService>().resetChat();
+              try {
+                final prefs = sl<SharedPreferences>();
+                await prefs.remove('pu_bot_chat_history');
+              } catch (_) {}
               setState(() {
                 _messages.clear();
                 _messages.add({
@@ -368,13 +476,57 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                               ),
                             ],
                           ),
-                          child: Text(
-                            msg['text'] ?? '',
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.45,
-                              color: colorScheme.onSurface,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                msg['text'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.45,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: InkWell(
+                                  onTap: () {
+                                    Clipboard.setData(ClipboardData(text: msg['text'] ?? ''));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Đã sao chép câu trả lời của PU Bot!'),
+                                        duration: Duration(seconds: 1),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.copy_rounded,
+                                          size: 13,
+                                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Sao chép',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -554,6 +706,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
 
   final List<String> _categories = [
     'Tất cả',
+    'Đã tham gia',
     'Học thuật',
     'Nghệ thuật',
     'Thể thao',
@@ -569,22 +722,22 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
   Color _getClubColor(BuildContext context, String category) {
     switch (category) {
       case 'Học thuật':
+      case 'Tình nguyện':
         return AppTheme.primaryColor(context);
       case 'Nghệ thuật':
-        return AppTheme.accentColor(context);
       case 'Thể thao':
-        return AppTheme.coralColor(context);
-      case 'Tình nguyện':
-        return AppTheme.mintColor(context);
+      case 'Đã tham gia':
       default:
-        return AppTheme.violetColor(context);
+        return AppTheme.accentColor(context);
     }
   }
 
-  String _getCategoryLabel(String cat, AppLocalizations l10n) {
+  String _getCategoryLabel(String cat, AppLocalizations l10n, [int joinedCount = 0]) {
     switch (cat) {
       case 'Tất cả':
         return l10n.all_clubs;
+      case 'Đã tham gia':
+        return 'Đã tham gia${joinedCount > 0 ? ' ($joinedCount)' : ''}';
       case 'Học thuật':
         return l10n.academic_clubs;
       case 'Nghệ thuật':
@@ -608,6 +761,8 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
         return Icons.sports_basketball_rounded;
       case 'Tình nguyện':
         return Icons.volunteer_activism_rounded;
+      case 'Đã tham gia':
+        return Icons.verified_user_rounded;
       default:
         return Icons.group_work_rounded;
     }
@@ -620,7 +775,9 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     final l10n = AppLocalizations.of(context)!;
 
     final authState = context.watch<AuthCubit>().state;
-    final currentUserId = authState is Authenticated ? authState.user.uid : '';
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final currentUserId = currentUser?.uid ?? '';
+    final currentStudentId = currentUser?.studentId ?? '';
 
     return BlocConsumer<ClubCubit, ClubState>(
       listener: (context, state) {
@@ -632,6 +789,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.read<ClubCubit>().clearMessages();
         } else if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -640,10 +798,12 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.read<ClubCubit>().clearMessages();
         }
       },
       builder: (context, state) {
-        final filteredClubs = state.filteredClubs;
+        final joinedClubs = state.getJoinedClubs(currentUserId, currentStudentId);
+        final filteredClubs = state.getFilteredClubs(currentUserId, currentStudentId);
 
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainerLowest,
@@ -711,7 +871,11 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                     final cat = _categories[index];
                     final isSelected = cat == state.selectedCategory;
                     return ChoiceChip(
-                      label: Text(_getCategoryLabel(cat, l10n)),
+                      label: Text(_getCategoryLabel(
+                        cat,
+                        l10n,
+                        cat == 'Đã tham gia' ? joinedClubs.length : 0,
+                      )),
                       selected: isSelected,
                       selectedColor: AppTheme.primaryColor(context),
                       labelStyle: TextStyle(
@@ -742,19 +906,51 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.group_off_rounded,
-                                    size: 52,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.3),
+                                    state.selectedCategory == 'Đã tham gia'
+                                        ? Icons.groups_outlined
+                                        : Icons.group_off_rounded,
+                                    size: 56,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.35),
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 14),
                                   Text(
-                                    'Không tìm thấy câu lạc bộ nào phù hợp',
+                                    state.selectedCategory == 'Đã tham gia'
+                                        ? 'Bạn chưa tham gia câu lạc bộ nào'
+                                        : 'Không tìm thấy câu lạc bộ nào phù hợp',
                                     style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    state.selectedCategory == 'Đã tham gia'
+                                        ? 'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!'
+                                        : 'Thử tìm với từ khóa khác hoặc chuyển sang danh mục câu lạc bộ khác.',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                      fontSize: 12.5,
+                                      height: 1.4,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (state.selectedCategory == 'Đã tham gia') ...[
+                                    const SizedBox(height: 18),
+                                    FilledButton.icon(
+                                      onPressed: () {
+                                        context.read<ClubCubit>().filterCategory('Tất cả');
+                                      },
+                                      icon: const Icon(Icons.explore_outlined, size: 18),
+                                      label: const Text('Khám phá các CLB Phenikaa'),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppTheme.primaryColor(context),
+                                        foregroundColor: isDark ? Colors.black87 : Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -765,7 +961,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                             separatorBuilder: (_, __) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final club = filteredClubs[index];
-                              final isJoined = club.isMember(currentUserId);
+                              final isJoined = club.isMember(currentUserId, currentStudentId);
                               final color = _getClubColor(context, club.category);
 
                               return Container(
@@ -774,7 +970,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: isJoined
-                                        ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                                        ? AppTheme.accentColor(context).withValues(alpha: 0.5)
                                         : colorScheme.outlineVariant.withValues(alpha: 0.4),
                                     width: isJoined ? 1.5 : 1,
                                   ),
@@ -863,18 +1059,18 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                                           ),
                                                         );
                                                       },
-                                                      icon: const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
+                                                      icon: Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.accentColor(context)),
                                                       label: Text(
                                                         l10n.joined_club,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontSize: 11.5,
                                                           fontWeight: FontWeight.bold,
-                                                          color: Color(0xFF10B981),
+                                                          color: AppTheme.accentColor(context),
                                                         ),
                                                       ),
                                                       style: OutlinedButton.styleFrom(
-                                                        backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.08),
-                                                        side: BorderSide(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                                                        backgroundColor: AppTheme.accentColor(context).withValues(alpha: 0.08),
+                                                        side: BorderSide(color: AppTheme.accentColor(context).withValues(alpha: 0.4)),
                                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                       ),
@@ -884,6 +1080,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                                         context.read<ClubCubit>().toggleJoinClub(
                                                               club: club,
                                                               userId: currentUserId,
+                                                              secondaryId: currentStudentId,
                                                             );
                                                       },
                                                       icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
@@ -893,6 +1090,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                                       ),
                                                       style: ElevatedButton.styleFrom(
                                                         backgroundColor: AppTheme.primaryColor(context),
+                                                        foregroundColor: isDark ? Colors.black87 : Colors.white,
                                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                       ),
@@ -914,19 +1112,26 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.person_outline_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    'CN: ${club.leaderName}',
-                                                    style: TextStyle(
-                                                      fontSize: 11.5,
-                                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                              Expanded(
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.person_outline_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                                    const SizedBox(width: 4),
+                                                    Flexible(
+                                                      child: Text(
+                                                        'CN: ${club.leaderName}',
+                                                        style: TextStyle(
+                                                          fontSize: 11.5,
+                                                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
+                                              const SizedBox(width: 8),
                                               Text(
                                                 'Chi tiết >',
                                                 style: TextStyle(
@@ -1007,12 +1212,28 @@ class _StudentProfileView extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => FriendListPage.openForCurrentUser(context, user),
+                      icon: Icon(Icons.people_outline_rounded, size: 16, color: AppTheme.accentColor(context)),
+                      label: Text(
+                        'Danh sách bạn bè (${user.friendsCount})',
+                        style: TextStyle(color: AppTheme.accentColor(context), fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppTheme.accentColor(context).withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _buildAcademicOverviewCard(context),
+                    _buildAcademicOverviewCard(context, user),
                     if (user.currentSubjects.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       _buildCurrentSubjectsCard(context, user),
                     ],
+                    const SizedBox(height: 16),
+                    _buildJoinedClubsCard(context, user),
                     const SizedBox(height: 16),
                     _buildSettingsSection(context, colorScheme),
                     const SizedBox(height: 20),
@@ -1154,7 +1375,7 @@ class _StudentProfileView extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: AppTheme.accentColor(context),
-                backgroundImage: user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                backgroundImage: AppTheme.imageProvider(user.avatarUrl),
                 child: user.avatarUrl.isEmpty
                     ? Text(
                         user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
@@ -1200,17 +1421,23 @@ class _StudentProfileView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                user.email,
-                style: const TextStyle(fontSize: 11, color: Colors.white60),
+              Expanded(
+                child: Text(
+                  user.email,
+                  style: const TextStyle(fontSize: 11, color: Colors.white60),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: AppTheme.mintColor(context), size: 14),
+                  Icon(Icons.check_circle_rounded, color: AppTheme.accentColor(context), size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    l10n.student_verified_badge.toUpperCase(),
-                    style: TextStyle(color: AppTheme.mintColor(context), fontSize: 10, fontWeight: FontWeight.bold),
+                    user.isAdmin ? 'QUẢN TRỊ VIÊN' : l10n.student_verified_badge.toUpperCase(),
+                    style: TextStyle(color: AppTheme.accentColor(context), fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -1221,8 +1448,36 @@ class _StudentProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildAcademicOverviewCard(BuildContext context) {
+  Widget _buildAcademicOverviewCard(BuildContext context, UserEntity user) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Compute GPA badge label
+    String gpaBadge;
+    if (user.gpa >= 3.6) {
+      gpaBadge = 'Xuất sắc';
+    } else if (user.gpa >= 3.2) {
+      gpaBadge = 'Giỏi';
+    } else if (user.gpa >= 2.5) {
+      gpaBadge = 'Khá';
+    } else if (user.gpa > 0) {
+      gpaBadge = 'Trung bình';
+    } else {
+      gpaBadge = '--';
+    }
+
+    // Compute training points badge
+    String drlBadge;
+    if (user.trainingPoints >= 90) {
+      drlBadge = l10n.training_excellent;
+    } else if (user.trainingPoints >= 80) {
+      drlBadge = 'Tốt';
+    } else if (user.trainingPoints >= 65) {
+      drlBadge = 'Khá';
+    } else if (user.trainingPoints > 0) {
+      drlBadge = 'Trung bình';
+    } else {
+      drlBadge = '--';
+    }
 
     return Row(
       children: [
@@ -1230,9 +1485,9 @@ class _StudentProfileView extends StatelessWidget {
           child: _buildMetricCard(
             context,
             title: l10n.gpa_accumulated,
-            value: '3.48',
+            value: user.gpa > 0 ? user.gpa.toStringAsFixed(2) : '--',
             unit: '/4.0',
-            badge: 'Giỏi',
+            badge: gpaBadge,
             color: AppTheme.primaryColor(context),
             icon: Icons.auto_awesome_rounded,
           ),
@@ -1242,7 +1497,7 @@ class _StudentProfileView extends StatelessWidget {
           child: _buildMetricCard(
             context,
             title: l10n.credits_accumulated,
-            value: '54',
+            value: user.creditsEarned > 0 ? '${user.creditsEarned}' : '--',
             unit: '/135',
             badge: 'Tín chỉ',
             color: AppTheme.accentColor(context),
@@ -1254,10 +1509,10 @@ class _StudentProfileView extends StatelessWidget {
           child: _buildMetricCard(
             context,
             title: l10n.training_points,
-            value: '92',
+            value: user.trainingPoints > 0 ? '${user.trainingPoints}' : '--',
             unit: 'ĐRL',
-            badge: l10n.training_excellent,
-            color: AppTheme.mintColor(context),
+            badge: drlBadge,
+            color: AppTheme.primaryColor(context),
             icon: Icons.military_tech_rounded,
           ),
         ),
@@ -1279,7 +1534,7 @@ class _StudentProfileView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.collections_bookmark_rounded, size: 18, color: AppTheme.mintColor(context)),
+              Icon(Icons.collections_bookmark_rounded, size: 18, color: AppTheme.accentColor(context)),
               const SizedBox(width: 8),
               const Text(
                 'Môn học kỳ này',
@@ -1316,6 +1571,131 @@ class _StudentProfileView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildJoinedClubsCard(BuildContext context, UserEntity user) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return BlocBuilder<ClubCubit, ClubState>(
+      builder: (context, state) {
+        final joinedClubs = state.getJoinedClubs(user.uid, user.studentId);
+        if (joinedClubs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.groups_rounded, size: 18, color: AppTheme.accentColor(context)),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Câu lạc bộ đã tham gia',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => MainNavigationPage.of(context)?.navigateToTab(3),
+                    child: Text(
+                      '${joinedClubs.length} CLB • Xem tất cả >',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryColor(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Column(
+                children: joinedClubs.map((club) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ClubDetailPage(club: club),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.isDark(context)
+                              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                              : AppTheme.primaryColor(context).withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                              child: Text(
+                                club.name.isNotEmpty ? club.name[0].toUpperCase() : 'C',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor(context),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    club.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${club.category} • ${club.membersCount} thành viên',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 13,
+                              color: AppTheme.primaryColor(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1410,6 +1790,10 @@ class _StudentProfileView extends StatelessWidget {
     final currentLocale = Localizations.localeOf(context).languageCode;
     final languageName = currentLocale == 'vi' ? l10n.vietnamese : l10n.english;
 
+    final authState = context.watch<AuthCubit>().state;
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final isAdmin = currentUser?.isAdmin == true;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOutCubic,
@@ -1433,9 +1817,7 @@ class _StudentProfileView extends StatelessWidget {
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppTheme.darkSoftViolet.withValues(alpha: 0.25)
-                    : const Color(0xFFF3E8FF),
+                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: AnimatedSwitcher(
@@ -1447,7 +1829,7 @@ class _StudentProfileView extends StatelessWidget {
                 child: Icon(
                   isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
                   key: ValueKey<bool>(isDark),
-                  color: isDark ? AppTheme.darkSoftViolet : AppTheme.softViolet,
+                  color: AppTheme.primaryColor(context),
                   size: 20,
                 ),
               ),
@@ -1455,7 +1837,7 @@ class _StudentProfileView extends StatelessWidget {
             title: Text(l10n.dark_theme_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(l10n.dark_theme_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
             value: isDark,
-            activeColor: AppTheme.darkSoftViolet,
+            activeColor: AppTheme.primaryColor(context),
             onChanged: (val) {
               context.read<ThemeCubit>().setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
             },
@@ -1484,10 +1866,10 @@ class _StudentProfileView extends StatelessWidget {
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF10B981), size: 20),
+              child: Icon(Icons.notifications_active_rounded, color: AppTheme.accentColor(context), size: 20),
             ),
             title: Text(l10n.notifications_settings_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(l10n.notifications_settings_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
@@ -1507,7 +1889,7 @@ class _StudentProfileView extends StatelessWidget {
                           SnackBar(
                             content: Text('Đã sao chép FCM Token: ${token.substring(0, 12)}...'),
                             behavior: SnackBarBehavior.floating,
-                            backgroundColor: const Color(0xFF10B981),
+                            backgroundColor: AppTheme.primaryColor(context),
                           ),
                         );
                       } else {
@@ -1586,10 +1968,161 @@ class _StudentProfileView extends StatelessWidget {
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.lock_reset_rounded, color: Colors.orange, size: 20),
+              child: Icon(Icons.bookmark_rounded, color: AppTheme.primaryColor(context), size: 20),
+            ),
+            title: const Text('Bài viết đã lưu', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Xem lại bài viết và tài liệu ôn thi bạn đã lưu', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: BlocBuilder<SavedPostsCubit, SavedPostsState>(
+              builder: (context, savedState) {
+                if (savedState.savedPostIds.isNotEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor(context),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      savedState.savedPostIds.length.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }
+                return const Icon(Icons.chevron_right_rounded);
+              },
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SavedPostsPage()),
+              );
+            },
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.diversity_3_rounded, color: Color(0xFF0284C7), size: 20),
+            ),
+            title: const Text('Nhóm học tập & Bạn cùng tiến', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Tìm đồng đội ôn thi, giải bài tập và học nhóm', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StudyGroupsPage()),
+              );
+            },
+          ),
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.groups_rounded, color: AppTheme.accentColor(context), size: 20),
+            ),
+            title: const Text('Câu lạc bộ sinh viên', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            subtitle: Text('Khám phá hoạt động và câu lạc bộ Phenikaa', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            trailing: BlocBuilder<ClubCubit, ClubState>(
+              builder: (context, clubState) {
+                final authState = context.watch<AuthCubit>().state;
+                if (authState is Authenticated) {
+                  final joined = clubState.getJoinedClubs(authState.user.uid, authState.user.studentId);
+                  if (joined.isNotEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentColor(context),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        joined.length.toString(),
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    );
+                  }
+                }
+                return const Icon(Icons.chevron_right_rounded);
+              },
+            ),
+            onTap: () => MainNavigationPage.of(context)?.navigateToTab(3),
+          ),
+          if (isAdmin) ...[
+            Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            ListTile(
+              leading: AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.admin_panel_settings_rounded, color: AppTheme.primaryColor(context), size: 20),
+              ),
+              title: Row(
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'Cổng Quản Trị Viên',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor(context),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'PORTAL',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Text(
+                'Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn',
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminPortalPage()),
+                );
+              },
+            ),
+          ],
+          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ListTile(
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.lock_reset_rounded, color: AppTheme.accentColor(context), size: 20),
             ),
             title: const Text('Đổi mật khẩu', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text('Cập nhật mật khẩu bảo vệ tài khoản', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
@@ -1696,90 +2229,327 @@ class _StudentProfileView extends StatelessWidget {
   void _showStudentQrModal(BuildContext context, UserEntity user) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final studentId = user.studentId.isNotEmpty ? user.studentId : '23010390';
+    final faculty = user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin';
+    final cohort = user.cohort != 0 ? user.cohort : 17;
+
+    final qrData = jsonEncode({
+      'app': 'pu_connection',
+      'type': 'student_card',
+      'uid': user.uid,
+      'studentId': studentId,
+      'displayName': user.displayName,
+      'faculty': faculty,
+      'cohort': cohort,
+      'email': user.email,
+    });
+
+    final formattedStudentText = '''
+[THẺ SINH VIÊN ĐIỆN TỬ PHENIKAA]
+Họ và tên: ${user.displayName}
+Mã số sinh viên: $studentId
+Khoa / Viện: $faculty
+Khóa đào tạo: K$cohort
+Email: ${user.email}
+Trường Đại học Phenikaa''';
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/logo/phenikaa_logo.png',
-                  width: 28,
-                  height: 28,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.school, size: 24),
+        contentPadding: const EdgeInsets.all(22),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/logo/phenikaa_logo.png',
+                    width: 28,
+                    height: 28,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.school, size: 24),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.university_name,
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.8),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.university_name,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.0),
+                child: Column(
+                  children: [
+                    QrImageView(
+                      data: qrData,
+                      version: QrVersions.auto,
+                      size: 170.0,
+                      backgroundColor: Colors.white,
+                      eyeStyle: const QrEyeStyle(
+                        eyeShape: QrEyeShape.square,
+                        color: Color(0xFF0056B3),
+                      ),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        dataModuleShape: QrDataModuleShape.square,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${l10n.student_id}: $studentId',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0056B3)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                user.displayName,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '$faculty • K$cohort',
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueContainer(context),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Quét mã này bằng Camera hoặc ứng dụng PU Connection để xem thông tin chuẩn hóa và kết bạn nhanh.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: AppTheme.primaryColor(context), height: 1.3),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: formattedStudentText));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Đã sao chép thông tin thẻ sinh viên chuẩn hóa!'),
+                            backgroundColor: AppTheme.primaryColor(context),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      label: const Text('Sao chép', style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showScanOrSearchStudentDialog(context);
+                      },
+                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
+                      label: const Text('Quét mã bạn', style: TextStyle(fontSize: 12)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor(context),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showScanOrSearchStudentDialog(BuildContext context) {
+    final textController = TextEditingController();
+    bool isSearching = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0056B3)),
+              SizedBox(width: 8),
+              Text('Quét / Nhập mã bạn bè', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Dán nội dung mã QR đã quét hoặc nhập Mã số sinh viên (MSSV) của bạn bè:',
+                style: TextStyle(fontSize: 12.5),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: textController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Nhập MSSV (VD: 23010390) hoặc dán mã QR...',
+                  hintStyle: const TextStyle(fontSize: 12),
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.paste_rounded, size: 18),
+                    tooltip: 'Dán từ bộ nhớ tạm',
+                    onPressed: () async {
+                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                      if (data?.text != null) {
+                        textController.text = data!.text!.trim();
+                      }
+                    },
+                  ),
+                ),
+              ),
+              if (isSearching) ...[
+                const SizedBox(height: 14),
+                const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
               ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Hủy'),
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.qr_code_2_rounded, size: 160, color: AppTheme.oceanBlue),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '23010390'}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.oceanBlue),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              user.displayName,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'} • K${user.cohort != 0 ? user.cohort : 17}',
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.blueContainer(context),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                l10n.student_qr_desc,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: AppTheme.primaryColor(context), height: 1.3),
-              ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor(context),
-                foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-                minimumSize: const Size.fromHeight(42),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
+            FilledButton(
+              onPressed: isSearching
+                  ? null
+                  : () async {
+                      final query = textController.text.trim();
+                      if (query.isEmpty) return;
+
+                      setDialogState(() => isSearching = true);
+
+                      try {
+                        String? targetUid;
+                        String? targetName;
+                        String? targetStudentId;
+                        String? targetFaculty;
+                        String? targetAvatar;
+
+                        // Trường hợp 1: Chuỗi là JSON từ mã QR của PU Connection
+                        if (query.startsWith('{') && query.endsWith('}')) {
+                          try {
+                            final map = jsonDecode(query) as Map<String, dynamic>;
+                            targetUid = map['uid'] as String?;
+                            targetName = map['displayName'] as String? ?? map['name'] as String?;
+                            targetStudentId = map['studentId'] as String?;
+                            targetFaculty = map['faculty'] as String?;
+                          } catch (_) {}
+                        }
+
+                        // Trường hợp 2: Tra cứu Firestore theo MSSV hoặc UID
+                        if (targetUid == null || targetUid.isEmpty) {
+                          // Tìm theo studentId
+                          final querySnap = await FirebaseFirestore.instance
+                              .collection(FirebaseConstants.usersCollection)
+                              .where('studentId', isEqualTo: query)
+                              .limit(1)
+                              .get();
+
+                          if (querySnap.docs.isNotEmpty) {
+                            final doc = querySnap.docs.first;
+                            final data = doc.data();
+                            targetUid = doc.id;
+                            targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
+                            targetStudentId = data['studentId'] as String? ?? query;
+                            targetFaculty = data['faculty'] as String? ?? '';
+                            targetAvatar = data['avatarUrl'] as String? ?? '';
+                          } else {
+                            // Thử tìm theo document ID (uid)
+                            final docSnap = await FirebaseFirestore.instance
+                                .collection(FirebaseConstants.usersCollection)
+                                .doc(query)
+                                .get();
+                            if (docSnap.exists) {
+                              final data = docSnap.data()!;
+                              targetUid = docSnap.id;
+                              targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
+                              targetStudentId = data['studentId'] as String? ?? '';
+                              targetFaculty = data['faculty'] as String? ?? '';
+                              targetAvatar = data['avatarUrl'] as String? ?? '';
+                            }
+                          }
+                        }
+
+                        if (!dialogCtx.mounted) return;
+                        Navigator.pop(dialogCtx);
+
+                        if (targetUid != null && targetUid.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UserProfilePage(
+                                userId: targetUid!,
+                                userName: targetName ?? 'Sinh viên Phenikaa',
+                                studentId: targetStudentId ?? '',
+                                faculty: targetFaculty ?? '',
+                                avatarUrl: targetAvatar ?? '',
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Không tìm thấy sinh viên với thông tin: "$query"'),
+                              backgroundColor: Colors.orange.shade800,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (dialogCtx.mounted) {
+                          setDialogState(() => isSearching = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi tra cứu: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
+                    },
+              child: const Text('Tìm kiếm'),
             ),
           ],
         ),

@@ -202,4 +202,25 @@ class _MockPostRepository implements PostRepository {
 
   @override
   Future<void> addComment(String postId, CommentEntity comment) async {}
+
+  @override
+  Future<void> toggleLikeComment({
+    required String postId,
+    required String commentId,
+    required String userId,
+    required bool isCurrentlyLiked,
+  }) async {}
+
+  @override
+  Future<void> deleteComment({
+    required String postId,
+    required String commentId,
+  }) async {}
+
+  @override
+  Future<void> editComment({
+    required String postId,
+    required String commentId,
+    required String newContent,
+  }) async {}
 }

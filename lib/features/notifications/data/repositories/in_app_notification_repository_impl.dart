@@ -32,7 +32,10 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
     return _controllers[userId]!;
   }
 
+  static bool enableSeedNotifications = false;
+
   List<NotificationEntity> _getInitialSeed(String userId) {
+    if (!enableSeedNotifications) return [];
     final now = DateTime.now();
     return [
       NotificationEntity(

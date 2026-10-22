@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pu_connection/core/models/paginated_result.dart';
 import 'package:pu_connection/features/documents/domain/entities/document_entity.dart';
+import 'package:pu_connection/features/documents/domain/entities/document_review_entity.dart';
 import 'package:pu_connection/features/documents/data/models/document_model.dart';
 import 'package:pu_connection/features/documents/domain/repositories/document_repository.dart';
 import 'package:pu_connection/features/documents/presentation/cubit/document_cubit.dart';
@@ -105,6 +106,23 @@ class MockDocumentRepository implements DocumentRepository {
   @override
   Future<void> deleteDocument(String documentId) async {
     _docs.removeWhere((d) => d.id == documentId);
+  }
+
+  final List<DocumentReviewEntity> _reviews = [];
+
+  @override
+  Future<void> submitDocumentReview(DocumentReviewEntity review) async {
+    _reviews.add(review);
+  }
+
+  @override
+  Stream<List<DocumentReviewEntity>> watchDocumentReviews(String documentId) {
+    return Stream.value(_reviews.where((r) => r.documentId == documentId).toList());
+  }
+
+  @override
+  Future<List<DocumentReviewEntity>> getDocumentReviews(String documentId) async {
+    return _reviews.where((r) => r.documentId == documentId).toList();
   }
 }
 

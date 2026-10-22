@@ -55,12 +55,16 @@ void main() {
     late ClubCubit cubit;
 
     setUp(() {
+      ClubRepositoryImpl.enableSeedClubs = true;
+      ClubRepositoryImpl.resetMemory();
       repository = ClubRepositoryImpl();
       cubit = ClubCubit(clubRepository: repository);
     });
 
     tearDown(() {
       cubit.close();
+      ClubRepositoryImpl.enableSeedClubs = false;
+      ClubRepositoryImpl.resetMemory();
     });
 
     test('Initial state loads default clubs and filters category', () async {

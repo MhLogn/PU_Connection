@@ -178,7 +178,12 @@ void main() {
     late InAppNotificationRepositoryImpl repository;
 
     setUp(() {
+      InAppNotificationRepositoryImpl.enableSeedNotifications = true;
       repository = InAppNotificationRepositoryImpl(); // in-memory mode
+    });
+
+    tearDown(() {
+      InAppNotificationRepositoryImpl.enableSeedNotifications = false;
     });
 
     test('watchNotifications emits seed notifications initially', () async {
@@ -245,12 +250,14 @@ void main() {
     late InAppNotificationsCubit cubit;
 
     setUp(() {
+      InAppNotificationRepositoryImpl.enableSeedNotifications = true;
       repository = InAppNotificationRepositoryImpl();
       cubit = InAppNotificationsCubit(repository: repository);
     });
 
     tearDown(() {
       cubit.close();
+      InAppNotificationRepositoryImpl.enableSeedNotifications = false;
     });
 
     test('initial state is NotificationsStatus.initial', () {

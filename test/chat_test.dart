@@ -135,6 +135,24 @@ class MockChatRepository implements ChatRepository {
     required String conversationId,
     required String currentUserId,
   }) async {}
+
+  final Map<String, Map<String, bool>> _typingStatus = {};
+  final StreamController<Map<String, bool>> _typingController = StreamController<Map<String, bool>>.broadcast();
+
+  @override
+  Future<void> setTypingStatus({
+    required String conversationId,
+    required String userId,
+    required bool isTyping,
+  }) async {
+    _typingStatus.putIfAbsent(conversationId, () => {})[userId] = isTyping;
+    _typingController.add(_typingStatus[conversationId] ?? {});
+  }
+
+  @override
+  Stream<Map<String, bool>> getTypingStream(String conversationId) {
+    return _typingController.stream;
+  }
 }
 
 void main() {
@@ -146,6 +164,10 @@ void main() {
         senderName: 'Hà Mạnh Long',
         content: 'Hôm nay học phòng mấy bạn nhỉ?',
         imageUrl: 'https://example.com/photo.jpg',
+        fileUrl: 'https://example.com/de_cuong.pdf',
+        fileName: 'de_cuong.pdf',
+        fileType: 'pdf',
+        fileSize: '1.8 MB',
         createdAt: DateTime(2026, 2, 10, 8, 30),
         isRead: true,
       );
@@ -155,6 +177,10 @@ void main() {
       expect(map['senderName'], 'Hà Mạnh Long');
       expect(map['content'], 'Hôm nay học phòng mấy bạn nhỉ?');
       expect(map['imageUrl'], 'https://example.com/photo.jpg');
+      expect(map['fileUrl'], 'https://example.com/de_cuong.pdf');
+      expect(map['fileName'], 'de_cuong.pdf');
+      expect(map['fileType'], 'pdf');
+      expect(map['fileSize'], '1.8 MB');
       expect(map['isRead'], true);
 
       final fromMap = MessageModel.fromMap(map, 'msg_100');
@@ -162,6 +188,8 @@ void main() {
       expect(fromMap.senderId, msg.senderId);
       expect(fromMap.content, msg.content);
       expect(fromMap.imageUrl, 'https://example.com/photo.jpg');
+      expect(fromMap.fileUrl, 'https://example.com/de_cuong.pdf');
+      expect(fromMap.fileName, 'de_cuong.pdf');
       expect(fromMap.isRead, msg.isRead);
     });
 
@@ -349,6 +377,35 @@ void main() {
       );
 
       expect(cubit.state.activeConversationId, isNull);
+    });
+
+    test('ChatCubit setTypingStatus calls repository', () async {
+      await cubit.setTypingStatus(
+        conversationId: 'userA_userB',
+        userId: 'userA',
+        isTyping: true,
+      );
+      // Completes successfully
+      expect(true, isTrue);
+    });
+
+    test('ChatCubit sendMessage sends file attachment message', () async {
+      cubit.openConversation('userA_userB', 'userA');
+
+      await cubit.sendMessage(
+        conversationId: 'userA_userB',
+        senderId: 'userA',
+        senderName: 'Hà Mạnh Long',
+        content: '',
+        fileUrl: 'https://cloudinary.com/slide_chuong_3.pdf',
+        fileName: 'slide_chuong_3.pdf',
+        fileType: 'pdf',
+        fileSize: '2.5 MB',
+        participantIds: ['userA', 'userB'],
+      );
+
+      expect(cubit.state.isSending, false);
+      expect(cubit.state.errorMessage, isNull);
     });
   });
 }
