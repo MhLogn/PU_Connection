@@ -7,8 +7,13 @@ class MessageEntity extends Equatable {
   final String senderAvatar;
   final String content;
   final String? imageUrl;
+  final String? fileUrl;
+  final String? fileName;
+  final String? fileType;
+  final String? fileSize;
   final DateTime createdAt;
   final bool isRead;
+  final bool isDelivered;
 
   const MessageEntity({
     required this.messageId,
@@ -17,8 +22,13 @@ class MessageEntity extends Equatable {
     this.senderAvatar = '',
     required this.content,
     this.imageUrl,
+    this.fileUrl,
+    this.fileName,
+    this.fileType,
+    this.fileSize,
     required this.createdAt,
     this.isRead = false,
+    this.isDelivered = true,
   });
 
   MessageEntity copyWith({
@@ -28,8 +38,13 @@ class MessageEntity extends Equatable {
     String? senderAvatar,
     String? content,
     String? imageUrl,
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
+    String? fileSize,
     DateTime? createdAt,
     bool? isRead,
+    bool? isDelivered,
   }) {
     return MessageEntity(
       messageId: messageId ?? this.messageId,
@@ -38,8 +53,13 @@ class MessageEntity extends Equatable {
       senderAvatar: senderAvatar ?? this.senderAvatar,
       content: content ?? this.content,
       imageUrl: imageUrl ?? this.imageUrl,
+      fileUrl: fileUrl ?? this.fileUrl,
+      fileName: fileName ?? this.fileName,
+      fileType: fileType ?? this.fileType,
+      fileSize: fileSize ?? this.fileSize,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
+      isDelivered: isDelivered ?? this.isDelivered,
     );
   }
 
@@ -51,7 +71,12 @@ class MessageEntity extends Equatable {
         senderAvatar,
         content,
         imageUrl,
+        fileUrl,
+        fileName,
+        fileType,
+        fileSize,
         createdAt,
         isRead,
+        isDelivered,
       ];
 }

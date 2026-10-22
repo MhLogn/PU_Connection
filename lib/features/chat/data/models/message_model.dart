@@ -9,8 +9,13 @@ class MessageModel extends MessageEntity {
     super.senderAvatar = '',
     required super.content,
     super.imageUrl,
+    super.fileUrl,
+    super.fileName,
+    super.fileType,
+    super.fileSize,
     required super.createdAt,
     super.isRead = false,
+    super.isDelivered = true,
   });
 
   factory MessageModel.fromMap(Map<String, dynamic> map, String id) {
@@ -27,8 +32,13 @@ class MessageModel extends MessageEntity {
       senderAvatar: map['senderAvatar'] as String? ?? '',
       content: map['content'] as String? ?? '',
       imageUrl: map['imageUrl'] as String?,
+      fileUrl: map['fileUrl'] as String?,
+      fileName: map['fileName'] as String?,
+      fileType: map['fileType'] as String?,
+      fileSize: map['fileSize'] as String?,
       createdAt: parseDate(map['createdAt']),
       isRead: map['isRead'] as bool? ?? false,
+      isDelivered: map['isDelivered'] as bool? ?? true,
     );
   }
 
@@ -44,8 +54,13 @@ class MessageModel extends MessageEntity {
       'senderAvatar': senderAvatar,
       'content': content,
       if (imageUrl != null) 'imageUrl': imageUrl,
+      if (fileUrl != null) 'fileUrl': fileUrl,
+      if (fileName != null) 'fileName': fileName,
+      if (fileType != null) 'fileType': fileType,
+      if (fileSize != null) 'fileSize': fileSize,
       'createdAt': Timestamp.fromDate(createdAt),
       'isRead': isRead,
+      'isDelivered': isDelivered,
     };
   }
 }

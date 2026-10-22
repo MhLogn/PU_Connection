@@ -41,4 +41,10 @@ abstract class ChatRepository {
     required String conversationId,
     required String currentUserId,
   });
+  Future<void> setTypingStatus({
+    required String conversationId,
+    required String userId,
+    required bool isTyping,
+  });
+  Stream<Map<String, bool>> getTypingStream(String conversationId);
 }

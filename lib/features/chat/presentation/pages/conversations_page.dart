@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
@@ -413,19 +415,37 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   ),
                                 ),
                         ),
-                        if (!isGroup)
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 13,
-                              height: 13,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF10B981),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: colorScheme.surface, width: 2),
-                              ),
-                            ),
+                        if (!isGroup && otherId.isNotEmpty)
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection(FirebaseConstants.usersCollection)
+                                .doc(otherId)
+                                .snapshots(),
+                            builder: (context, userSnap) {
+                              if (!userSnap.hasData || !userSnap.data!.exists) {
+                                return const SizedBox.shrink();
+                              }
+                              final data = userSnap.data!.data() as Map<String, dynamic>?;
+                              final rawOnline = data?['isOnline'] as bool? ?? false;
+                              final lastActiveTs = data?['lastActive'] as Timestamp?;
+                              final lastActive = lastActiveTs?.toDate();
+                              final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
+                              final isOnline = rawOnline && isRecent;
+                              if (!isOnline) return const SizedBox.shrink();
+                              return Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 13,
+                                  height: 13,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: colorScheme.surface, width: 2),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                       ],
                     ),

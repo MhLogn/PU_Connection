@@ -9,6 +9,7 @@ class ChatState extends Equatable {
   final List<ConversationEntity> conversations;
   final List<MessageEntity> currentMessages;
   final String? activeConversationId;
+  final Map<String, bool> typingUsers;
   final bool isSending;
   final String? errorMessage;
 
@@ -17,6 +18,7 @@ class ChatState extends Equatable {
     this.conversations = const [],
     this.currentMessages = const [],
     this.activeConversationId,
+    this.typingUsers = const {},
     this.isSending = false,
     this.errorMessage,
   });
@@ -27,6 +29,7 @@ class ChatState extends Equatable {
     List<MessageEntity>? currentMessages,
     String? activeConversationId,
     bool resetActiveConversation = false,
+    Map<String, bool>? typingUsers,
     bool? isSending,
     String? errorMessage,
   }) {
@@ -37,6 +40,7 @@ class ChatState extends Equatable {
       activeConversationId: resetActiveConversation
           ? null
           : (activeConversationId ?? this.activeConversationId),
+      typingUsers: typingUsers ?? this.typingUsers,
       isSending: isSending ?? this.isSending,
       errorMessage: errorMessage,
     );
@@ -48,6 +52,7 @@ class ChatState extends Equatable {
         conversations,
         currentMessages,
         activeConversationId,
+        typingUsers,
         isSending,
         errorMessage,
       ];

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../documents/domain/entities/document_entity.dart';
+import '../../../documents/presentation/pages/pdf_viewer_page.dart';
 import '../../domain/entities/message_entity.dart';
 
 class ChatMessageBubble extends StatelessWidget {
@@ -46,6 +51,66 @@ class ChatMessageBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openAttachedFile(BuildContext context) async {
+    final fileUrl = message.fileUrl;
+    if (fileUrl == null || fileUrl.isEmpty) return;
+
+    final fileName = message.fileName ?? 'document';
+    final isPdf = fileName.toLowerCase().endsWith('.pdf') ||
+        (message.fileType != null && message.fileType!.toLowerCase() == 'pdf');
+
+    if (isPdf) {
+      final doc = DocumentEntity(
+        id: message.messageId.isNotEmpty ? message.messageId : 'chat_doc',
+        title: fileName,
+        code: 'CHAT_DOC',
+        faculty: 'Phenikaa University',
+        fileUrl: fileUrl,
+        fileType: 'pdf',
+        fileSize: message.fileSize ?? 'Tài liệu',
+        authorId: message.senderId,
+        authorName: message.senderName,
+        authorStudentId: message.senderId,
+        createdAt: message.createdAt,
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfViewerPage(document: doc),
+        ),
+      );
+    } else {
+      // Download to cache and open via open_filex
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Đang tải tệp về để mở...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final savePath = '${tempDir.path}/$fileName';
+        await Dio().download(fileUrl, savePath);
+
+        final result = await OpenFilex.open(savePath);
+        if (result.type != ResultType.done && context.mounted) {
+          messenger.showSnackBar(
+            SnackBar(content: Text('Không thể mở tệp: ${result.message}')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          messenger.showSnackBar(
+            SnackBar(content: Text('Lỗi khi mở tệp: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -103,12 +168,106 @@ class ChatMessageBubble extends StatelessWidget {
     );
   }
 
+  Widget _buildFileAttachmentCard(
+    BuildContext context,
+    bool isMe,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    final fileName = message.fileName ?? 'Tài liệu đính kèm';
+    final ext = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : 'FILE';
+    final isPdf = ext == 'PDF';
+    final isDoc = ext == 'DOC' || ext == 'DOCX';
+    final isXls = ext == 'XLS' || ext == 'XLSX';
+
+    Color badgeColor = Colors.orange;
+    IconData badgeIcon = Icons.insert_drive_file_rounded;
+    if (isPdf) {
+      badgeColor = Colors.red.shade600;
+      badgeIcon = Icons.picture_as_pdf_rounded;
+    } else if (isDoc) {
+      badgeColor = const Color(0xFF2563EB);
+      badgeIcon = Icons.description_rounded;
+    } else if (isXls) {
+      badgeColor = const Color(0xFF16A34A);
+      badgeIcon = Icons.table_chart_rounded;
+    }
+
+    return InkWell(
+      onTap: () => _openAttachedFile(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isMe
+              ? Colors.white.withValues(alpha: 0.18)
+              : (isDark ? colorScheme.surface : Colors.white),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isMe
+                ? Colors.white24
+                : colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: badgeColor.withValues(alpha: isMe ? 0.3 : 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(badgeIcon, color: badgeColor, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fileName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isMe ? Colors.white : colorScheme.onSurface,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    message.fileSize != null && message.fileSize!.isNotEmpty
+                        ? '$ext • ${message.fileSize}'
+                        : '$ext • Nhấn để xem',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isMe
+                          ? Colors.white70
+                          : colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              isPdf ? Icons.visibility_rounded : Icons.download_rounded,
+              size: 20,
+              color: isMe ? Colors.white70 : AppTheme.primaryColor(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBubble(BuildContext context, bool isDark, ColorScheme colorScheme) {
     final timeStr = DateFormat('HH:mm').format(message.createdAt);
 
     return ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.76,
+        maxWidth: MediaQuery.of(context).size.width * 0.78,
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -168,8 +327,11 @@ class ChatMessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              if (message.content.isNotEmpty) const SizedBox(height: 8),
+              if (message.content.isNotEmpty || message.fileUrl != null)
+                const SizedBox(height: 8),
             ],
+            if (message.fileUrl != null && message.fileUrl!.isNotEmpty)
+              _buildFileAttachmentCard(context, isMe, isDark, colorScheme),
             if (message.content.isNotEmpty)
               Text(
                 message.content,
@@ -194,10 +356,15 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 4),
-                  const Icon(
-                    Icons.done_all_rounded,
-                    size: 13,
-                    color: Colors.white70,
+                  Tooltip(
+                    message: message.isRead ? 'Đã xem' : 'Đã gửi',
+                    child: Icon(
+                      Icons.done_all_rounded,
+                      size: 14,
+                      color: message.isRead
+                          ? const Color(0xFF38BDF8) // Cyan sáng khi đã xem
+                          : Colors.white60,        // Trắng mờ khi đã gửi
+                    ),
                   ),
                 ],
               ],

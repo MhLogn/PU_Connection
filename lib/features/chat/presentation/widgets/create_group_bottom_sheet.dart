@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/data/datasources/phenikaa_student_directory.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/chat_cubit.dart';
@@ -22,48 +23,16 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
   String _searchQuery = '';
   bool _isLoading = false;
 
-  final List<Map<String, String>> _mockStudents = [
-    {
-      'id': 'pu_student_1',
-      'name': 'Nguyễn Văn An',
-      'studentId': '23010101',
-      'faculty': 'CNTT',
-      'major': 'Khoa học máy tính',
-      'avatar': '',
-    },
-    {
-      'id': 'pu_student_2',
-      'name': 'Trần Thị Mai',
-      'studentId': '23010202',
-      'faculty': 'Dược - Y',
-      'major': 'Dược học',
-      'avatar': '',
-    },
-    {
-      'id': 'pu_student_3',
-      'name': 'Lê Hoàng Nam',
-      'studentId': '23010303',
-      'faculty': 'Kinh tế & QTKD',
-      'major': 'Quản trị kinh doanh',
-      'avatar': '',
-    },
-    {
-      'id': 'pu_student_4',
-      'name': 'Phạm Thu Trang',
-      'studentId': '23010404',
-      'faculty': 'Ngôn ngữ Anh',
-      'major': 'Tiếng Anh thương mại',
-      'avatar': '',
-    },
-    {
-      'id': 'pu_student_5',
-      'name': 'Đỗ Minh Đức',
-      'studentId': '23010505',
-      'faculty': 'Kỹ thuật Ô tô',
-      'major': 'Cơ điện tử ô tô',
-      'avatar': '',
-    },
-  ];
+  List<Map<String, String>> get _mockStudents => PhenikaaStudentDirectory.defaultStudents
+      .map((s) => {
+            'id': s.studentId,
+            'name': s.fullName,
+            'studentId': s.studentId,
+            'faculty': s.faculty,
+            'major': s.major,
+            'avatar': '',
+          })
+      .toList();
 
   @override
   void dispose() {

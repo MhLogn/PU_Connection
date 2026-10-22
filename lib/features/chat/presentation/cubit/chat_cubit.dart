@@ -14,6 +14,7 @@ class ChatCubit extends Cubit<ChatState> {
   final CloudinaryService _cloudinaryService;
   StreamSubscription<List<ConversationEntity>>? _convSubscription;
   StreamSubscription<List<MessageEntity>>? _msgSubscription;
+  StreamSubscription<Map<String, bool>>? _typingSubscription;
 
   final Map<String, DateTime> _lastNotifiedMessageTimes = {};
   bool _isFirstConvLoad = true;
@@ -93,9 +94,11 @@ class ChatCubit extends Cubit<ChatState> {
 
   void openConversation(String conversationId, String currentUserId) {
     _msgSubscription?.cancel();
+    _typingSubscription?.cancel();
     emit(state.copyWith(
       activeConversationId: conversationId,
       currentMessages: [],
+      typingUsers: {},
     ));
 
     _msgSubscription = _chatRepository
@@ -109,6 +112,15 @@ class ChatCubit extends Cubit<ChatState> {
       },
     );
 
+    _typingSubscription = _chatRepository
+        .getTypingStream(conversationId)
+        .listen(
+      (typingMap) {
+        emit(state.copyWith(typingUsers: typingMap));
+      },
+      onError: (_) {},
+    );
+
     _chatRepository.markAsRead(
       conversationId: conversationId,
       currentUserId: currentUserId,
@@ -118,10 +130,27 @@ class ChatCubit extends Cubit<ChatState> {
   void closeCurrentConversation() {
     _msgSubscription?.cancel();
     _msgSubscription = null;
+    _typingSubscription?.cancel();
+    _typingSubscription = null;
     emit(state.copyWith(
       resetActiveConversation: true,
       currentMessages: [],
+      typingUsers: {},
     ));
+  }
+
+  Future<void> setTypingStatus({
+    required String conversationId,
+    required String userId,
+    required bool isTyping,
+  }) async {
+    try {
+      await _chatRepository.setTypingStatus(
+        conversationId: conversationId,
+        userId: userId,
+        isTyping: isTyping,
+      );
+    } catch (_) {}
   }
 
   Future<void> sendMessage({
@@ -132,9 +161,20 @@ class ChatCubit extends Cubit<ChatState> {
     required String content,
     String? imageUrl,
     File? imageFile,
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
+    String? fileSize,
+    File? docFile,
     required List<String> participantIds,
   }) async {
-    if (content.trim().isEmpty && imageUrl == null && imageFile == null) return;
+    if (content.trim().isEmpty &&
+        imageUrl == null &&
+        imageFile == null &&
+        fileUrl == null &&
+        docFile == null) {
+      return;
+    }
 
     emit(state.copyWith(isSending: true));
 
@@ -144,6 +184,13 @@ class ChatCubit extends Cubit<ChatState> {
         resolvedImageUrl = await _cloudinaryService.uploadImage(imageFile);
       }
 
+      String? resolvedFileUrl = fileUrl;
+      String? resolvedFileName = fileName;
+      if (docFile != null) {
+        resolvedFileUrl = await _cloudinaryService.uploadDocument(docFile);
+        resolvedFileName ??= docFile.path.split(Platform.pathSeparator).last;
+      }
+
       final msg = MessageEntity(
         messageId: '',
         senderId: senderId,
@@ -151,8 +198,13 @@ class ChatCubit extends Cubit<ChatState> {
         senderAvatar: senderAvatar,
         content: content.trim(),
         imageUrl: resolvedImageUrl,
+        fileUrl: resolvedFileUrl,
+        fileName: resolvedFileName,
+        fileType: fileType,
+        fileSize: fileSize,
         createdAt: DateTime.now(),
         isRead: false,
+        isDelivered: true,
       );
 
       await _chatRepository.sendMessage(
@@ -264,6 +316,8 @@ class ChatCubit extends Cubit<ChatState> {
     _convSubscription = null;
     _msgSubscription?.cancel();
     _msgSubscription = null;
+    _typingSubscription?.cancel();
+    _typingSubscription = null;
     emit(const ChatState());
   }
 
@@ -271,6 +325,7 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> close() {
     _convSubscription?.cancel();
     _msgSubscription?.cancel();
+    _typingSubscription?.cancel();
     return super.close();
   }
 }

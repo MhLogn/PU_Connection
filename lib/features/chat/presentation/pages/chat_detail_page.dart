@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
@@ -44,6 +49,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
   File? _selectedImage;
+  File? _selectedFile;
+  String? _selectedFileName;
+  String? _selectedFileSize;
+  Timer? _typingTimer;
+  bool _isTyping = false;
 
   @override
   void initState() {
@@ -58,6 +68,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
+    final authState = context.read<AuthCubit>().state;
+    if (authState is Authenticated) {
+      context.read<ChatCubit>().setTypingStatus(
+        conversationId: widget.conversationId,
+        userId: authState.user.uid,
+        isTyping: false,
+      );
+    }
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -176,16 +195,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void _openHeaderTarget() {
     if (widget.isGroup) {
       final conversations = context.read<ChatCubit>().state.conversations;
-      final currentConv = conversations.firstWhere(
-        (c) => c.id == widget.conversationId,
-        orElse: () => ConversationEntity(
-          id: widget.conversationId,
-          isGroup: true,
-          groupName: widget.groupName,
-          participantIds: widget.participantIds,
-          participantNames: const {},
-        ),
-      );
+      final matchingConvs = conversations.where((c) => c.id == widget.conversationId);
+      final currentConv = matchingConvs.isNotEmpty
+          ? matchingConvs.first
+          : ConversationEntity(
+              id: widget.conversationId,
+              isGroup: true,
+              groupName: widget.groupName,
+              participantIds: widget.participantIds,
+              participantNames: const {},
+            );
 
       showModalBottomSheet(
         context: context,
@@ -210,9 +229,73 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
+  Future<void> _pickDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'txt'],
+      );
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final sizeInBytes = await file.length();
+        String sizeFormatted = '${(sizeInBytes / 1024).toStringAsFixed(1)} KB';
+        if (sizeInBytes > 1024 * 1024) {
+          sizeFormatted = '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+        }
+        setState(() {
+          _selectedFile = file;
+          _selectedFileName = result.files.single.name;
+          _selectedFileSize = sizeFormatted;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể chọn tệp: $e')),
+        );
+      }
+    }
+  }
+
+  void _onTypingChanged(String val) {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! Authenticated) return;
+    final currentUserId = authState.user.uid;
+
+    if (val.trim().isNotEmpty) {
+      if (!_isTyping) {
+        _isTyping = true;
+        context.read<ChatCubit>().setTypingStatus(
+          conversationId: widget.conversationId,
+          userId: currentUserId,
+          isTyping: true,
+        );
+      }
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(milliseconds: 2500), () {
+        _isTyping = false;
+        context.read<ChatCubit>().setTypingStatus(
+          conversationId: widget.conversationId,
+          userId: currentUserId,
+          isTyping: false,
+        );
+      });
+    } else {
+      if (_isTyping) {
+        _isTyping = false;
+        _typingTimer?.cancel();
+        context.read<ChatCubit>().setTypingStatus(
+          conversationId: widget.conversationId,
+          userId: currentUserId,
+          isTyping: false,
+        );
+      }
+    }
+  }
+
   void _sendMessage() {
     final text = _textController.text.trim();
-    if (text.isEmpty && _selectedImage == null) return;
+    if (text.isEmpty && _selectedImage == null && _selectedFile == null) return;
 
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) return;
@@ -224,9 +307,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final currentUserAvatar = authState.user.avatarUrl;
 
     final imageToSend = _selectedImage;
+    final fileToSend = _selectedFile;
+    final fileNameToSend = _selectedFileName;
+    final fileSizeToSend = _selectedFileSize;
+
     _textController.clear();
+    _onTypingChanged('');
+
     setState(() {
       _selectedImage = null;
+      _selectedFile = null;
+      _selectedFileName = null;
+      _selectedFileSize = null;
     });
 
     context.read<ChatCubit>().sendMessage(
@@ -236,6 +328,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       senderAvatar: currentUserAvatar,
       content: text,
       imageFile: imageToSend,
+      docFile: fileToSend,
+      fileName: fileNameToSend,
+      fileSize: fileSizeToSend,
       participantIds: widget.participantIds,
     );
 
@@ -291,22 +386,40 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                               ),
                             ),
                     ),
-                    if (!widget.isGroup)
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: colorScheme.surface,
-                              width: 1.5,
+                    if (!widget.isGroup && widget.otherUserId.isNotEmpty)
+                      StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection(FirebaseConstants.usersCollection)
+                            .doc(widget.otherUserId)
+                            .snapshots(),
+                        builder: (context, userSnap) {
+                          if (!userSnap.hasData || !userSnap.data!.exists) {
+                            return const SizedBox.shrink();
+                          }
+                          final data = userSnap.data!.data() as Map<String, dynamic>?;
+                          final rawOnline = data?['isOnline'] as bool? ?? false;
+                          final lastActiveTs = data?['lastActive'] as Timestamp?;
+                          final lastActive = lastActiveTs?.toDate();
+                          final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
+                          final isOnline = rawOnline && isRecent;
+                          if (!isOnline) return const SizedBox.shrink();
+                          return Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.surface,
+                                  width: 1.5,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -323,18 +436,74 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        widget.isGroup
-                            ? '${widget.participantIds.length} thành viên • Nhấn để xem'
-                            : (widget.otherUserFaculty.isNotEmpty
-                                  ? '${widget.otherUserFaculty} • Nhấn để xem hồ sơ'
-                                  : 'Sinh viên Phenikaa'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      if (widget.isGroup)
+                        Text(
+                          '${widget.participantIds.length} thành viên • Nhấn để xem',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else
+                        StreamBuilder<DocumentSnapshot>(
+                          stream: widget.otherUserId.isNotEmpty
+                              ? FirebaseFirestore.instance
+                                  .collection(FirebaseConstants.usersCollection)
+                                  .doc(widget.otherUserId)
+                                  .snapshots()
+                              : null,
+                          builder: (context, userSnap) {
+                            final data = userSnap.data?.data() as Map<String, dynamic>?;
+                            final rawOnline = data?['isOnline'] as bool? ?? false;
+                            final lastActiveTs = data?['lastActive'] as Timestamp?;
+                            final lastActive = lastActiveTs?.toDate();
+                            final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
+                            final isOnline = rawOnline && isRecent;
+
+                            String statusText;
+                            Color statusColor = colorScheme.onSurface.withValues(alpha: 0.6);
+
+                            if (isOnline) {
+                              statusText = 'Đang hoạt động';
+                              statusColor = const Color(0xFF10B981);
+                            } else if (lastActive != null) {
+                              final locale = Localizations.localeOf(context).languageCode;
+                              statusText = 'Hoạt động ${timeago.format(lastActive, locale: locale)}';
+                            } else if (widget.otherUserFaculty.isNotEmpty) {
+                              statusText = widget.otherUserFaculty;
+                            } else {
+                              statusText = 'Không trực tuyến';
+                            }
+
+                            return Row(
+                              children: [
+                                if (isOnline) ...[
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    margin: const EdgeInsets.only(right: 5),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF10B981),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    statusText,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: isOnline ? FontWeight.w600 : FontWeight.normal,
+                                      color: statusColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ],
                   ),
                 ),
@@ -432,7 +601,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               },
             ),
           ),
+          BlocBuilder<ChatCubit, ChatState>(
+            buildWhen: (prev, curr) => prev.typingUsers != curr.typingUsers,
+            builder: (context, state) {
+              return _buildTypingIndicator(state, currentUserId, colorScheme);
+            },
+          ),
           if (_selectedImage != null) _buildSelectedImagePreview(colorScheme),
+          if (_selectedFile != null) _buildSelectedFilePreview(colorScheme),
           _buildInputBar(context, colorScheme, isDark),
         ],
       ),
@@ -486,6 +662,109 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 color: AppTheme.primaryColor(context),
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedFilePreview(ColorScheme colorScheme) {
+    final fileName = _selectedFileName ?? 'Tệp đính kèm';
+    final ext = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : 'FILE';
+    final isPdf = ext == 'PDF';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isPdf
+                  ? Colors.red.withValues(alpha: 0.15)
+                  : Colors.blue.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
+              color: isPdf ? Colors.red : Colors.blue,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fileName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _selectedFileSize ?? 'Tệp tài liệu',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, size: 18),
+            onPressed: () {
+              setState(() {
+                _selectedFile = null;
+                _selectedFileName = null;
+                _selectedFileSize = null;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator(
+    ChatState state,
+    String currentUserId,
+    ColorScheme colorScheme,
+  ) {
+    final otherTyping = state.typingUsers.entries
+        .where((e) => e.key != currentUserId && e.value == true)
+        .toList();
+
+    if (otherTyping.isEmpty) return const SizedBox.shrink();
+
+    final typingName = widget.isGroup
+        ? 'Thành viên trong nhóm'
+        : widget.otherUserName;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: AppTheme.primaryColor(context),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$typingName đang soạn tin nhắn...',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontStyle: FontStyle.italic,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -716,6 +995,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             tooltip: 'Gửi hình ảnh',
             onPressed: isSending ? null : _showImagePickerOptions,
           ),
+          IconButton(
+            icon: Icon(
+              Icons.attach_file_rounded,
+              color: AppTheme.accentColor(context),
+              size: 24,
+            ),
+            tooltip: 'Gửi tệp tài liệu',
+            onPressed: isSending ? null : _pickDocument,
+          ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -731,6 +1019,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 controller: _textController,
                 textCapitalization: TextCapitalization.sentences,
                 textInputAction: TextInputAction.send,
+                onChanged: _onTypingChanged,
                 onSubmitted: (_) => _sendMessage(),
                 decoration: InputDecoration(
                   hintText: widget.isGroup

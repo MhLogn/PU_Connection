@@ -67,19 +67,32 @@ class ChatRepositoryImpl implements ChatRepository {
       senderAvatar: message.senderAvatar,
       content: message.content,
       imageUrl: message.imageUrl,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      fileType: message.fileType,
+      fileSize: message.fileSize,
       createdAt: message.createdAt,
       isRead: false,
+      isDelivered: true,
     );
 
     final otherParticipants =
         participantIds.where((id) => id != message.senderId).toList();
 
+    String displayLastMessage = message.content;
+    if (displayLastMessage.isEmpty) {
+      if (message.fileUrl != null && message.fileUrl!.isNotEmpty) {
+        displayLastMessage = '[Tệp: ${message.fileName ?? "Tài liệu"}]';
+      } else if (message.imageUrl != null && message.imageUrl!.isNotEmpty) {
+        displayLastMessage = '[Hình ảnh]';
+      }
+    }
+
     final Map<String, dynamic> updateData = {
-      'lastMessage': message.content.isNotEmpty
-          ? message.content
-          : (message.imageUrl != null ? '[Hình ảnh]' : ''),
+      'lastMessage': displayLastMessage,
       'lastMessageSenderId': message.senderId,
       'lastMessageAt': FieldValue.serverTimestamp(),
+      'typingUsers.${message.senderId}': false,
     };
 
     for (final otherId in otherParticipants) {
@@ -263,5 +276,38 @@ class ChatRepositoryImpl implements ChatRepository {
     if (updateData.isNotEmpty) {
       await convRef.update(updateData);
     }
+  }
+
+  @override
+  Future<void> setTypingStatus({
+    required String conversationId,
+    required String userId,
+    required bool isTyping,
+  }) async {
+    try {
+      final convRef = _firestore
+          .collection(FirebaseConstants.chatsCollection)
+          .doc(conversationId);
+      await convRef.set({
+        'typingUsers': {
+          userId: isTyping,
+        },
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  @override
+  Stream<Map<String, bool>> getTypingStream(String conversationId) {
+    return _firestore
+        .collection(FirebaseConstants.chatsCollection)
+        .doc(conversationId)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists || snapshot.data() == null) return {};
+      final data = snapshot.data()!;
+      final typingMap = data['typingUsers'] as Map<String, dynamic>?;
+      if (typingMap == null) return {};
+      return typingMap.map((k, v) => MapEntry(k, v == true));
+    });
   }
 }
