@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../domain/entities/document_entity.dart';
+import '../../domain/entities/document_review_entity.dart';
 import '../../domain/repositories/document_repository.dart';
 import 'document_state.dart';
 
@@ -181,6 +182,29 @@ class DocumentCubit extends Cubit<DocumentState> {
         errorMessage: 'Lỗi khi xóa tài liệu: ${e.toString()}',
       ));
     }
+  }
+
+  Future<void> submitReview(DocumentReviewEntity review) async {
+    try {
+      await _documentRepository.submitDocumentReview(review);
+      emit(state.copyWith(
+        successMessage: 'Cảm ơn bạn đã đánh giá tài liệu!',
+      ));
+      // Tải lại danh sách documents để cập nhật average rating mới
+      loadDocuments(refresh: true);
+    } catch (e) {
+      emit(state.copyWith(
+        errorMessage: 'Lỗi khi gửi đánh giá: ${e.toString()}',
+      ));
+    }
+  }
+
+  Future<List<DocumentReviewEntity>> getReviews(String documentId) async {
+    return _documentRepository.getDocumentReviews(documentId);
+  }
+
+  Stream<List<DocumentReviewEntity>> watchReviews(String documentId) {
+    return _documentRepository.watchDocumentReviews(documentId);
   }
 
   void clearMessages() {

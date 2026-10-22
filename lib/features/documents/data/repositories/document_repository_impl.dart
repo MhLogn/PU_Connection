@@ -6,8 +6,10 @@ import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/models/paginated_result.dart';
 import '../../../../core/services/cloudinary_service.dart';
 import '../../domain/entities/document_entity.dart';
+import '../../domain/entities/document_review_entity.dart';
 import '../../domain/repositories/document_repository.dart';
 import '../models/document_model.dart';
+import '../models/document_review_model.dart';
 
 class DocumentRepositoryImpl implements DocumentRepository {
   final FirebaseFirestore _firestore;
@@ -218,5 +220,92 @@ class DocumentRepositoryImpl implements DocumentRepository {
   Future<void> deleteDocument(String documentId) async {
     if (documentId.isEmpty) return;
     await _docsRef.doc(documentId).delete();
+  }
+
+  // In-memory fallback cho reviews
+  final Map<String, List<DocumentReviewEntity>> _inMemoryReviews = {};
+
+  @override
+  Future<void> submitDocumentReview(DocumentReviewEntity review) async {
+    if (review.documentId.isEmpty) return;
+
+    // 1. Lưu In-memory
+    final list = _inMemoryReviews.putIfAbsent(review.documentId, () => []);
+    list.removeWhere((r) => r.userId == review.userId);
+    list.insert(0, review);
+
+    // 2. Lưu Firestore
+    try {
+      final docRef = _docsRef.doc(review.documentId);
+      final model = DocumentReviewModel.fromEntity(review);
+
+      await docRef
+          .collection(FirebaseConstants.documentReviewsSubcollection)
+          .doc(review.userId)
+          .set(model.toMap());
+
+      // Tính toán lại average rating
+      final allReviews = await docRef
+          .collection(FirebaseConstants.documentReviewsSubcollection)
+          .get();
+
+      if (allReviews.docs.isNotEmpty) {
+        final total = allReviews.docs.fold<double>(
+          0.0,
+          (acc, doc) => acc + ((doc.data()['rating'] as num?)?.toDouble() ?? 5.0),
+        );
+        final avg = total / allReviews.docs.length;
+        await docRef.update({
+          'rating': double.parse(avg.toStringAsFixed(1)),
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Stream<List<DocumentReviewEntity>> watchDocumentReviews(String documentId) {
+    if (documentId.isEmpty) return Stream.value([]);
+
+    try {
+      return _docsRef
+          .doc(documentId)
+          .collection(FirebaseConstants.documentReviewsSubcollection)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        final reviews = snapshot.docs
+            .map((doc) => DocumentReviewModel.fromFirestore(doc))
+            .toList();
+        _inMemoryReviews[documentId] = reviews;
+        return reviews;
+      }).handleError((_) {
+        return _inMemoryReviews[documentId] ?? [];
+      });
+    } catch (_) {
+      return Stream.value(_inMemoryReviews[documentId] ?? []);
+    }
+  }
+
+  @override
+  Future<List<DocumentReviewEntity>> getDocumentReviews(String documentId) async {
+    if (documentId.isEmpty) return [];
+
+    try {
+      final snapshot = await _docsRef
+          .doc(documentId)
+          .collection(FirebaseConstants.documentReviewsSubcollection)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final reviews = snapshot.docs
+            .map((doc) => DocumentReviewModel.fromFirestore(doc))
+            .toList();
+        _inMemoryReviews[documentId] = reviews;
+        return reviews;
+      }
+    } catch (_) {}
+
+    return _inMemoryReviews[documentId] ?? [];
   }
 }

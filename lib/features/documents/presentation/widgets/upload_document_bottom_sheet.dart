@@ -320,37 +320,36 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _codeController,
-                    decoration: InputDecoration(
-                      labelText: l10n.course_code_label,
-                      hintText: l10n.course_code_hint,
-                      prefixIcon: const Icon(Icons.code_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedFaculty,
-                    decoration: InputDecoration(
-                      labelText: l10n.faculty_label,
-                      prefixIcon: const Icon(Icons.apartment_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    items: _faculties
-                        .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedFaculty = val);
-                    },
-                  ),
-                ),
-              ],
+            TextField(
+              controller: _codeController,
+              decoration: InputDecoration(
+                labelText: l10n.course_code_label,
+                hintText: l10n.course_code_hint,
+                prefixIcon: const Icon(Icons.code_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedFaculty,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: l10n.faculty_label,
+                prefixIcon: const Icon(Icons.apartment_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              items: _faculties
+                  .map((f) => DropdownMenuItem(
+                        value: f,
+                        child: Text(
+                          f,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ))
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedFaculty = val);
+              },
             ),
             const SizedBox(height: 18),
             ElevatedButton.icon(

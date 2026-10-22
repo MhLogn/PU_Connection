@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 class DocumentEntity extends Equatable {
   final String id;
@@ -14,6 +14,7 @@ class DocumentEntity extends Equatable {
   final int downloads;
   final double rating;
   final String? description;
+  final String? originPostId;
   final DateTime createdAt;
 
   const DocumentEntity({
@@ -30,6 +31,7 @@ class DocumentEntity extends Equatable {
     this.downloads = 0,
     this.rating = 5.0,
     this.description,
+    this.originPostId,
     required this.createdAt,
   });
 
@@ -47,6 +49,7 @@ class DocumentEntity extends Equatable {
     int? downloads,
     double? rating,
     String? description,
+    String? originPostId,
     DateTime? createdAt,
   }) {
     return DocumentEntity(
@@ -63,6 +66,7 @@ class DocumentEntity extends Equatable {
       downloads: downloads ?? this.downloads,
       rating: rating ?? this.rating,
       description: description ?? this.description,
+      originPostId: originPostId ?? this.originPostId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -82,6 +86,7 @@ class DocumentEntity extends Equatable {
         downloads,
         rating,
         description,
+        originPostId,
         createdAt,
       ];
 }

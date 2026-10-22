@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/document_entity.dart';
 import '../pages/pdf_viewer_page.dart';
+import 'document_review_sheet.dart';
 
 class DocumentCard extends StatelessWidget {
   final DocumentEntity document;
@@ -124,6 +128,31 @@ class DocumentCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
+                              if (document.originPostId != null && document.originPostId!.isNotEmpty) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.orangeContainer(context),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.dynamic_feed_rounded, size: 10, color: AppTheme.accentColor(context)),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        'Bảng tin',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.accentColor(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
                               Expanded(
                                 child: Text(
                                   '• ${document.faculty}',
@@ -164,12 +193,28 @@ class DocumentCard extends StatelessWidget {
                                   color: colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Icon(Icons.star_rounded, size: 14, color: AppTheme.amberColor(context)),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${document.rating}',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              const SizedBox(width: 6),
+                              InkWell(
+                                onTap: () => _openReviewSheet(context),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '${document.rating}',
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -276,6 +321,25 @@ class DocumentCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _openReviewSheet(BuildContext context) {
+    final authState = context.read<AuthCubit>().state;
+    String uid = '';
+    String name = 'Sinh viên Phenikaa';
+    String? avatar;
+    if (authState is Authenticated) {
+      uid = authState.user.uid;
+      name = authState.user.displayName;
+      avatar = authState.user.avatarUrl;
+    }
+    DocumentReviewSheet.show(
+      context,
+      document: document,
+      currentUserId: uid,
+      currentUserName: name,
+      currentUserAvatar: avatar,
     );
   }
 }

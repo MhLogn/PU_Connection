@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/document_entity.dart';
 
 class DocumentModel extends DocumentEntity {
@@ -16,6 +16,7 @@ class DocumentModel extends DocumentEntity {
     super.downloads,
     super.rating,
     super.description,
+    super.originPostId,
     required super.createdAt,
   });
 
@@ -34,6 +35,7 @@ class DocumentModel extends DocumentEntity {
       downloads: (map['downloads'] as num?)?.toInt() ?? 0,
       rating: (map['rating'] as num?)?.toDouble() ?? 5.0,
       description: map['description'] as String?,
+      originPostId: map['originPostId'] as String?,
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : (map['createdAt'] is String
@@ -61,6 +63,7 @@ class DocumentModel extends DocumentEntity {
       'downloads': downloads,
       'rating': rating,
       'description': description,
+      'originPostId': originPostId,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -81,6 +84,7 @@ class DocumentModel extends DocumentEntity {
       downloads: entity.downloads,
       rating: entity.rating,
       description: entity.description,
+      originPostId: entity.originPostId,
       createdAt: entity.createdAt,
     );
   }
