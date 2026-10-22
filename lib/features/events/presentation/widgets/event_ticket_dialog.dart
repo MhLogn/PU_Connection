@@ -76,33 +76,41 @@ class EventTicketDialog extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/logo/phenikaa_logo.png',
+                                width: 22,
+                                height: 22,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.school, color: AppTheme.oceanBlue, size: 18),
+                              ),
                             ),
-                            child: Image.asset(
-                              'assets/logo/phenikaa_logo.png',
-                              width: 22,
-                              height: 22,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.school, color: AppTheme.oceanBlue, size: 18),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              child: Text(
+                                'PHENIKAA UNIVERSITY',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'PHENIKAA UNIVERSITY',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(

@@ -69,7 +69,9 @@ class _EventsPageState extends State<EventsPage> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
-            Text(l10n.cancel_registration_confirm_title),
+            Expanded(
+              child: Text(l10n.cancel_registration_confirm_title),
+            ),
           ],
         ),
         content: Text(
@@ -121,13 +123,10 @@ class _EventsPageState extends State<EventsPage> {
   Color _getColor(BuildContext context, String type) {
     switch (type) {
       case 'orange':
+      case 'coral':
+      case 'violet':
         return AppTheme.accentColor(context);
       case 'mint':
-        return AppTheme.mintColor(context);
-      case 'violet':
-        return AppTheme.violetColor(context);
-      case 'coral':
-        return AppTheme.coralColor(context);
       case 'blue':
       default:
         return AppTheme.primaryColor(context);

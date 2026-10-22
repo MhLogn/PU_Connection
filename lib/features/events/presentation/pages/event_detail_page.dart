@@ -36,13 +36,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Color _getColor(String type) {
     switch (type) {
       case 'orange':
+      case 'coral':
+      case 'violet':
         return AppTheme.accentColor(context);
       case 'mint':
-        return AppTheme.mintColor(context);
-      case 'violet':
-        return AppTheme.violetColor(context);
-      case 'coral':
-        return AppTheme.coralColor(context);
       case 'blue':
       default:
         return AppTheme.primaryColor(context);
@@ -113,7 +110,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
-            Text(l10n.cancel_registration_confirm_title),
+            Expanded(
+              child: Text(l10n.cancel_registration_confirm_title),
+            ),
           ],
         ),
         content: Text(
@@ -470,7 +469,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         _buildInfoTile(
                           context,
                           icon: Icons.location_on_rounded,
-                          color: AppTheme.coralColor(context),
+                          color: AppTheme.accentColor(context),
                           title: 'Địa điểm tổ chức',
                           subtitle: _currentEvent.location,
                         ),
@@ -478,7 +477,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         _buildInfoTile(
                           context,
                           icon: Icons.stars_rounded,
-                          color: AppTheme.accentColor(context),
+                          color: AppTheme.primaryColor(context),
                           title: 'Quyền lợi sinh viên',
                           subtitle: 'Cộng điểm rèn luyện (ĐRL) & cấp giấy chứng nhận tham gia sự kiện',
                         ),

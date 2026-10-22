@@ -9,6 +9,9 @@ class EventRepository {
   EventRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
+  static bool enableSeedEvents = false;
+  static List<EventEntity> get seedEvents => enableSeedEvents ? defaultEvents : const <EventEntity>[];
+
   static final List<EventEntity> defaultEvents = [
     EventEntity(
       id: 'event_hackathon_2026',
@@ -108,7 +111,7 @@ class EventRepository {
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isEmpty) {
-        return defaultEvents;
+        return seedEvents;
       }
       return snapshot.docs.map((doc) {
         final data = doc.data();
@@ -129,7 +132,7 @@ class EventRepository {
           isOnline: data['isOnline'] as bool? ?? false,
         );
       }).toList();
-    }).handleError((_) => defaultEvents);
+    }).handleError((_) => seedEvents);
   }
 
   IconData _mapIcon(String? iconName) {
