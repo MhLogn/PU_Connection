@@ -21,12 +21,12 @@ class PhenikaaStudentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        studentId,
-        fullName,
-        email,
-        faculty,
-        major,
-        cohort,
-        isActivated,
-      ];
+    studentId,
+    fullName,
+    email,
+    faculty,
+    major,
+    cohort,
+    isActivated,
+  ];
 }

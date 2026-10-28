@@ -78,7 +78,9 @@ class UserModel extends UserEntity {
       'currentSubjects': currentSubjects,
       'friendsCount': friendsCount,
       'postsCount': postsCount,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'gpa': gpa,
       'creditsEarned': creditsEarned,

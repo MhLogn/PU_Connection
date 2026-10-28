@@ -47,7 +47,7 @@ class UserEntity extends Equatable {
     this.trainingPoints = 0,
   });
 
-  bool get isAdmin => userType.toLowerCase() == 'admin' || email.toLowerCase().startsWith('admin');
+  bool get isAdmin => userType.toLowerCase() == 'admin';
 
   UserEntity copyWith({
     String? uid,
@@ -99,26 +99,26 @@ class UserEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        uid,
-        email,
-        studentId,
-        displayName,
-        username,
-        avatarUrl,
-        coverUrl,
-        bio,
-        faculty,
-        major,
-        cohort,
-        userType,
-        isVerified,
-        isBanned,
-        currentSubjects,
-        friendsCount,
-        postsCount,
-        createdAt,
-        gpa,
-        creditsEarned,
-        trainingPoints,
-      ];
+    uid,
+    email,
+    studentId,
+    displayName,
+    username,
+    avatarUrl,
+    coverUrl,
+    bio,
+    faculty,
+    major,
+    cohort,
+    userType,
+    isVerified,
+    isBanned,
+    currentSubjects,
+    friendsCount,
+    postsCount,
+    createdAt,
+    gpa,
+    creditsEarned,
+    trainingPoints,
+  ];
 }

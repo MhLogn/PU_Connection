@@ -3,6 +3,33 @@ import '../models/phenikaa_student_model.dart';
 class PhenikaaStudentDirectory {
   static final List<PhenikaaStudentModel> defaultStudents = [
     const PhenikaaStudentModel(
+      studentId: '23010304',
+      fullName: 'Nguyễn Thành Long',
+      email: '23010304@st.phenikaa-uni.edu.vn',
+      faculty: 'Công nghệ thông tin',
+      major: 'Kỹ thuật phần mềm',
+      cohort: 17,
+      isActivated: false,
+    ),
+    const PhenikaaStudentModel(
+      studentId: '23010381',
+      fullName: 'Vũ Đức Minh',
+      email: '23010381@st.phenikaa-uni.edu.vn',
+      faculty: 'Công nghệ thông tin',
+      major: 'Kỹ thuật phần mềm',
+      cohort: 17,
+      isActivated: false,
+    ),
+    const PhenikaaStudentModel(
+      studentId: '23010389',
+      fullName: 'Trần Minh Hiếu',
+      email: '23010389@st.phenikaa-uni.edu.vn',
+      faculty: 'Công nghệ thông tin',
+      major: 'Kỹ thuật phần mềm',
+      cohort: 17,
+      isActivated: false,
+    ),
+    const PhenikaaStudentModel(
       studentId: '23010390',
       fullName: 'Hà Mạnh Long',
       email: '23010390@st.phenikaa-uni.edu.vn',

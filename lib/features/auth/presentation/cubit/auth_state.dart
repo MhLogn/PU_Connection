@@ -77,10 +77,7 @@ class EmailNotVerified extends AuthState {
   final String email;
   final String message;
 
-  const EmailNotVerified({
-    required this.email,
-    required this.message,
-  });
+  const EmailNotVerified({required this.email, required this.message});
 
   @override
   List<Object?> get props => [email, message];

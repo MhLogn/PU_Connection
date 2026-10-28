@@ -9,6 +9,8 @@ import '../../data/models/user_model.dart';
 import '../../domain/entities/user_entity.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
+import 'student_qr_code_page.dart';
+import 'student_qr_scanner_page.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../feed/data/models/post_model.dart';
@@ -47,7 +49,8 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
+class _UserProfilePageState extends State<UserProfilePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -60,9 +63,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       if (authState is Authenticated) {
         final currentUid = authState.user.uid;
         context.read<FriendshipCubit>().initRelationship(
-              currentUserId: currentUid,
-              targetUserId: widget.userId,
-            );
+          currentUserId: currentUid,
+          targetUserId: widget.userId,
+        );
         if (currentUid == widget.userId) {
           context.read<FriendshipCubit>().initReceivedRequests(currentUid);
         }
@@ -96,15 +99,15 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
     try {
       final convId = await context.read<ChatCubit>().startDirectChat(
-            currentUserId: currentUserId,
-            currentUserName: currentUserName,
-            currentUserAvatar: currentUserAvatar,
-            currentUserFaculty: currentUserFaculty,
-            otherUserId: widget.userId,
-            otherUserName: widget.userName,
-            otherUserFaculty: widget.faculty,
-            otherUserAvatar: widget.avatarUrl,
-          );
+        currentUserId: currentUserId,
+        currentUserName: currentUserName,
+        currentUserAvatar: currentUserAvatar,
+        currentUserFaculty: currentUserFaculty,
+        otherUserId: widget.userId,
+        otherUserName: widget.userName,
+        otherUserFaculty: widget.faculty,
+        otherUserAvatar: widget.avatarUrl,
+      );
 
       if (mounted) {
         Navigator.push(
@@ -155,7 +158,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Hủy lời mời kết bạn?'),
-            content: Text('Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến ${targetUser.displayName}?'),
+            content: Text(
+              'Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến ${targetUser.displayName}?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -190,12 +195,21 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 children: [
                   Text(
                     'Lời mời kết bạn từ ${targetUser.displayName}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ListTile(
-                    leading: const Icon(Icons.check_circle, color: Colors.green),
-                    title: const Text('Chấp nhận kết bạn', style: TextStyle(fontWeight: FontWeight.bold)),
+                    leading: const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                    ),
+                    title: const Text(
+                      'Chấp nhận kết bạn',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     onTap: () {
                       Navigator.pop(ctx);
                       cubit.acceptFriendRequest(
@@ -233,7 +247,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Hủy kết bạn?'),
-            content: Text('Bạn có chắc chắn muốn hủy kết bạn với ${targetUser.displayName}?'),
+            content: Text(
+              'Bạn có chắc chắn muốn hủy kết bạn với ${targetUser.displayName}?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -268,7 +284,8 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
     return BlocListener<FriendshipCubit, FriendshipState>(
       listener: (context, fState) {
-        if (fState.message != null && fState.actionStatus == FriendshipActionStatus.success) {
+        if (fState.message != null &&
+            fState.actionStatus == FriendshipActionStatus.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(fState.message!),
@@ -282,18 +299,24 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       child: StreamBuilder<DocumentSnapshot>(
         stream: widget.userId.isNotEmpty
             ? FirebaseFirestore.instance
-                .collection(FirebaseConstants.usersCollection)
-                .doc(widget.userId)
-                .snapshots()
+                  .collection(FirebaseConstants.usersCollection)
+                  .doc(widget.userId)
+                  .snapshots()
             : null,
         builder: (context, snapshot) {
           UserEntity user;
-          if (snapshot.hasData && snapshot.data!.exists && snapshot.data!.data() != null) {
+          if (snapshot.hasData &&
+              snapshot.data!.exists &&
+              snapshot.data!.data() != null) {
             user = UserModel.fromFirestore(snapshot.data!);
           } else {
-            String finalName = widget.userName.isNotEmpty ? widget.userName : 'Sinh viên Phenikaa';
+            String finalName = widget.userName.isNotEmpty
+                ? widget.userName
+                : 'Sinh viên Phenikaa';
             String finalStudentId = widget.studentId;
-            String finalFaculty = widget.faculty.isNotEmpty ? widget.faculty : 'Công nghệ thông tin';
+            String finalFaculty = widget.faculty.isNotEmpty
+                ? widget.faculty
+                : 'Công nghệ thông tin';
             String finalMajor = 'Kỹ thuật phần mềm';
             int finalCohort = 17;
 
@@ -330,7 +353,25 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             appBar: AppBar(
               title: Text(user.displayName),
               actions: [
-                if (isSelf)
+                if (isSelf) ...[
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_rounded),
+                    tooltip: 'Mã QR sinh viên của tôi',
+                    onPressed: () =>
+                        StudentQrCodePage.show(context, user: user),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_scanner_rounded),
+                    tooltip: 'Quét mã QR sinh viên',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const StudentQrScannerPage(),
+                        ),
+                      );
+                    },
+                  ),
                   BlocBuilder<FriendshipCubit, FriendshipState>(
                     builder: (context, fState) {
                       final reqCount = fState.receivedRequests.length;
@@ -351,20 +392,32 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                         ),
                       );
                     },
-                  )
-                else ...[
+                  ),
+                ] else ...[
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_rounded),
+                    tooltip: 'Mã QR sinh viên',
+                    onPressed: () =>
+                        StudentQrCodePage.show(context, user: user),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
                     tooltip: 'Chia sẻ hồ sơ',
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đã sao chép liên kết hồ sơ của ${user.displayName}!')),
+                        SnackBar(
+                          content: Text(
+                            'Đã sao chép liên kết hồ sơ của ${user.displayName}!',
+                          ),
+                        ),
                       );
                     },
                   ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert_rounded),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     onSelected: (value) {
                       if (value == 'report') {
                         ReportBottomSheet.show(
@@ -388,19 +441,21 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                                 child: const Text('Hủy'),
                               ),
                               FilledButton(
-                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.red.shade700,
+                                ),
                                 onPressed: () {
                                   Navigator.pop(ctx);
                                   context.read<ModerationCubit>().blockUser(
-                                        currentUserId: currentUid,
-                                        blockedUser: BlockedUserEntity(
-                                          userId: user.uid,
-                                          userName: user.displayName,
-                                          userAvatar: user.avatarUrl,
-                                          userFaculty: user.faculty,
-                                          blockedAt: DateTime.now(),
-                                        ),
-                                      );
+                                    currentUserId: currentUid,
+                                    blockedUser: BlockedUserEntity(
+                                      userId: user.uid,
+                                      userName: user.displayName,
+                                      userAvatar: user.avatarUrl,
+                                      userFaculty: user.faculty,
+                                      blockedAt: DateTime.now(),
+                                    ),
+                                  );
                                   Navigator.pop(context);
                                 },
                                 child: const Text('Chặn'),
@@ -415,7 +470,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                         value: 'report',
                         child: Row(
                           children: [
-                            Icon(Icons.report_problem_outlined, color: Colors.orange, size: 20),
+                            Icon(
+                              Icons.report_problem_outlined,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
                             SizedBox(width: 10),
                             Text('Báo cáo người dùng'),
                           ],
@@ -425,9 +484,16 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                         value: 'block',
                         child: Row(
                           children: [
-                            Icon(Icons.block_rounded, color: Colors.red, size: 20),
+                            Icon(
+                              Icons.block_rounded,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                             SizedBox(width: 10),
-                            Text('Chặn người dùng này', style: TextStyle(color: Colors.red)),
+                            Text(
+                              'Chặn người dùng này',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
@@ -466,14 +532,28 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                     TabBar(
                       controller: _tabController,
                       labelColor: AppTheme.primaryColor(context),
-                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                      unselectedLabelColor: colorScheme.onSurface.withValues(
+                        alpha: 0.6,
+                      ),
                       indicatorColor: AppTheme.primaryColor(context),
                       indicatorWeight: 3,
                       tabs: const [
-                        Tab(icon: Icon(Icons.article_outlined), text: 'Bài viết'),
-                        Tab(icon: Icon(Icons.people_alt_outlined), text: 'Bạn bè'),
-                        Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tài liệu'),
-                        Tab(icon: Icon(Icons.info_outline_rounded), text: 'Thông tin'),
+                        Tab(
+                          icon: Icon(Icons.article_outlined),
+                          text: 'Bài viết',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.people_alt_outlined),
+                          text: 'Bạn bè',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.menu_book_outlined),
+                          text: 'Tài liệu',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.info_outline_rounded),
+                          text: 'Thông tin',
+                        ),
                       ],
                     ),
                     colorScheme.surface,
@@ -545,12 +625,21 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   child: ElevatedButton.icon(
                     onPressed: _startChat,
                     icon: const Icon(Icons.chat_bubble_rounded, size: 17),
-                    label: const Text('Nhắn tin', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    label: const Text(
+                      'Nhắn tin',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor(context),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
                     ),
                   ),
                 ),
@@ -566,7 +655,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       currentUser: currentUser,
                       targetUser: targetUser,
                     ),
-                    icon: Icon(friendButtonIcon, size: 17, color: friendButtonColor),
+                    icon: Icon(
+                      friendButtonIcon,
+                      size: 17,
+                      color: friendButtonColor,
+                    ),
                     label: Text(
                       friendButtonText,
                       style: TextStyle(
@@ -578,9 +671,14 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       overflow: TextOverflow.ellipsis,
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: friendButtonColor.withValues(alpha: 0.6), width: 1.5),
+                      side: BorderSide(
+                        color: friendButtonColor.withValues(alpha: 0.6),
+                        width: 1.0,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -590,31 +688,43 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 InkWell(
                   onTap: () {
                     context.read<FriendshipCubit>().toggleFollow(
-                          currentUserId: currentUser.uid,
-                          targetUserId: targetUser.uid,
-                        );
+                      currentUserId: currentUser.uid,
+                      targetUserId: targetUser.uid,
+                    );
                   },
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isFollowing
-                          ? AppTheme.accentColor(context).withValues(alpha: 0.15)
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(14),
+                          ? AppTheme.accentColor(
+                              context,
+                            ).withValues(alpha: 0.15)
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: isFollowing
                             ? AppTheme.accentColor(context)
                             : Theme.of(context).colorScheme.outlineVariant,
+                        width: 0.8,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isFollowing ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                          isFollowing
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_none_rounded,
                           size: 18,
-                          color: isFollowing ? AppTheme.accentColor(context) : null,
+                          color: isFollowing
+                              ? AppTheme.accentColor(context)
+                              : null,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -622,7 +732,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isFollowing ? AppTheme.accentColor(context) : null,
+                            color: isFollowing
+                                ? AppTheme.accentColor(context)
+                                : null,
                           ),
                         ),
                       ],
@@ -639,22 +751,24 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
   Widget _buildDigitalCard(BuildContext context, UserEntity user) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0369A1), Color(0xFF0284C7), Color(0xFF0C4A6E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: isDark ? const Color(0xFF1E293B) : AppTheme.deepBlue,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+          width: 0.8,
         ),
-        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.isDark(context)
+            color: isDark
                 ? Colors.black54
-                : const Color(0xFF0284C7).withValues(alpha: 0.35),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+                : AppTheme.deepBlue.withValues(alpha: 0.2),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -670,7 +784,8 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                     'assets/logo/phenikaa_logo.png',
                     width: 28,
                     height: 28,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Colors.white, size: 24),
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.school, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -684,16 +799,44 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'SINH VIÊN',
-                  style: TextStyle(color: Color(0xFFFFB088), fontSize: 10, fontWeight: FontWeight.bold),
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'SINH VIÊN',
+                      style: TextStyle(
+                        color: Color(0xFFFFB088),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => StudentQrCodePage.show(context, user: user),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -706,8 +849,14 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                 backgroundImage: AppTheme.imageProvider(user.avatarUrl),
                 child: user.avatarUrl.isEmpty
                     ? Text(
-                        user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                        user.displayName.isNotEmpty
+                            ? user.displayName[0].toUpperCase()
+                            : 'P',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       )
                     : null,
               ),
@@ -718,16 +867,26 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   children: [
                     Text(
                       user.displayName,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'MSSV: ${user.studentId.isNotEmpty ? user.studentId : '23010390'} • K${user.cohort != 0 ? user.cohort : 17}',
-                      style: const TextStyle(fontSize: 12.5, color: Colors.white70),
+                      'MSSV: ${user.studentId.isNotEmpty ? user.studentId : '--'}${user.cohort != 0 ? ' • K${user.cohort}' : ''}',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.white70,
+                      ),
                     ),
                     Text(
-                      'Khoa: ${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      'Khoa: ${user.faculty.isNotEmpty ? user.faculty : 'Chưa cập nhật'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
@@ -744,7 +903,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               ),
               child: Text(
                 '💬 "${user.bio}"',
-                style: const TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -759,7 +922,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     return BlocBuilder<FriendshipCubit, FriendshipState>(
       builder: (context, fState) {
         final rel = fState.relationship;
-        final friendsCount = rel.friendsCount > 0 ? rel.friendsCount : user.friendsCount;
+        final friendsCount = rel.friendsCount > 0
+            ? rel.friendsCount
+            : user.friendsCount;
         final followersCount = rel.followersCount;
         final followingCount = rel.followingCount;
 
@@ -823,17 +988,25 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Column(
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
           const SizedBox(height: 2),
           Text(
             title,
-            style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+            style: TextStyle(
+              fontSize: 10,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -842,7 +1015,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     );
   }
 
-  Widget _buildPostsTab(BuildContext context, UserEntity user, String currentUid) {
+  Widget _buildPostsTab(
+    BuildContext context,
+    UserEntity user,
+    String currentUid,
+  ) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(FirebaseConstants.postsCollection)
@@ -854,29 +1031,66 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
         }
 
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) {
+        final posts = docs.map((doc) => PostModel.fromFirestore(doc)).where((
+          p,
+        ) {
+          final contentLower = p.content.toLowerCase().trim();
+          final isSeed =
+              p.authorId == 'phenikaa_admin' ||
+              p.authorId == 'student_2' ||
+              p.authorId == 'phenikaa_union' ||
+              p.authorId == 'pu_admin' ||
+              p.authorId == 'pu_anonymous' ||
+              p.authorStudentId == 'DOAN-PU' ||
+              p.authorStudentId == '23020015' ||
+              (contentLower.contains('chào các bạn sinh viên phenikaa!') &&
+                  contentLower.contains('cấu trúc dữ liệu')) ||
+              (contentLower.contains('khoa ô tô') &&
+                  contentLower.contains('matlab & simulink')) ||
+              contentLower.contains('phenikaa innovation 2026') ||
+              contentLower.startsWith('bài viết mẫu') ||
+              contentLower.startsWith('test post');
+          if (isSeed && p.postId.isNotEmpty) {
+            FirebaseFirestore.instance
+                .collection(FirebaseConstants.postsCollection)
+                .doc(p.postId)
+                .delete()
+                .catchError((_) {});
+            return false;
+          }
+          return true;
+        }).toList();
+
+        if (posts.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.article_outlined, size: 54, color: Theme.of(context).colorScheme.outlineVariant),
+                Icon(
+                  Icons.article_outlined,
+                  size: 54,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   AppLocalizations.of(context)!.no_posts_empty,
-                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ],
             ),
           );
         }
 
-        final posts = docs.map((doc) => PostModel.fromFirestore(doc)).toList();
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: posts.length,
           itemBuilder: (context, index) {
             final post = posts[index];
-            final isOwner = currentUid.isNotEmpty && (post.authorId == currentUid || user.uid == currentUid);
+            final isOwner =
+                currentUid.isNotEmpty &&
+                (post.authorId == currentUid || user.uid == currentUid);
             return PostCard(
               post: post,
               currentUserId: currentUid,
@@ -914,7 +1128,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(AppLocalizations.of(context)!.delete_post_success),
+                              content: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.delete_post_success,
+                              ),
                               backgroundColor: AppTheme.primaryColor(context),
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -952,7 +1170,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline_rounded, size: 54, color: colorScheme.outlineVariant),
+                Icon(
+                  Icons.people_outline_rounded,
+                  size: 54,
+                  color: colorScheme.outlineVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Chưa có bạn bè nào',
@@ -970,7 +1192,8 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           itemBuilder: (context, index) {
             final friend = friends[index];
             final fId = friend['userId'] as String? ?? '';
-            final fName = friend['displayName'] as String? ?? 'Sinh viên Phenikaa';
+            final fName =
+                friend['displayName'] as String? ?? 'Sinh viên Phenikaa';
             final fAvatar = friend['avatarUrl'] as String? ?? '';
             final fFaculty = friend['faculty'] as String? ?? '';
 
@@ -979,7 +1202,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               decoration: BoxDecoration(
                 color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                ),
               ),
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -990,14 +1215,26 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   child: fAvatar.isEmpty
                       ? Text(
                           fName.isNotEmpty ? fName[0].toUpperCase() : '?',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         )
                       : null,
                 ),
-                title: Text(fName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                title: Text(
+                  fName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 subtitle: Text(
                   fFaculty.isNotEmpty ? fFaculty : 'Đại học Phenikaa',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
@@ -1038,18 +1275,26 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.menu_book_outlined, size: 54, color: Theme.of(context).colorScheme.outlineVariant),
+                Icon(
+                  Icons.menu_book_outlined,
+                  size: 54,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   AppLocalizations.of(context)!.no_docs_found,
-                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ],
             ),
           );
         }
 
-        final documents = docs.map((doc) => DocumentModel.fromFirestore(doc)).toList();
+        final documents = docs
+            .map((doc) => DocumentModel.fromFirestore(doc))
+            .toList();
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: documents.length,
@@ -1061,7 +1306,9 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               onDownload: () {
                 final l10n = AppLocalizations.of(context)!;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${l10n.downloading} ${document.title}')),
+                  SnackBar(
+                    content: Text('${l10n.downloading} ${document.title}'),
+                  ),
                 );
               },
             );
@@ -1081,30 +1328,59 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           decoration: BoxDecoration(
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Thông tin học tập', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'Thông tin học tập',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 12),
-              _buildInfoTile(Icons.badge_outlined, 'Mã số sinh viên', user.studentId.isNotEmpty ? user.studentId : '23010390'),
-              _buildInfoTile(Icons.school_outlined, 'Khoa / Viện', user.faculty.isNotEmpty ? user.faculty : 'Khoa Công nghệ thông tin'),
-              _buildInfoTile(Icons.book_outlined, 'Chuyên ngành', user.major.isNotEmpty ? user.major : 'Kỹ thuật phần mềm'),
-              _buildInfoTile(Icons.calendar_today_outlined, 'Khóa đào tạo', 'K${user.cohort != 0 ? user.cohort : 17} (2023 - 2027)'),
+              _buildInfoTile(
+                Icons.badge_outlined,
+                'Mã số sinh viên',
+                user.studentId.isNotEmpty ? user.studentId : '--',
+              ),
+              _buildInfoTile(
+                Icons.school_outlined,
+                'Khoa / Viện',
+                user.faculty.isNotEmpty
+                    ? user.faculty
+                    : 'Chưa cập nhật',
+              ),
+              _buildInfoTile(
+                Icons.book_outlined,
+                'Chuyên ngành',
+                user.major.isNotEmpty ? user.major : 'Chưa cập nhật',
+              ),
+              _buildInfoTile(
+                Icons.calendar_today_outlined,
+                'Khóa đào tạo',
+                'K${user.cohort != 0 ? user.cohort : 17} (2023 - 2027)',
+              ),
               _buildInfoTile(Icons.email_outlined, 'Email liên hệ', user.email),
               if (user.currentSubjects.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Divider(height: 1),
                 const SizedBox(height: 14),
-                const Text('Môn học đang theo học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  'Môn học đang theo học',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: user.currentSubjects.map((sub) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.blueContainer(context),
                         borderRadius: BorderRadius.circular(10),
@@ -1140,9 +1416,18 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                ),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1164,11 +1449,12 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: backgroundColor,
-      child: tabBar,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: backgroundColor, child: tabBar);
   }
 
   @override

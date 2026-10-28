@@ -43,9 +43,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
 
     try {
       await context.read<AuthCubit>().changePassword(
-            currentPassword: _currentPasswordController.text,
-            newPassword: _newPasswordController.text,
-          );
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
 
       if (mounted) {
         Navigator.pop(context);
@@ -82,7 +82,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         children: [
           Icon(Icons.lock_reset_rounded, color: AppTheme.primaryColor(context)),
           const SizedBox(width: 8),
-          const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text(
+            'Đổi mật khẩu',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
         ],
       ),
       content: SingleChildScrollView(
@@ -93,7 +96,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             children: [
               Text(
                 'Để đảm bảo an toàn, vui lòng nhập mật khẩu hiện tại và tạo mật khẩu mới.',
-                style: TextStyle(fontSize: 12.5, color: colorScheme.onSurface.withValues(alpha: 0.65)),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: colorScheme.onSurface.withValues(alpha: 0.65),
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -103,10 +109,16 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   labelText: 'Mật khẩu hiện tại',
                   prefixIcon: const Icon(Icons.password_rounded, size: 20),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
-                    onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                    icon: Icon(
+                      _obscureCurrent ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureCurrent = !_obscureCurrent),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -123,10 +135,15 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   labelText: 'Mật khẩu mới',
                   prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
+                    icon: Icon(
+                      _obscureNew ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
                     onPressed: () => setState(() => _obscureNew = !_obscureNew),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -144,12 +161,21 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 obscureText: _obscureConfirm,
                 decoration: InputDecoration(
                   labelText: 'Xác nhận mật khẩu mới',
-                  prefixIcon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 20),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  prefixIcon: const Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 20,
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -174,13 +200,18 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           onPressed: _isLoading ? null : _submit,
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.primaryColor(context),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: _isLoading
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Text('Cập nhật'),
         ),

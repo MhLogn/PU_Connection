@@ -12,8 +12,8 @@ class AuthCubit extends Cubit<AuthState> {
   StreamSubscription? _authSubscription;
 
   AuthCubit({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(AuthInitial()) {
+    : _authRepository = authRepository,
+      super(AuthInitial()) {
     _initAuthListener();
   }
 
@@ -34,10 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     emit(AuthLoading());
     try {
       final user = await _authRepository.signInWithEmailAndPassword(
@@ -75,12 +72,16 @@ class AuthCubit extends Cubit<AuthState> {
       final errorMsg = e.toString().replaceAll('Exception: ', '');
       if (errorMsg.contains('ALREADY_ACTIVATED:')) {
         final cleanMsg = errorMsg.replaceAll('ALREADY_ACTIVATED:', '').trim();
-        final cleanId = identifier.contains('@') ? identifier.split('@').first : identifier;
-        emit(StudentAlreadyActivated(
-          studentId: cleanId,
-          email: identifier,
-          message: cleanMsg,
-        ));
+        final cleanId = identifier.contains('@')
+            ? identifier.split('@').first
+            : identifier;
+        emit(
+          StudentAlreadyActivated(
+            studentId: cleanId,
+            email: identifier,
+            message: cleanMsg,
+          ),
+        );
       } else {
         emit(AuthError(errorMsg));
       }
@@ -97,10 +98,9 @@ class AuthCubit extends Cubit<AuthState> {
         student: student,
         password: password,
       );
-      emit(ActivationVerificationEmailSent(
-        student: student,
-        email: student.email,
-      ));
+      emit(
+        ActivationVerificationEmailSent(student: student, email: student.email),
+      );
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }
@@ -160,7 +160,9 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
-    final currentUser = state is Authenticated ? (state as Authenticated).user : null;
+    final currentUser = state is Authenticated
+        ? (state as Authenticated).user
+        : null;
     if (currentUser != null && sl.isRegistered<NotificationService>()) {
       try {
         await sl<NotificationService>()

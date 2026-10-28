@@ -16,7 +16,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   final _signInFormKey = GlobalKey<FormState>();
@@ -82,17 +83,17 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     });
     if (_signInFormKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().signIn(
-            email: _signInEmailController.text.trim(),
-            password: _signInPasswordController.text,
-          );
+        email: _signInEmailController.text.trim(),
+        password: _signInPasswordController.text,
+      );
     }
   }
 
   void _onVerifyStudentSubmitted() {
     if (_activationFormKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().verifyStudent(
-            _activationIdentifierController.text.trim(),
-          );
+        _activationIdentifierController.text.trim(),
+      );
     }
   }
 
@@ -100,9 +101,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     if (_passwordFormKey.currentState?.validate() ?? false) {
       if (_currentStudent != null) {
         context.read<AuthCubit>().registerAndSendVerificationLink(
-              student: _currentStudent!,
-              password: _newPasswordController.text,
-            );
+          student: _currentStudent!,
+          password: _newPasswordController.text,
+        );
       }
     }
   }
@@ -117,7 +118,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   void _showForgotPasswordDialog() {
-    final resetEmailController = TextEditingController(text: _signInEmailController.text.trim());
+    final resetEmailController = TextEditingController(
+      text: _signInEmailController.text.trim(),
+    );
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -175,9 +178,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        actions: [
-          _buildLanguageToggleButton(context),
-        ],
+        actions: [_buildLanguageToggleButton(context)],
       ),
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -211,7 +212,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               SnackBar(
                 content: Text(
                   state.message,
-                  style: TextStyle(color: AppTheme.isDark(context) ? Colors.black87 : Colors.white),
+                  style: TextStyle(
+                    color: AppTheme.isDark(context)
+                        ? Colors.black87
+                        : Colors.white,
+                  ),
                 ),
                 backgroundColor: AppTheme.primaryColor(context),
                 duration: const Duration(seconds: 4),
@@ -243,7 +248,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               SnackBar(
                 content: Text(
                   'Đã gửi lại link xác thực Firebase tới ${state.email}.',
-                  style: TextStyle(color: AppTheme.isDark(context) ? Colors.black87 : Colors.white),
+                  style: TextStyle(
+                    color: AppTheme.isDark(context)
+                        ? Colors.black87
+                        : Colors.white,
+                  ),
                 ),
                 backgroundColor: AppTheme.primaryColor(context),
                 behavior: SnackBarBehavior.floating,
@@ -262,11 +271,17 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             SharedPreferences.getInstance().then((prefs) {
               prefs.setBool('has_seen_intro', true);
             });
-            context.go('/home');
+            if (state.user.isAdmin) {
+              context.go('/admin');
+            } else {
+              context.go('/home');
+            }
           } else if (state is PasswordResetSent) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Đã gửi liên kết đặt lại mật khẩu tới ${state.email}.'),
+                content: Text(
+                  'Đã gửi liên kết đặt lại mật khẩu tới ${state.email}.',
+                ),
                 backgroundColor: Colors.blueAccent,
                 behavior: SnackBarBehavior.floating,
               ),
@@ -275,12 +290,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
+          final isDark = AppTheme.isDark(context);
           final l10n = AppLocalizations.of(context)!;
 
           return SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),
                   child: Column(
@@ -294,11 +313,19 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               decoration: BoxDecoration(
                                 color: colorScheme.surface,
                                 shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.isDark(context)
+                                      ? Colors.white12
+                                      : AppTheme.borderLight,
+                                  width: 1,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppTheme.primaryColor(context).withValues(alpha: 0.15),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 6),
+                                    color: AppTheme.isDark(context)
+                                        ? Colors.black26
+                                        : const Color(0x0C123B63),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -315,21 +342,31 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                             ),
                             const SizedBox(height: 14),
-                            Text(
-                              'PU Connection',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: AppTheme.primaryColor(context),
-                                letterSpacing: 0.5,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'PU Connection',
+                                  style: TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.isDark(context)
+                                        ? Colors.white
+                                        : AppTheme.deepBlue,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Mạng xã hội sinh viên Trường Đại học Phenikaa',
+                              'Mạng xã hội sinh viên Đại học Phenikaa',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ],
@@ -338,10 +375,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       const SizedBox(height: 24),
                       Container(
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                          borderRadius: BorderRadius.circular(14),
+                          color: isDark
+                              ? colorScheme.surfaceContainerHighest
+                              : AppTheme.borderSubtle,
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                            color: isDark
+                                ? Colors.white12
+                                : AppTheme.borderLight,
+                            width: 0.8,
                           ),
                         ),
                         padding: const EdgeInsets.all(4),
@@ -350,18 +392,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           indicatorSize: TabBarIndicatorSize.tab,
                           indicator: BoxDecoration(
                             color: AppTheme.primaryColor(context),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          labelColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-                          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.65),
-                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: colorScheme.onSurface
+                              .withValues(alpha: 0.65),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                           tabs: [
                             Tab(text: l10n.login_tab),
                             Tab(text: l10n.activate_tab),
@@ -374,7 +413,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         builder: (context, _) {
                           return _tabController.index == 0
                               ? _buildSignInTab(isLoading, colorScheme, l10n)
-                              : _buildActivationTab(isLoading, colorScheme, l10n);
+                              : _buildActivationTab(
+                                  isLoading,
+                                  colorScheme,
+                                  l10n,
+                                );
                         },
                       ),
                     ],
@@ -388,7 +431,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildSignInTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildSignInTab(
+    bool isLoading,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     return Form(
       key: _signInFormKey,
       child: Column(
@@ -403,7 +450,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               hintText: l10n.student_email_hint,
               prefixIcon: const Icon(Icons.badge_outlined),
               errorText: _signInEmailError,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -422,10 +471,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               prefixIcon: const Icon(Icons.lock_outline),
               errorText: _signInPasswordError,
               suffixIcon: IconButton(
-                icon: Icon(_signInObscurePassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _signInObscurePassword = !_signInObscurePassword),
+                icon: Icon(
+                  _signInObscurePassword
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                ),
+                onPressed: () => setState(
+                  () => _signInObscurePassword = !_signInObscurePassword,
+                ),
               ),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -446,23 +503,38 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             onPressed: isLoading ? null : _onSignInSubmitted,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor(context),
-              foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 2,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
             ),
             child: isLoading
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : Text(l10n.sign_in_btn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                : Text(
+                    l10n.sign_in_btn,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+              Expanded(
+                child: Divider(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
@@ -474,17 +546,28 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+              Expanded(
+                child: Divider(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
           OutlinedButton(
-            onPressed: isLoading ? null : () => context.read<AuthCubit>().signInWithGoogle(),
+            onPressed: isLoading
+                ? null
+                : () => context.read<AuthCubit>().signInWithGoogle(),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryColor(context),
-              side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.35), width: 1.2),
+              side: BorderSide(
+                color: AppTheme.primaryColor(context).withValues(alpha: 0.35),
+                width: 1.2,
+              ),
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -493,13 +576,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   'assets/logo/phenikaa_logo.png',
                   width: 22,
                   height: 22,
-                  errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 22),
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.school,
+                    color: AppTheme.primaryColor(context),
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
                     l10n.google_sign_in_btn,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -510,7 +600,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           Center(
             child: Text(
               l10n.google_sign_in_sub,
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ),
         ],
@@ -518,7 +611,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildActivationTab(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildActivationTab(
+    bool isLoading,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     switch (_activationStep) {
       case 2:
         return _buildCheckInfoAndSetPasswordStep(isLoading, colorScheme, l10n);
@@ -530,7 +627,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
   }
 
-  Widget _buildEnterIdentifierStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildEnterIdentifierStep(
+    bool isLoading,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     return Form(
       key: _activationFormKey,
       child: Column(
@@ -542,12 +643,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             decoration: BoxDecoration(
               color: AppTheme.blueContainer(context),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.primaryColor(context).withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor(context), size: 22),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: AppTheme.primaryColor(context),
+                  size: 22,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -570,7 +677,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               labelText: l10n.student_email_label,
               hintText: l10n.student_email_hint,
               prefixIcon: const Icon(Icons.badge_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             validator: (val) {
               if (val == null || val.trim().isEmpty) {
@@ -585,22 +694,37 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.accentColor(context),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 2,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
             ),
             child: isLoading
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : Text(l10n.verify_student_btn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                : Text(
+                    l10n.verify_student_btn,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+              Expanded(
+                child: Divider(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
@@ -612,17 +736,28 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+              Expanded(
+                child: Divider(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
           OutlinedButton(
-            onPressed: isLoading ? null : () => context.read<AuthCubit>().signInWithGoogle(),
+            onPressed: isLoading
+                ? null
+                : () => context.read<AuthCubit>().signInWithGoogle(),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryColor(context),
-              side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.35), width: 1.2),
+              side: BorderSide(
+                color: AppTheme.primaryColor(context).withValues(alpha: 0.35),
+                width: 1.0,
+              ),
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -631,13 +766,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   'assets/logo/phenikaa_logo.png',
                   width: 22,
                   height: 22,
-                  errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 22),
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.school,
+                    color: AppTheme.primaryColor(context),
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
                     l10n.google_sign_in_btn,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -647,8 +789,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           const SizedBox(height: 12),
           Center(
             child: Text(
-              'Gợi ý mã SV demo: 23010390, 23010111, 23020015',
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              'Gợi ý mã SV: 23010304, 23010381, 23010389, 23010390',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ),
         ],
@@ -656,7 +801,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildCheckInfoAndSetPasswordStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildCheckInfoAndSetPasswordStep(
+    bool isLoading,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     final student = _currentStudent;
     if (student == null) return const SizedBox.shrink();
 
@@ -668,15 +817,19 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0369A1), Color(0xFF0284C7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: AppTheme.isDark(context)
+                  ? const Color(0xFF1E293B)
+                  : AppTheme.deepBlue,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.16),
+                width: 0.8,
               ),
-              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.isDark(context) ? Colors.black38 : AppTheme.navyBlue.withValues(alpha: 0.25),
+                  color: AppTheme.isDark(context)
+                      ? Colors.black38
+                      : AppTheme.deepBlue.withValues(alpha: 0.18),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -690,7 +843,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.verified_rounded, color: AppTheme.orangeAccent, size: 18),
+                        Icon(
+                          Icons.verified_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'PHENIKAA UNIVERSITY',
@@ -704,14 +861,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         l10n.student_verified_badge.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -743,7 +907,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
                 Text(
                   'Email: ${student.email}',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFFFFB088)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFFFB088),
+                  ),
                 ),
               ],
             ),
@@ -756,12 +923,19 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               labelText: l10n.new_password_label,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_obscureNewPassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                icon: Icon(
+                  _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () =>
+                    setState(() => _obscureNewPassword = !_obscureNewPassword),
               ),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            validator: (val) => (val == null || val.length < 6) ? l10n.password_length_err : null,
+            validator: (val) => (val == null || val.length < 6)
+                ? l10n.password_length_err
+                : null,
           ),
           if (_newPasswordController.text.length >= 6) ...[
             const SizedBox(height: 6),
@@ -769,7 +943,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     l10n.valid_password,
@@ -790,7 +968,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             decoration: InputDecoration(
               labelText: l10n.confirm_password_label,
               prefixIcon: const Icon(Icons.lock_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             validator: (val) {
               if (val != _newPasswordController.text) {
@@ -805,9 +985,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 children: [
-                  if (_confirmPasswordController.text == _newPasswordController.text &&
+                  if (_confirmPasswordController.text ==
+                          _newPasswordController.text &&
                       _newPasswordController.text.length >= 6) ...[
-                    const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Color(0xFF16A34A),
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       l10n.valid_password,
@@ -818,7 +1003,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                     ),
                   ] else ...[
-                    const Icon(Icons.cancel_rounded, color: Colors.redAccent, size: 16),
+                    const Icon(
+                      Icons.cancel_rounded,
+                      color: Colors.redAccent,
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
                     const Text(
                       'Mật khẩu không khớp',
@@ -835,23 +1024,33 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ],
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: isLoading ? null : _onRegisterWithVerificationLinkSubmitted,
+            onPressed: isLoading
+                ? null
+                : _onRegisterWithVerificationLinkSubmitted,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.accentColor(context),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 2,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
             ),
             child: isLoading
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : Text(
                     l10n.send_activation_link_btn,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
           const SizedBox(height: 10),
@@ -864,7 +1063,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildEmailVerificationSentStep(bool isLoading, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildEmailVerificationSentStep(
+    bool isLoading,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     final student = _currentStudent;
     final email = student?.email ?? '';
 
@@ -879,7 +1082,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             decoration: BoxDecoration(
               color: AppTheme.orangeContainer(context),
               shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.accentColor(context).withValues(alpha: 0.3), width: 2),
+              border: Border.all(
+                color: AppTheme.accentColor(context).withValues(alpha: 0.3),
+                width: 2,
+              ),
             ),
             child: Icon(
               Icons.mark_email_read_outlined,
@@ -904,26 +1110,57 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           decoration: BoxDecoration(
             color: AppTheme.blueContainer(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppTheme.primaryColor(context).withValues(alpha: 0.2)),
+            border: Border.all(
+              color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Firebase: $email',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor(context),
-                ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.school_rounded,
+                    size: 18,
+                    color: AppTheme.primaryColor(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      student != null
+                          ? '${student.fullName} (MSSV: ${student.studentId})'
+                          : (email.isNotEmpty ? email : 'Tài khoản sinh viên Phenikaa'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor(context),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
+              if (email.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Email liên kết: $email',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               const Divider(height: 1),
               const SizedBox(height: 8),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.touch_app_outlined, color: AppTheme.accentColor(context), size: 20),
+                  Icon(
+                    Icons.touch_app_outlined,
+                    color: AppTheme.accentColor(context),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -952,13 +1189,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           icon: const Icon(Icons.login, color: Colors.white),
           label: Text(
             l10n.recheck_verified_btn,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryColor(context),
-            foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
+            foregroundColor: AppTheme.isDark(context)
+                ? Colors.black87
+                : Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -968,16 +1213,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               : () {
                   if (student != null) {
                     context.read<AuthCubit>().resendVerificationLink(
-                          email: student.email,
-                          password: _newPasswordController.text,
-                        );
+                      email: student.email,
+                      password: _newPasswordController.text,
+                    );
                   }
                 },
           icon: const Icon(Icons.refresh, size: 18),
           label: Text(l10n.retry),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 13),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -1000,16 +1247,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () {
-                final nextLocale = isVi ? const Locale('en') : const Locale('vi');
+                final nextLocale = isVi
+                    ? const Locale('en')
+                    : const Locale('vi');
                 context.read<LocaleCubit>().setLocale(nextLocale);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.blueContainer(context),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.25),
                     width: 1,
                   ),
                 ),
@@ -1040,4 +1294,3 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 }
-
