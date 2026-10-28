@@ -50,3 +50,7 @@ android/.gradle/
 serviceAccountKey.json
 scripts/serviceAccountKey.json
 node_modules/
+
+# Internal documentation and offline scripts
+docs/
+scripts/
