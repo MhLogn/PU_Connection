@@ -25,6 +25,8 @@ import '../../../onboarding/presentation/widgets/notification_permission_sheet.d
 import '../../../clubs/presentation/cubit/club_cubit.dart';
 import '../../../clubs/presentation/cubit/club_state.dart';
 import '../../../clubs/presentation/pages/club_detail_page.dart';
+import '../../../clubs/presentation/pages/create_club_page.dart';
+import '../../../clubs/domain/entities/club_creation_request_entity.dart';
 import '../../../auth/presentation/pages/edit_profile_page.dart';
 import '../../../auth/presentation/pages/change_password_dialog.dart';
 import '../../../moderation/presentation/cubit/moderation_cubit.dart';
@@ -37,9 +39,8 @@ import '../../../saved_posts/presentation/cubit/saved_posts_cubit.dart';
 import '../../../saved_posts/presentation/cubit/saved_posts_state.dart';
 import '../../../saved_posts/presentation/pages/saved_posts_page.dart';
 import '../../../study_groups/presentation/pages/study_groups_page.dart';
-import '../../../admin/presentation/pages/admin_portal_page.dart';
-import '../../../auth/presentation/pages/user_profile_page.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import '../../../auth/presentation/pages/student_qr_code_page.dart';
+import '../../../auth/presentation/pages/student_qr_scanner_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -52,7 +53,8 @@ class MainNavigationPage extends StatefulWidget {
   State<MainNavigationPage> createState() => MainNavigationPageState();
 }
 
-class MainNavigationPageState extends State<MainNavigationPage> with WidgetsBindingObserver {
+class MainNavigationPageState extends State<MainNavigationPage>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
   final Set<int> _loadedTabs = {0};
 
@@ -73,9 +75,10 @@ class MainNavigationPageState extends State<MainNavigationPage> with WidgetsBind
             .collection(FirebaseConstants.usersCollection)
             .doc(authState.user.uid)
             .update({
-          'isOnline': isOnline,
-          'lastActive': FieldValue.serverTimestamp(),
-        }).catchError((_) {});
+              'isOnline': isOnline,
+              'lastActive': FieldValue.serverTimestamp(),
+            })
+            .catchError((_) {});
       }
     } catch (_) {}
   }
@@ -132,9 +135,15 @@ class MainNavigationPageState extends State<MainNavigationPage> with WidgetsBind
               child: const DocsHubPage(),
             )
           : const SizedBox.shrink(),
-      _loadedTabs.contains(2) ? const _PuBotChatView() : const SizedBox.shrink(),
-      _loadedTabs.contains(3) ? const _ClubsCommunityView() : const SizedBox.shrink(),
-      _loadedTabs.contains(4) ? const _StudentProfileView() : const SizedBox.shrink(),
+      _loadedTabs.contains(2)
+          ? const _PuBotChatView()
+          : const SizedBox.shrink(),
+      _loadedTabs.contains(3)
+          ? const _ClubsCommunityView()
+          : const SizedBox.shrink(),
+      _loadedTabs.contains(4)
+          ? const _StudentProfileView()
+          : const SizedBox.shrink(),
     ];
 
     return BlocListener<AuthCubit, AuthState>(
@@ -151,73 +160,86 @@ class MainNavigationPageState extends State<MainNavigationPage> with WidgetsBind
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: AppTheme.isDark(context)
-                  ? colorScheme.outlineVariant.withValues(alpha: 0.25)
-                  : AppTheme.borderLight,
-              width: 1,
+        body: IndexedStack(index: _currentIndex, children: pages),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            border: Border(
+              top: BorderSide(
+                color: AppTheme.isDark(context)
+                    ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+                    : AppTheme.borderLight,
+                width: 1,
+              ),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.isDark(context)
+                    ? Colors.black.withValues(alpha: 0.35)
+                    : const Color(0xFF123B63).withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.isDark(context)
-                  ? Colors.black.withValues(alpha: 0.35)
-                  : const Color(0xFF0284C7).withValues(alpha: 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-              _loadedTabs.add(index);
-            });
-          },
-          backgroundColor: Colors.transparent,
-          indicatorColor: AppTheme.blueContainer(context),
-          elevation: 0,
-          height: 66,
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded, color: AppTheme.primaryColor(context)),
-              label: l10n.nav_feed,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book_rounded, color: AppTheme.primaryColor(context)),
-              label: l10n.nav_docs,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.smart_toy_outlined),
-              selectedIcon: Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context)),
-              label: l10n.nav_bot,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups_rounded, color: AppTheme.primaryColor(context)),
-              label: l10n.nav_clubs,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryColor(context)),
-              label: l10n.nav_profile,
-            ),
-          ],
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentIndex = index;
+                _loadedTabs.add(index);
+              });
+            },
+            backgroundColor: Colors.transparent,
+            indicatorColor: AppTheme.blueContainer(context),
+            elevation: 0,
+            height: 64,
+            destinations: [
+              NavigationDestination(
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: Icon(
+                  Icons.home_rounded,
+                  color: AppTheme.primaryColor(context),
+                ),
+                label: l10n.nav_feed,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(
+                  Icons.menu_book_rounded,
+                  color: AppTheme.primaryColor(context),
+                ),
+                label: l10n.nav_docs,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.smart_toy_outlined),
+                selectedIcon: Icon(
+                  Icons.smart_toy_rounded,
+                  color: AppTheme.accentColor(context),
+                ),
+                label: l10n.nav_bot,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.groups_outlined),
+                selectedIcon: Icon(
+                  Icons.groups_rounded,
+                  color: AppTheme.primaryColor(context),
+                ),
+                label: l10n.nav_clubs,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(
+                  Icons.person_rounded,
+                  color: AppTheme.primaryColor(context),
+                ),
+                label: l10n.nav_profile,
+              ),
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -268,10 +290,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
     } catch (_) {}
 
     if (_messages.isEmpty) {
-      _messages.add({
-        'role': 'bot',
-        'text': defaultWelcome,
-      });
+      _messages.add({'role': 'bot', 'text': defaultWelcome});
       if (mounted) setState(() {});
     }
   }
@@ -351,7 +370,11 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.smart_toy_rounded, color: AppTheme.accentColor(context), size: 24),
+            Icon(
+              Icons.smart_toy_rounded,
+              color: AppTheme.accentColor(context),
+              size: 24,
+            ),
             const SizedBox(width: 8),
             Text(l10n.bot_title),
           ],
@@ -368,10 +391,7 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
               } catch (_) {}
               setState(() {
                 _messages.clear();
-                _messages.add({
-                  'role': 'bot',
-                  'text': l10n.bot_reset_done,
-                });
+                _messages.add({'role': 'bot', 'text': l10n.bot_reset_done});
               });
             },
           ),
@@ -393,27 +413,26 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                     alignment: Alignment.centerRight,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.78,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: AppTheme.isDark(context)
-                              ? [const Color(0xFF0C4A6E), const Color(0xFF0284C7)]
-                              : [const Color(0xFF0284C7), const Color(0xFF0369A1)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: AppTheme.primaryColor(context),
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(18),
-                          topRight: Radius.circular(18),
-                          bottomLeft: Radius.circular(18),
+                          topLeft: Radius.circular(14),
+                          topRight: Radius.circular(14),
+                          bottomLeft: Radius.circular(14),
                           bottomRight: Radius.circular(4),
                         ),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                            color: Color(0x06123B63),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
                           ),
                         ],
                       ),
@@ -438,41 +457,53 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                         margin: const EdgeInsets.only(top: 2),
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF76B1C), Color(0xFFFF8E42)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: AppTheme.accentColor(context),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF76B1C).withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                              color: AppTheme.accentColor(
+                                context,
+                              ).withValues(alpha: 0.25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 16),
+                        child: const Icon(
+                          Icons.smart_toy_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Flexible(
                         child: Container(
-                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.78,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: colorScheme.surface,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(4),
-                              topRight: Radius.circular(18),
-                              bottomLeft: Radius.circular(18),
-                              bottomRight: Radius.circular(18),
+                              topRight: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
                             ),
-                            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                            boxShadow: [
+                            border: Border.all(
+                              color: AppTheme.isDark(context)
+                                  ? Colors.white12
+                                  : AppTheme.borderLight,
+                              width: 0.8,
+                            ),
+                            boxShadow: const [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                color: Color(0x06123B63),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
                               ),
                             ],
                           ),
@@ -492,10 +523,14 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                                 alignment: Alignment.bottomRight,
                                 child: InkWell(
                                   onTap: () {
-                                    Clipboard.setData(ClipboardData(text: msg['text'] ?? ''));
+                                    Clipboard.setData(
+                                      ClipboardData(text: msg['text'] ?? ''),
+                                    );
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Đã sao chép câu trả lời của PU Bot!'),
+                                        content: Text(
+                                          'Đã sao chép câu trả lời của PU Bot!',
+                                        ),
                                         duration: Duration(seconds: 1),
                                         behavior: SnackBarBehavior.floating,
                                       ),
@@ -503,21 +538,26 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                                   },
                                   borderRadius: BorderRadius.circular(6),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.copy_rounded,
                                           size: 13,
-                                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.5),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
                                           'Sao chép',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                            color: colorScheme.onSurface
+                                                .withValues(alpha: 0.55),
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -544,24 +584,36 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF76B1C),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentColor(context),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 14),
+                    child: const Icon(
+                      Icons.smart_toy_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                      boxShadow: [
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppTheme.isDark(context)
+                            ? Colors.white12
+                            : AppTheme.borderLight,
+                        width: 0.8,
+                      ),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                          color: Color(0x06123B63),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
                         ),
                       ],
                     ),
@@ -603,23 +655,31 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                 final suggestion = suggestions[index];
                 return InkWell(
                   onTap: () => _sendMessage(suggestion),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.isDark(context)
-                          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
+                          ? colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.6,
+                            )
                           : AppTheme.blueContainer(context),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.3),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.2),
+                        width: 0.8,
                       ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       suggestion,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.isDark(context)
                             ? colorScheme.onSurface
@@ -636,11 +696,19 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
             decoration: BoxDecoration(
               color: colorScheme.surface,
-              boxShadow: [
+              border: Border(
+                top: BorderSide(
+                  color: AppTheme.isDark(context)
+                      ? Colors.white10
+                      : AppTheme.borderLight,
+                  width: 0.8,
+                ),
+              ),
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+                  color: Color(0x06123B63),
+                  blurRadius: 6,
+                  offset: Offset(0, -1),
                 ),
               ],
             ),
@@ -649,18 +717,33 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      color: AppTheme.isDark(context)
+                          ? colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.35,
+                            )
+                          : AppTheme.backgroundLight,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppTheme.isDark(context)
+                            ? Colors.white12
+                            : AppTheme.borderLight,
+                        width: 0.8,
+                      ),
                     ),
                     child: TextField(
                       controller: _msgController,
                       onSubmitted: (text) => _sendMessage(text),
                       decoration: InputDecoration(
                         hintText: l10n.bot_input_hint,
-                        hintStyle: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                       ),
                     ),
                   ),
@@ -668,20 +751,15 @@ class _PuBotChatViewState extends State<_PuBotChatView> {
                 const SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFF76B1C), Color(0xFFFF8E42)],
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFF76B1C).withValues(alpha: 0.35),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    color: AppTheme.accentColor(context),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 19),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 19,
+                    ),
                     onPressed: () => _sendMessage(_msgController.text),
                   ),
                 ),
@@ -703,6 +781,8 @@ class _ClubsCommunityView extends StatefulWidget {
 
 class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
   final TextEditingController _searchController = TextEditingController();
+  int _activeSubTab = 0; // 0: Khám phá CLB, 1: Yêu cầu của tôi
+  String? _initializedUserId;
 
   final List<String> _categories = [
     'Tất cả',
@@ -732,7 +812,11 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     }
   }
 
-  String _getCategoryLabel(String cat, AppLocalizations l10n, [int joinedCount = 0]) {
+  String _getCategoryLabel(
+    String cat,
+    AppLocalizations l10n, [
+    int joinedCount = 0,
+  ]) {
     switch (cat) {
       case 'Tất cả':
         return l10n.all_clubs;
@@ -768,6 +852,11 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     }
   }
 
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '--/--/----';
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -778,6 +867,15 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     final currentUser = authState is Authenticated ? authState.user : null;
     final currentUserId = currentUser?.uid ?? '';
     final currentStudentId = currentUser?.studentId ?? '';
+
+    if (currentUserId.isNotEmpty && _initializedUserId != currentUserId) {
+      _initializedUserId = currentUserId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<ClubCubit>().initMyRequestsStream(currentUserId);
+        }
+      });
+    }
 
     return BlocConsumer<ClubCubit, ClubState>(
       listener: (context, state) {
@@ -802,342 +900,506 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
         }
       },
       builder: (context, state) {
-        final joinedClubs = state.getJoinedClubs(currentUserId, currentStudentId);
-        final filteredClubs = state.getFilteredClubs(currentUserId, currentStudentId);
+        final joinedClubs = state.getJoinedClubs(
+          currentUserId,
+          currentStudentId,
+        );
+        final filteredClubs = state.getFilteredClubs(
+          currentUserId,
+          currentStudentId,
+        );
 
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainerLowest,
           appBar: AppBar(
             title: Text(l10n.clubs_title),
             elevation: 0,
+            actions: [
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CreateClubPage()),
+                  );
+                },
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text(
+                  'Tạo CLB',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+            ],
           ),
           body: Column(
             children: [
-              // Search Bar
+              // Sub-tab Switcher: Khám phá vs Yêu cầu của tôi
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
                 child: Container(
-                  height: 44,
                   decoration: BoxDecoration(
-                    color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: isDark ? Colors.white10 : AppTheme.borderLight,
-                      width: 1,
-                    ),
+                    color: isDark
+                        ? colorScheme.surfaceContainerHighest
+                        : AppTheme.borderSubtle,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Center(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: colorScheme.onSurface, fontSize: 13.5),
-                      decoration: InputDecoration(
-                        hintText: 'Tìm kiếm câu lạc bộ, chủ nhiệm...',
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        icon: Icon(Icons.search_rounded, size: 18, color: AppTheme.oceanBlue),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close_rounded, size: 16),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  context.read<ClubCubit>().searchClubs('');
-                                },
-                              )
-                            : null,
-                      ),
-                      onChanged: (val) {
-                        context.read<ClubCubit>().searchClubs(val);
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Category Choice Chips
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    final isSelected = cat == state.selectedCategory;
-                    return ChoiceChip(
-                      label: Text(_getCategoryLabel(
-                        cat,
-                        l10n,
-                        cat == 'Đã tham gia' ? joinedClubs.length : 0,
-                      )),
-                      selected: isSelected,
-                      selectedColor: AppTheme.primaryColor(context),
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? (AppTheme.isDark(context) ? Colors.black87 : Colors.white)
-                            : colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                      onSelected: (val) {
-                        if (val) context.read<ClubCubit>().filterCategory(cat);
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Club List
-              Expanded(
-                child: state.status == ClubStatus.loading && state.clubs.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
-                    : filteredClubs.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    state.selectedCategory == 'Đã tham gia'
-                                        ? Icons.groups_outlined
-                                        : Icons.group_off_rounded,
-                                    size: 56,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.35),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  Text(
-                                    state.selectedCategory == 'Đã tham gia'
-                                        ? 'Bạn chưa tham gia câu lạc bộ nào'
-                                        : 'Không tìm thấy câu lạc bộ nào phù hợp',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(alpha: 0.8),
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    state.selectedCategory == 'Đã tham gia'
-                                        ? 'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!'
-                                        : 'Thử tìm với từ khóa khác hoặc chuyển sang danh mục câu lạc bộ khác.',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(alpha: 0.55),
-                                      fontSize: 12.5,
-                                      height: 1.4,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  if (state.selectedCategory == 'Đã tham gia') ...[
-                                    const SizedBox(height: 18),
-                                    FilledButton.icon(
-                                      onPressed: () {
-                                        context.read<ClubCubit>().filterCategory('Tất cả');
-                                      },
-                                      icon: const Icon(Icons.explore_outlined, size: 18),
-                                      label: const Text('Khám phá các CLB Phenikaa'),
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppTheme.primaryColor(context),
-                                        foregroundColor: isDark ? Colors.black87 : Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  padding: const EdgeInsets.all(3),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _activeSubTab = 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _activeSubTab == 0
+                                  ? AppTheme.primaryColor(context)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Khám phá CLB',
+                              style: TextStyle(
+                                fontWeight: _activeSubTab == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                fontSize: 13,
+                                color: _activeSubTab == 0
+                                    ? (isDark ? Colors.black87 : Colors.white)
+                                    : colorScheme.onSurface.withValues(
+                                        alpha: 0.7,
                                       ),
-                                    ),
-                                  ],
-                                ],
                               ),
                             ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                            itemCount: filteredClubs.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final club = filteredClubs[index];
-                              final isJoined = club.isMember(currentUserId, currentStudentId);
-                              final color = _getClubColor(context, club.category);
-
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: isJoined
-                                        ? AppTheme.accentColor(context).withValues(alpha: 0.5)
-                                        : colorScheme.outlineVariant.withValues(alpha: 0.4),
-                                    width: isJoined ? 1.5 : 1,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _activeSubTab = 1),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _activeSubTab == 1
+                                  ? AppTheme.primaryColor(context)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Yêu cầu của tôi',
+                                  style: TextStyle(
+                                    fontWeight: _activeSubTab == 1
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
+                                    fontSize: 13,
+                                    color: _activeSubTab == 1
+                                        ? (isDark
+                                              ? Colors.black87
+                                              : Colors.white)
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.7,
+                                          ),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => ClubDetailPage(club: club),
+                                if (state.myRequests.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _activeSubTab == 1
+                                          ? (isDark
+                                                ? Colors.black26
+                                                : Colors.white24)
+                                          : AppTheme.accentColor(context),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${state.myRequests.length}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: _activeSubTab == 1
+                                            ? (isDark
+                                                  ? Colors.black87
+                                                  : Colors.white)
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Tab View Content
+              Expanded(
+                child: _activeSubTab == 0
+                    ? _buildExploreClubs(
+                        context,
+                        state,
+                        filteredClubs,
+                        joinedClubs,
+                        isDark,
+                        colorScheme,
+                        l10n,
+                        currentUserId,
+                        currentStudentId,
+                      )
+                    : _buildMyRequestsTab(
+                        context,
+                        state,
+                        isDark,
+                        colorScheme,
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildExploreClubs(
+    BuildContext context,
+    ClubState state,
+    List<dynamic> filteredClubs,
+    List<dynamic> joinedClubs,
+    bool isDark,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+    String currentUserId,
+    String currentStudentId,
+  ) {
+    return Column(
+      children: [
+        // Responsive Search Bar without rigid container overflow
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 13.5,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm câu lạc bộ, chủ nhiệm...',
+              hintStyle: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
+                fontSize: 13,
+              ),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: AppTheme.oceanBlue,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      onPressed: () {
+                        _searchController.clear();
+                        context.read<ClubCubit>().searchClubs('');
+                      },
+                    )
+                  : null,
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 36,
+                minHeight: 36,
+              ),
+              filled: true,
+              fillColor: isDark
+                  ? colorScheme.surfaceContainerHighest
+                  : AppTheme.borderSubtle,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.white10 : AppTheme.borderLight,
+                  width: 0.8,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.white10 : AppTheme.borderLight,
+                  width: 0.8,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: AppTheme.primaryColor(context),
+                  width: 1.2,
+                ),
+              ),
+            ),
+            onChanged: (val) {
+              context.read<ClubCubit>().searchClubs(val);
+            },
+          ),
+        ),
+
+        // Category Choice Chips
+        SizedBox(
+          height: 40,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: _categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final cat = _categories[index];
+              final isSelected = cat == state.selectedCategory;
+              return ChoiceChip(
+                label: Text(
+                  _getCategoryLabel(
+                    cat,
+                    l10n,
+                    cat == 'Đã tham gia' ? joinedClubs.length : 0,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: AppTheme.primaryColor(context),
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? (AppTheme.isDark(context)
+                            ? Colors.black87
+                            : Colors.white)
+                      : colorScheme.onSurface,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 12,
+                ),
+                onSelected: (val) {
+                  if (val) context.read<ClubCubit>().filterCategory(cat);
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Club List
+        Expanded(
+          child: state.status == ClubStatus.loading && state.clubs.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : filteredClubs.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          state.selectedCategory == 'Đã tham gia'
+                              ? Icons.groups_outlined
+                              : Icons.group_off_rounded,
+                          size: 56,
+                          color: colorScheme.onSurface.withValues(alpha: 0.35),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          state.selectedCategory == 'Đã tham gia'
+                              ? 'Bạn chưa tham gia câu lạc bộ nào'
+                              : 'Không tìm thấy câu lạc bộ nào phù hợp',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withValues(alpha: 0.8),
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.selectedCategory == 'Đã tham gia'
+                              ? 'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!'
+                              : 'Thử tìm với từ khóa khác hoặc chuyển sang danh mục câu lạc bộ khác.',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.55,
+                            ),
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (state.selectedCategory == 'Đã tham gia') ...[
+                          const SizedBox(height: 18),
+                          FilledButton.icon(
+                            onPressed: () {
+                              context.read<ClubCubit>().filterCategory(
+                                'Tất cả',
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.explore_outlined,
+                              size: 18,
+                            ),
+                            label: const Text('Khám phá các CLB Phenikaa'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor(context),
+                              foregroundColor: isDark
+                                  ? Colors.black87
+                                  : Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  itemCount: filteredClubs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final club = filteredClubs[index];
+                    final isJoined = club.isMember(
+                      currentUserId,
+                      currentStudentId,
+                    );
+                    final color = _getClubColor(context, club.category);
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isJoined
+                              ? AppTheme.accentColor(
+                                  context,
+                                ).withValues(alpha: 0.6)
+                              : (isDark
+                                    ? Colors.white10
+                                    : AppTheme.borderLight),
+                          width: 0.8,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x06123B63),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ClubDetailPage(club: club),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(
+                                          alpha: isDark ? 0.22 : 0.12,
                                         ),
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        _getCategoryIcon(club.category),
+                                        color: color,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
+                                          Text(
+                                            club.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
                                           Row(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.all(10),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: color.withValues(alpha: isDark ? 0.22 : 0.12),
-                                                  borderRadius: BorderRadius.circular(14),
+                                                  color: color.withValues(
+                                                    alpha: 0.12,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
                                                 ),
-                                                child: Icon(
-                                                  _getCategoryIcon(club.category),
-                                                  color: color,
-                                                  size: 24,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      club.name,
-                                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                                    ),
-                                                    const SizedBox(height: 3),
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                          decoration: BoxDecoration(
-                                                            color: color.withValues(alpha: 0.12),
-                                                            borderRadius: BorderRadius.circular(6),
-                                                          ),
-                                                          child: Text(
-                                                            _getCategoryLabel(club.category, l10n),
-                                                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: color),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(width: 8),
-                                                        Icon(Icons.people_alt_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                                        const SizedBox(width: 3),
-                                                        Text(
-                                                          '${club.effectiveMembersCount} ${l10n.club_members}',
-                                                          style: TextStyle(
-                                                            fontSize: 11.5,
-                                                            color: colorScheme.onSurface.withValues(alpha: 0.6),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              isJoined
-                                                  ? OutlinedButton.icon(
-                                                      onPressed: () {
-                                                        Navigator.of(context).push(
-                                                          MaterialPageRoute(
-                                                            builder: (_) => ClubDetailPage(club: club),
-                                                          ),
-                                                        );
-                                                      },
-                                                      icon: Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.accentColor(context)),
-                                                      label: Text(
-                                                        l10n.joined_club,
-                                                        style: TextStyle(
-                                                          fontSize: 11.5,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: AppTheme.accentColor(context),
-                                                        ),
-                                                      ),
-                                                      style: OutlinedButton.styleFrom(
-                                                        backgroundColor: AppTheme.accentColor(context).withValues(alpha: 0.08),
-                                                        side: BorderSide(color: AppTheme.accentColor(context).withValues(alpha: 0.4)),
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                      ),
-                                                    )
-                                                  : ElevatedButton.icon(
-                                                      onPressed: () {
-                                                        context.read<ClubCubit>().toggleJoinClub(
-                                                              club: club,
-                                                              userId: currentUserId,
-                                                              secondaryId: currentStudentId,
-                                                            );
-                                                      },
-                                                      icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                                                      label: Text(
-                                                        l10n.join_club,
-                                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
-                                                      ),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: AppTheme.primaryColor(context),
-                                                        foregroundColor: isDark ? Colors.black87 : Colors.white,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                      ),
-                                                    ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Text(
-                                            club.description,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: colorScheme.onSurface.withValues(alpha: 0.75),
-                                              height: 1.35,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.person_outline_rounded, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                                    const SizedBox(width: 4),
-                                                    Flexible(
-                                                      child: Text(
-                                                        'CN: ${club.leaderName}',
-                                                        style: TextStyle(
-                                                          fontSize: 11.5,
-                                                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                child: Text(
+                                                  _getCategoryLabel(
+                                                    club.category,
+                                                    l10n,
+                                                  ),
+                                                  style: TextStyle(
+                                                    fontSize: 10.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: color,
+                                                  ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
+                                              Icon(
+                                                Icons.people_alt_rounded,
+                                                size: 13,
+                                                color: colorScheme.onSurface
+                                                    .withValues(alpha: 0.5),
+                                              ),
+                                              const SizedBox(width: 3),
                                               Text(
-                                                'Chi tiết >',
+                                                '${club.effectiveMembersCount} ${l10n.club_members}',
                                                 style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppTheme.primaryColor(context),
+                                                  fontSize: 11.5,
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.6),
                                                 ),
                                               ),
                                             ],
@@ -1145,16 +1407,500 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                         ],
                                       ),
                                     ),
-                                  ),
+                                    isJoined
+                                        ? OutlinedButton.icon(
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      ClubDetailPage(
+                                                        club: club,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            icon: Icon(
+                                              Icons.check_circle_rounded,
+                                              size: 14,
+                                              color: AppTheme.accentColor(
+                                                context,
+                                              ),
+                                            ),
+                                            label: Text(
+                                              l10n.joined_club,
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.accentColor(
+                                                  context,
+                                                ),
+                                              ),
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              backgroundColor:
+                                                  AppTheme.accentColor(
+                                                    context,
+                                                  ).withValues(alpha: 0.08),
+                                              side: BorderSide(
+                                                color: AppTheme.accentColor(
+                                                  context,
+                                                ).withValues(alpha: 0.4),
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 6,
+                                                  ),
+                                            ),
+                                          )
+                                        : ElevatedButton.icon(
+                                            onPressed: () {
+                                              context
+                                                  .read<ClubCubit>()
+                                                  .toggleJoinClub(
+                                                    club: club,
+                                                    userId: currentUserId,
+                                                    secondaryId:
+                                                        currentStudentId,
+                                                  );
+                                            },
+                                            icon: const Icon(
+                                              Icons.add_rounded,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                            label: Text(
+                                              l10n.join_club,
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  AppTheme.primaryColor(
+                                                    context,
+                                                  ),
+                                              foregroundColor: isDark
+                                                  ? Colors.black87
+                                                  : Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                            ),
+                                          ),
+                                  ],
                                 ),
-                              );
-                            },
+                                const SizedBox(height: 10),
+                                Text(
+                                  club.description,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.75,
+                                    ),
+                                    height: 1.35,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person_outline_rounded,
+                                            size: 13,
+                                            color: colorScheme.onSurface
+                                                .withValues(alpha: 0.5),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              'CN: ${club.leaderName}',
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                color: colorScheme.onSurface
+                                                    .withValues(alpha: 0.6),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Chi tiết >',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMyRequestsTab(
+    BuildContext context,
+    ClubState state,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    if (state.myRequests.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.post_add_rounded,
+                size: 60,
+                color: colorScheme.onSurface.withValues(alpha: 0.35),
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Bạn chưa gửi yêu cầu thành lập CLB nào',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Nếu bạn và các bạn cùng sở thích muốn thành lập câu lạc bộ mới tại Phenikaa, hãy gửi hồ sơ để Ban Quản Trị xem xét!',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  height: 1.45,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CreateClubPage()),
+                  );
+                },
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Đăng ký thành lập CLB mới'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor(context),
+                  foregroundColor: isDark ? Colors.black87 : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: state.myRequests.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final req = state.myRequests[index];
+        final isPending = req.status == 'pending';
+        final isApproved = req.status == 'approved';
+        final isRejected = req.status == 'rejected';
+
+        Color statusColor;
+        String statusText;
+        IconData statusIcon;
+
+        if (isApproved) {
+          statusColor = const Color(0xFF10B981);
+          statusText = 'Đã phê duyệt';
+          statusIcon = Icons.check_circle_rounded;
+        } else if (isRejected) {
+          statusColor = Colors.redAccent;
+          statusText = 'Bị từ chối';
+          statusIcon = Icons.cancel_rounded;
+        } else {
+          statusColor = Colors.orange;
+          statusText = 'Chờ duyệt';
+          statusIcon = Icons.hourglass_top_rounded;
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: statusColor.withValues(alpha: 0.35),
+              width: 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x06123B63),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          req.clubName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor(
+                                  context,
+                                ).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                req.category,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.primaryColor(context),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Gửi ngày: ${_formatDate(req.createdAt)}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                req.description,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? colorScheme.surfaceContainerHighest
+                      : AppTheme.borderSubtle,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lý do & Kế hoạch: ${req.reason}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Lịch SH: ${req.schedule} • Địa điểm: ${req.location}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isRejected && req.adminFeedback != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Lý do từ chối: ${req.adminFeedback}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (isPending) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _showCancelRequestDialog(context, req);
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 16,
+                      color: Colors.redAccent,
+                    ),
+                    label: const Text(
+                      'Hủy yêu cầu',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.redAccent, width: 0.8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
       },
+    );
+  }
+
+  void _showCancelRequestDialog(
+    BuildContext context,
+    ClubCreationRequestEntity req,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: const Text('Hủy yêu cầu thành lập?'),
+        content: Text(
+          'Bạn có chắc chắn muốn hủy yêu cầu thành lập CLB "${req.clubName}" không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đóng'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<ClubCubit>().cancelClubRequest(req.id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Xác nhận hủy'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1177,6 +1923,33 @@ class _StudentProfileView extends StatelessWidget {
         appBar: AppBar(
           title: Text(l10n.profile_title),
           actions: [
+            BlocBuilder<AuthCubit, AuthState>(
+              builder: (context, state) {
+                if (state is! Authenticated) return const SizedBox.shrink();
+                final user = state.user;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.qr_code_rounded),
+                      tooltip: 'Mã QR sinh viên của tôi',
+                      onPressed: () =>
+                          StudentQrCodePage.show(context, user: user),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.qr_code_scanner_rounded),
+                      tooltip: 'Quét mã QR sinh viên',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const StudentQrScannerPage(),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.logout_rounded),
               tooltip: l10n.logout,
@@ -1199,30 +1972,59 @@ class _StudentProfileView extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => EditProfilePage(user: user)),
+                        MaterialPageRoute(
+                          builder: (_) => EditProfilePage(user: user),
+                        ),
                       ),
-                      icon: Icon(Icons.edit_outlined, size: 16, color: AppTheme.primaryColor(context)),
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: AppTheme.primaryColor(context),
+                      ),
                       label: Text(
                         'Chỉnh sửa thông tin cá nhân',
-                        style: TextStyle(color: AppTheme.primaryColor(context), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppTheme.primaryColor(context),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.4)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(
+                          color: AppTheme.primaryColor(
+                            context,
+                          ).withValues(alpha: 0.4),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: () => FriendListPage.openForCurrentUser(context, user),
-                      icon: Icon(Icons.people_outline_rounded, size: 16, color: AppTheme.accentColor(context)),
+                      onPressed: () =>
+                          FriendListPage.openForCurrentUser(context, user),
+                      icon: Icon(
+                        Icons.people_outline_rounded,
+                        size: 16,
+                        color: AppTheme.accentColor(context),
+                      ),
                       label: Text(
                         'Danh sách bạn bè (${user.friendsCount})',
-                        style: TextStyle(color: AppTheme.accentColor(context), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppTheme.accentColor(context),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppTheme.accentColor(context).withValues(alpha: 0.4)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(
+                          color: AppTheme.accentColor(
+                            context,
+                          ).withValues(alpha: 0.4),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
@@ -1239,12 +2041,20 @@ class _StudentProfileView extends StatelessWidget {
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: () => _confirmSignOut(context),
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                      label: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
+                      icon: const Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        l10n.logout,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.shade700,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -1263,21 +2073,23 @@ class _StudentProfileView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0369A1), Color(0xFF0284C7), Color(0xFF0C4A6E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: AppTheme.isDark(context)
+            ? const Color(0xFF1E293B)
+            : AppTheme.deepBlue,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+          width: 0.8,
         ),
-        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: AppTheme.isDark(context)
                 ? Colors.black54
-                : const Color(0xFF0284C7).withValues(alpha: 0.35),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+                : AppTheme.deepBlue.withValues(alpha: 0.18),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1293,7 +2105,8 @@ class _StudentProfileView extends StatelessWidget {
                     'assets/logo/phenikaa_logo.png',
                     width: 32,
                     height: 32,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Colors.white, size: 28),
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.school, color: Colors.white, size: 28),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -1310,7 +2123,11 @@ class _StudentProfileView extends StatelessWidget {
                       ),
                       Text(
                         l10n.digital_student_card,
-                        style: const TextStyle(color: Color(0xFFFFB088), fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Color(0xFFFFB088),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -1324,7 +2141,11 @@ class _StudentProfileView extends StatelessWidget {
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFFD54F), Color(0xFFFFB300), Color(0xFFFFE082)],
+                        colors: [
+                          Color(0xFFFFD54F),
+                          Color(0xFFFFB300),
+                          Color(0xFFFFE082),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1344,7 +2165,10 @@ class _StudentProfileView extends StatelessWidget {
                             width: 13,
                             height: 13,
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black38, width: 0.6),
+                              border: Border.all(
+                                color: Colors.black38,
+                                width: 0.6,
+                              ),
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -1362,7 +2186,11 @@ class _StudentProfileView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.white24, width: 0.8),
                       ),
-                      child: const Icon(Icons.qr_code_rounded, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.qr_code_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ],
@@ -1378,8 +2206,14 @@ class _StudentProfileView extends StatelessWidget {
                 backgroundImage: AppTheme.imageProvider(user.avatarUrl),
                 child: user.avatarUrl.isEmpty
                     ? Text(
-                        user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'P',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        user.displayName.isNotEmpty
+                            ? user.displayName[0].toUpperCase()
+                            : 'P',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       )
                     : null,
               ),
@@ -1390,22 +2224,36 @@ class _StudentProfileView extends StatelessWidget {
                   children: [
                     Text(
                       user.displayName,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '23010390'} • K${user.cohort != 0 ? user.cohort : 17}',
-                      style: const TextStyle(fontSize: 13, color: Colors.white70),
+                      '${l10n.student_id}: ${user.studentId.isNotEmpty ? user.studentId : '--'}${user.cohort != 0 ? ' • K${user.cohort}' : ''}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white70,
+                      ),
                     ),
                     Text(
-                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin'}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : 'Chưa cập nhật'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
                     ),
                     if (user.bio.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         '💬 "${user.bio}"',
-                        style: const TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white70,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1433,11 +2281,21 @@ class _StudentProfileView extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: AppTheme.accentColor(context), size: 14),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: AppTheme.accentColor(context),
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    user.isAdmin ? 'QUẢN TRỊ VIÊN' : l10n.student_verified_badge.toUpperCase(),
-                    style: TextStyle(color: AppTheme.accentColor(context), fontSize: 10, fontWeight: FontWeight.bold),
+                    user.isAdmin
+                        ? 'QUẢN TRỊ VIÊN'
+                        : l10n.student_verified_badge.toUpperCase(),
+                    style: TextStyle(
+                      color: AppTheme.accentColor(context),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -1526,15 +2384,31 @@ class _StudentProfileView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.isDark(context)
+              ? Colors.white10
+              : AppTheme.borderLight,
+          width: 0.8,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06123B63),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.collections_bookmark_rounded, size: 18, color: AppTheme.accentColor(context)),
+              Icon(
+                Icons.collections_bookmark_rounded,
+                size: 18,
+                color: AppTheme.accentColor(context),
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Môn học kỳ này',
@@ -1543,7 +2417,10 @@ class _StudentProfileView extends StatelessWidget {
               const Spacer(),
               Text(
                 '${user.currentSubjects.length} môn',
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
             ],
           ),
@@ -1553,10 +2430,19 @@ class _StudentProfileView extends StatelessWidget {
             runSpacing: 8,
             children: user.currentSubjects.map((subject) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.blueContainer(context),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.2),
+                    width: 0.8,
+                  ),
                 ),
                 child: Text(
                   subject,
@@ -1587,26 +2473,46 @@ class _StudentProfileView extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.isDark(context)
+                  ? Colors.white10
+                  : AppTheme.borderLight,
+              width: 0.8,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x06123B63),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.groups_rounded, size: 18, color: AppTheme.accentColor(context)),
+                  Icon(
+                    Icons.groups_rounded,
+                    size: 18,
+                    color: AppTheme.accentColor(context),
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
                       'Câu lạc bộ đã tham gia',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => MainNavigationPage.of(context)?.navigateToTab(3),
+                    onTap: () =>
+                        MainNavigationPage.of(context)?.navigateToTab(3),
                     child: Text(
                       '${joinedClubs.length} CLB • Xem tất cả >',
                       style: TextStyle(
@@ -1632,25 +2538,39 @@ class _StudentProfileView extends StatelessWidget {
                           ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.isDark(context)
-                              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
-                              : AppTheme.primaryColor(context).withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
+                              ? colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.4,
+                                )
+                              : AppTheme.primaryColor(
+                                  context,
+                                ).withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                            color: AppTheme.primaryColor(
+                              context,
+                            ).withValues(alpha: 0.15),
+                            width: 0.8,
                           ),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 18,
-                              backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                              backgroundColor: AppTheme.primaryColor(
+                                context,
+                              ).withValues(alpha: 0.15),
                               child: Text(
-                                club.name.isNotEmpty ? club.name[0].toUpperCase() : 'C',
+                                club.name.isNotEmpty
+                                    ? club.name[0].toUpperCase()
+                                    : 'C',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryColor(context),
@@ -1665,7 +2585,10 @@ class _StudentProfileView extends StatelessWidget {
                                 children: [
                                   Text(
                                     club.name,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1674,7 +2597,9 @@ class _StudentProfileView extends StatelessWidget {
                                     '${club.category} • ${club.membersCount} thành viên',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.6,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1715,13 +2640,18 @@ class _StudentProfileView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.isDark(context)
+              ? Colors.white10
+              : AppTheme.borderLight,
+          width: 0.8,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0x06123B63),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -1736,7 +2666,9 @@ class _StudentProfileView extends StatelessWidget {
                 curve: Curves.easeInOutCubic,
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: AppTheme.isDark(context) ? 0.22 : 0.1),
+                  color: color.withValues(
+                    alpha: AppTheme.isDark(context) ? 0.22 : 0.1,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 16),
@@ -1746,12 +2678,18 @@ class _StudentProfileView extends StatelessWidget {
                 curve: Curves.easeInOutCubic,
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.12),
+                  color: color.withValues(
+                    alpha: AppTheme.isDark(context) ? 0.25 : 0.12,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   badge,
-                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: color),
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
               ),
             ],
@@ -1763,12 +2701,19 @@ class _StudentProfileView extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: colorScheme.onSurface),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: colorScheme.onSurface,
+                ),
               ),
               const SizedBox(width: 2),
               Text(
                 unit,
-                style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
               ),
             ],
           ),
@@ -1777,7 +2722,10 @@ class _StudentProfileView extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10.5, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+            style: TextStyle(
+              fontSize: 10.5,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
         ],
       ),
@@ -1799,13 +2747,16 @@ class _StudentProfileView extends StatelessWidget {
       curve: Curves.easeInOutCubic,
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppTheme.borderLight,
+          width: 0.8,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Color(0x06123B63),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -1817,7 +2768,9 @@ class _StudentProfileView extends StatelessWidget {
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.primaryColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: AnimatedSwitcher(
@@ -1834,50 +2787,103 @@ class _StudentProfileView extends StatelessWidget {
                 ),
               ),
             ),
-            title: Text(l10n.dark_theme_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.dark_theme_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: Text(
+              l10n.dark_theme_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              l10n.dark_theme_desc,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             value: isDark,
             activeColor: AppTheme.primaryColor(context),
             onChanged: (val) {
-              context.read<ThemeCubit>().setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
+              context.read<ThemeCubit>().setThemeMode(
+                val ? ThemeMode.dark : ThemeMode.light,
+              );
             },
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.primaryColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.language_rounded, color: AppTheme.primaryColor(context), size: 20),
+              child: Icon(
+                Icons.language_rounded,
+                color: AppTheme.primaryColor(context),
+                size: 20,
+              ),
             ),
-            title: Text(l10n.language, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(languageName, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: Text(
+              l10n.language,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              languageName,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showLanguagePickerModal(context),
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.accentColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.notifications_active_rounded, color: AppTheme.accentColor(context), size: 20),
+              child: Icon(
+                Icons.notifications_active_rounded,
+                color: AppTheme.accentColor(context),
+                size: 20,
+              ),
             ),
-            title: Text(l10n.notifications_settings_title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.notifications_settings_desc, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: Text(
+              l10n.notifications_settings_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              l10n.notifications_settings_desc,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.fingerprint_rounded, size: 20, color: AppTheme.accentColor(context)),
+                  icon: Icon(
+                    Icons.fingerprint_rounded,
+                    size: 20,
+                    color: AppTheme.accentColor(context),
+                  ),
                   tooltip: 'Sao chép FCM Token thiết bị',
                   onPressed: () async {
                     final token = await sl<NotificationService>().getFcmToken();
@@ -1887,7 +2893,9 @@ class _StudentProfileView extends StatelessWidget {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Đã sao chép FCM Token: ${token.substring(0, 12)}...'),
+                            content: Text(
+                              'Đã sao chép FCM Token: ${token.substring(0, 12)}...',
+                            ),
                             behavior: SnackBarBehavior.floating,
                             backgroundColor: AppTheme.primaryColor(context),
                           ),
@@ -1895,7 +2903,9 @@ class _StudentProfileView extends StatelessWidget {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('FCM Token chưa sẵn sàng trên nền tảng này.'),
+                            content: Text(
+                              'FCM Token chưa sẵn sàng trên nền tảng này.',
+                            ),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -1904,14 +2914,20 @@ class _StudentProfileView extends StatelessWidget {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.send_rounded, size: 20, color: AppTheme.primaryColor(context)),
+                  icon: Icon(
+                    Icons.send_rounded,
+                    size: 20,
+                    color: AppTheme.primaryColor(context),
+                  ),
                   tooltip: l10n.test_notification_btn,
                   onPressed: () async {
                     await sl<NotificationService>().sendTestNotification();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Đã gửi thông báo thử nghiệm! Vui lòng kiểm tra thanh thông báo thiết bị.'),
+                          content: Text(
+                            'Đã gửi thông báo thử nghiệm! Vui lòng kiểm tra thanh thông báo thiết bị.',
+                          ),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -1920,40 +2936,70 @@ class _StudentProfileView extends StatelessWidget {
                 ),
               ],
             ),
-            onTap: () => NotificationPermissionSheet.checkAndShowPrompt(context, force: true),
+            onTap: () => NotificationPermissionSheet.checkAndShowPrompt(
+              context,
+              force: true,
+            ),
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: const Color(
+                  0xFF0284C7,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.notifications_rounded, color: Color(0xFF0284C7), size: 20),
+              child: const Icon(
+                Icons.notifications_rounded,
+                color: Color(0xFF0284C7),
+                size: 20,
+              ),
             ),
-            title: const Text('Trung tâm thông báo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Xem và quản lý tất cả thông báo trường học', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
-            trailing: BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
-              builder: (context, notifState) {
-                if (notifState.unreadCount > 0) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentColor(context),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      notifState.unreadCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  );
-                }
-                return const Icon(Icons.chevron_right_rounded);
-              },
+            title: const Text(
+              'Trung tâm thông báo',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
+            subtitle: Text(
+              'Xem và quản lý tất cả thông báo trường học',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+            trailing:
+                BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
+                  builder: (context, notifState) {
+                    if (notifState.unreadCount > 0) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentColor(context),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          notifState.unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }
+                    return const Icon(Icons.chevron_right_rounded);
+                  },
+                ),
             onTap: () {
               Navigator.push(
                 context,
@@ -1961,32 +3007,58 @@ class _StudentProfileView extends StatelessWidget {
               );
             },
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.primaryColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.bookmark_rounded, color: AppTheme.primaryColor(context), size: 20),
+              child: Icon(
+                Icons.bookmark_rounded,
+                color: AppTheme.primaryColor(context),
+                size: 20,
+              ),
             ),
-            title: const Text('Bài viết đã lưu', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Xem lại bài viết và tài liệu ôn thi bạn đã lưu', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: const Text(
+              'Bài viết đã lưu',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Xem lại bài viết và tài liệu ôn thi bạn đã lưu',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: BlocBuilder<SavedPostsCubit, SavedPostsState>(
               builder: (context, savedState) {
-                if (savedState.savedPostIds.isNotEmpty) {
+                if (savedState.unviewedCount > 0) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor(context),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      savedState.savedPostIds.length.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      savedState.unviewedCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   );
                 }
@@ -2000,20 +3072,39 @@ class _StudentProfileView extends StatelessWidget {
               );
             },
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: const Color(
+                  0xFF0284C7,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.diversity_3_rounded, color: Color(0xFF0284C7), size: 20),
+              child: const Icon(
+                Icons.diversity_3_rounded,
+                color: Color(0xFF0284C7),
+                size: 20,
+              ),
             ),
-            title: const Text('Nhóm học tập & Bạn cùng tiến', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Tìm đồng đội ôn thi, giải bài tập và học nhóm', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: const Text(
+              'Nhóm học tập & Bạn cùng tiến',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Tìm đồng đội ôn thi, giải bài tập và học nhóm',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () {
               Navigator.push(
@@ -2022,35 +3113,64 @@ class _StudentProfileView extends StatelessWidget {
               );
             },
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.accentColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.groups_rounded, color: AppTheme.accentColor(context), size: 20),
+              child: Icon(
+                Icons.groups_rounded,
+                color: AppTheme.accentColor(context),
+                size: 20,
+              ),
             ),
-            title: const Text('Câu lạc bộ sinh viên', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Khám phá hoạt động và câu lạc bộ Phenikaa', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: const Text(
+              'Câu lạc bộ sinh viên',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Khám phá hoạt động và câu lạc bộ Phenikaa',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: BlocBuilder<ClubCubit, ClubState>(
               builder: (context, clubState) {
                 final authState = context.watch<AuthCubit>().state;
                 if (authState is Authenticated) {
-                  final joined = clubState.getJoinedClubs(authState.user.uid, authState.user.studentId);
+                  final joined = clubState.getJoinedClubs(
+                    authState.user.uid,
+                    authState.user.studentId,
+                  );
                   if (joined.isNotEmpty) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.accentColor(context),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         joined.length.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     );
                   }
@@ -2061,75 +3181,116 @@ class _StudentProfileView extends StatelessWidget {
             onTap: () => MainNavigationPage.of(context)?.navigateToTab(3),
           ),
           if (isAdmin) ...[
-            Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            Divider(
+              height: 1,
+              indent: 56,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
             ListTile(
               leading: AnimatedContainer(
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOutCubic,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                  color: AppTheme.primaryColor(
+                    context,
+                  ).withValues(alpha: isDark ? 0.25 : 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.admin_panel_settings_rounded, color: AppTheme.primaryColor(context), size: 20),
+                child: Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: AppTheme.primaryColor(context),
+                  size: 20,
+                ),
               ),
               title: Row(
                 children: [
                   const Flexible(
                     child: Text(
                       'Cổng Quản Trị Viên',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor(context),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
                       'PORTAL',
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
               ),
               subtitle: Text(
                 'Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn',
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminPortalPage()),
-                );
-              },
+              onTap: () => context.go('/admin'),
             ),
           ],
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.accentColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.lock_reset_rounded, color: AppTheme.accentColor(context), size: 20),
+              child: Icon(
+                Icons.lock_reset_rounded,
+                color: AppTheme.accentColor(context),
+                size: 20,
+              ),
             ),
-            title: const Text('Đổi mật khẩu', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Cập nhật mật khẩu bảo vệ tài khoản', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: const Text(
+              'Đổi mật khẩu',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Cập nhật mật khẩu bảo vệ tài khoản',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => ChangePasswordDialog.show(context),
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
@@ -2139,10 +3300,23 @@ class _StudentProfileView extends StatelessWidget {
                 color: Colors.red.withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.block_flipped, color: Colors.red, size: 20),
+              child: const Icon(
+                Icons.block_flipped,
+                color: Colors.red,
+                size: 20,
+              ),
             ),
-            title: const Text('Người dùng đã chặn', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text('Quản lý danh sách tài khoản bạn đã chặn', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: const Text(
+              'Người dùng đã chặn',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Quản lý danh sách tài khoản bạn đã chặn',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () {
               Navigator.push(
@@ -2151,20 +3325,39 @@ class _StudentProfileView extends StatelessWidget {
               );
             },
           ),
-          Divider(height: 1, indent: 56, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
           ListTile(
             leading: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor(context).withValues(alpha: isDark ? 0.25 : 0.12),
+                color: AppTheme.accentColor(
+                  context,
+                ).withValues(alpha: isDark ? 0.25 : 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.info_outline_rounded, color: AppTheme.accentColor(context), size: 20),
+              child: Icon(
+                Icons.info_outline_rounded,
+                color: AppTheme.accentColor(context),
+                size: 20,
+              ),
             ),
-            title: Text(l10n.about_pu, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.app_version, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            title: Text(
+              l10n.about_pu,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              l10n.app_version,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
           ),
         ],
       ),
@@ -2192,7 +3385,10 @@ class _StudentProfileView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     l10n.select_language,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -2200,7 +3396,10 @@ class _StudentProfileView extends StatelessWidget {
                   leading: const Text('🇻🇳', style: TextStyle(fontSize: 24)),
                   title: Text(l10n.vietnamese),
                   trailing: currentLocale == 'vi'
-                      ? Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor(context))
+                      ? Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.primaryColor(context),
+                        )
                       : null,
                   onTap: () {
                     context.read<LocaleCubit>().setLocale(const Locale('vi'));
@@ -2211,7 +3410,10 @@ class _StudentProfileView extends StatelessWidget {
                   leading: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
                   title: Text(l10n.english),
                   trailing: currentLocale == 'en'
-                      ? Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor(context))
+                      ? Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.primaryColor(context),
+                        )
                       : null,
                   onTap: () {
                     context.read<LocaleCubit>().setLocale(const Locale('en'));
@@ -2227,186 +3429,17 @@ class _StudentProfileView extends StatelessWidget {
   }
 
   void _showStudentQrModal(BuildContext context, UserEntity user) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-    final studentId = user.studentId.isNotEmpty ? user.studentId : '23010390';
-    final faculty = user.faculty.isNotEmpty ? user.faculty : 'Công nghệ thông tin';
-    final cohort = user.cohort != 0 ? user.cohort : 17;
-
-    final qrData = jsonEncode({
-      'app': 'pu_connection',
-      'type': 'student_card',
-      'uid': user.uid,
-      'studentId': studentId,
-      'displayName': user.displayName,
-      'faculty': faculty,
-      'cohort': cohort,
-      'email': user.email,
-    });
-
-    final formattedStudentText = '''
-[THẺ SINH VIÊN ĐIỆN TỬ PHENIKAA]
-Họ và tên: ${user.displayName}
-Mã số sinh viên: $studentId
-Khoa / Viện: $faculty
-Khóa đào tạo: K$cohort
-Email: ${user.email}
-Trường Đại học Phenikaa''';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.all(22),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/logo/phenikaa_logo.png',
-                    width: 28,
-                    height: 28,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.school, size: 24),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.university_name,
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.8),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    QrImageView(
-                      data: qrData,
-                      version: QrVersions.auto,
-                      size: 170.0,
-                      backgroundColor: Colors.white,
-                      eyeStyle: const QrEyeStyle(
-                        eyeShape: QrEyeShape.square,
-                        color: Color(0xFF0056B3),
-                      ),
-                      dataModuleStyle: const QrDataModuleStyle(
-                        dataModuleShape: QrDataModuleShape.square,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${l10n.student_id}: $studentId',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0056B3)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                user.displayName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '$faculty • K$cohort',
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(
-                  color: AppTheme.blueContainer(context),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'Quét mã này bằng Camera hoặc ứng dụng PU Connection để xem thông tin chuẩn hóa và kết bạn nhanh.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: AppTheme.primaryColor(context), height: 1.3),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: formattedStudentText));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Đã sao chép thông tin thẻ sinh viên chuẩn hóa!'),
-                            backgroundColor: AppTheme.primaryColor(context),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.copy_rounded, size: 16),
-                      label: const Text('Sao chép', style: TextStyle(fontSize: 12)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _showScanOrSearchStudentDialog(context);
-                      },
-                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
-                      label: const Text('Quét mã bạn', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor(context),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l10n.close, style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    StudentQrCodePage.show(context, user: user);
   }
-
-  void _showScanOrSearchStudentDialog(BuildContext context) {
-    final textController = TextEditingController();
-    bool isSearching = false;
-
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  /*
           title: const Row(
             children: [
               Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0056B3)),
               SizedBox(width: 8),
-              Text('Quét / Nhập mã bạn bè', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                'Quét / Nhập mã bạn bè',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ],
           ),
           content: Column(
@@ -2425,12 +3458,16 @@ Trường Đại học Phenikaa''';
                   hintText: 'Nhập MSSV (VD: 23010390) hoặc dán mã QR...',
                   hintStyle: const TextStyle(fontSize: 12),
                   prefixIcon: const Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.paste_rounded, size: 18),
                     tooltip: 'Dán từ bộ nhớ tạm',
                     onPressed: () async {
-                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                      final data = await Clipboard.getData(
+                        Clipboard.kTextPlain,
+                      );
                       if (data?.text != null) {
                         textController.text = data!.text!.trim();
                       }
@@ -2474,9 +3511,12 @@ Trường Đại học Phenikaa''';
                         // Trường hợp 1: Chuỗi là JSON từ mã QR của PU Connection
                         if (query.startsWith('{') && query.endsWith('}')) {
                           try {
-                            final map = jsonDecode(query) as Map<String, dynamic>;
+                            final map =
+                                jsonDecode(query) as Map<String, dynamic>;
                             targetUid = map['uid'] as String?;
-                            targetName = map['displayName'] as String? ?? map['name'] as String?;
+                            targetName =
+                                map['displayName'] as String? ??
+                                map['name'] as String?;
                             targetStudentId = map['studentId'] as String?;
                             targetFaculty = map['faculty'] as String?;
                           } catch (_) {}
@@ -2495,8 +3535,11 @@ Trường Đại học Phenikaa''';
                             final doc = querySnap.docs.first;
                             final data = doc.data();
                             targetUid = doc.id;
-                            targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
-                            targetStudentId = data['studentId'] as String? ?? query;
+                            targetName =
+                                data['displayName'] as String? ??
+                                'Sinh viên Phenikaa';
+                            targetStudentId =
+                                data['studentId'] as String? ?? query;
                             targetFaculty = data['faculty'] as String? ?? '';
                             targetAvatar = data['avatarUrl'] as String? ?? '';
                           } else {
@@ -2508,8 +3551,11 @@ Trường Đại học Phenikaa''';
                             if (docSnap.exists) {
                               final data = docSnap.data()!;
                               targetUid = docSnap.id;
-                              targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
-                              targetStudentId = data['studentId'] as String? ?? '';
+                              targetName =
+                                  data['displayName'] as String? ??
+                                  'Sinh viên Phenikaa';
+                              targetStudentId =
+                                  data['studentId'] as String? ?? '';
                               targetFaculty = data['faculty'] as String? ?? '';
                               targetAvatar = data['avatarUrl'] as String? ?? '';
                             }
@@ -2535,7 +3581,9 @@ Trường Đại học Phenikaa''';
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Không tìm thấy sinh viên với thông tin: "$query"'),
+                              content: Text(
+                                'Không tìm thấy sinh viên với thông tin: "$query"',
+                              ),
                               backgroundColor: Colors.orange.shade800,
                             ),
                           );
@@ -2544,11 +3592,19 @@ Trường Đại học Phenikaa''';
                         if (dialogCtx.mounted) {
                           setDialogState(() => isSearching = false);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi tra cứu: $e'), backgroundColor: Colors.red),
+                            SnackBar(
+                              content: Text('Lỗi tra cứu: $e'),
+                              backgroundColor: Colors.red,
+                            ),
                           );
                         }
                       }
                     },
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('Tìm kiếm'),
             ),
           ],
@@ -2556,6 +3612,7 @@ Trường Đại học Phenikaa''';
       ),
     );
   }
+*/
 
   Future<void> _confirmSignOut(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
@@ -2566,6 +3623,7 @@ Trường Đại học Phenikaa''';
       context: context,
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Text(l10n.logout_confirm_title),
         content: Text(l10n.logout_confirm_desc),
         actions: [
@@ -2575,8 +3633,16 @@ Trường Đại học Phenikaa''';
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: Text(l10n.logout, style: const TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              l10n.logout,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -2591,4 +3657,3 @@ Trường Đại học Phenikaa''';
     }
   }
 }
-

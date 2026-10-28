@@ -1061,7 +1061,7 @@ abstract class AppLocalizations {
   /// No description provided for @university_name.
   ///
   /// In vi, this message translates to:
-  /// **'TRƯỜNG ĐẠI HỌC PHENIKAA'**
+  /// **'ĐẠI HỌC PHENIKAA'**
   String get university_name;
 
   /// No description provided for @student_slogan.

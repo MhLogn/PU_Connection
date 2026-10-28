@@ -40,8 +40,8 @@ class _NotificationPermissionSheetState
     setState(() => _isLoading = true);
 
     try {
-      final granted =
-          await sl<NotificationService>().requestNotificationPermission();
+      final granted = await sl<NotificationService>()
+          .requestNotificationPermission();
 
       if (mounted) {
         Navigator.pop(context);
@@ -206,7 +206,9 @@ class _NotificationPermissionSheetState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+              color: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.35,
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.35),

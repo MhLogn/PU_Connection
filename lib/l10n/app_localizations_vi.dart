@@ -503,7 +503,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?';
 
   @override
-  String get university_name => 'TRƯỜNG ĐẠI HỌC PHENIKAA';
+  String get university_name => 'ĐẠI HỌC PHENIKAA';
 
   @override
   String get student_slogan => 'Tôn trọng – Sáng tạo – Phản biện';

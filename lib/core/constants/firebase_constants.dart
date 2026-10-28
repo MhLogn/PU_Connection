@@ -13,6 +13,7 @@ class FirebaseConstants {
   static const String notificationsSubcollection = 'notifications';
   static const String eventsCollection = 'events';
   static const String clubsCollection = 'clubs';
+  static const String clubRequestsCollection = 'club_requests';
   static const String subjectsCollection = 'subjects';
   static const String topicsCollection = 'topics';
 
@@ -22,13 +23,17 @@ class FirebaseConstants {
   static const String followingSubcollection = 'following';
   static const String blockedUsersSubcollection = 'blocked_users';
   static const String reportsCollection = 'reports';
+  static const String notesCollection = 'notes';
   static const String studyGroupsCollection = 'study_groups';
+  static const String adminsCollection = 'admins';
+  static const String auditLogsCollection = 'admin_audit_logs';
 
   static const String studentEmailDomain = '@st.phenikaa-uni.edu.vn';
   static const String staffEmailDomain = '@phenikaa-uni.edu.vn';
 
   static bool isPhenikaaEmail(String email) {
     final lower = email.trim().toLowerCase();
-    return lower.endsWith(studentEmailDomain) || lower.endsWith(staffEmailDomain);
+    return lower.endsWith(studentEmailDomain) ||
+        lower.endsWith(staffEmailDomain);
   }
 }

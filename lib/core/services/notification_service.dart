@@ -15,15 +15,19 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await Firebase.initializeApp();
     }
   } catch (_) {}
-  debugPrint('FCM Remote Message in background: ${message.messageId} - ${message.notification?.title}');
+  debugPrint(
+    'FCM Remote Message in background: ${message.messageId} - ${message.notification?.title}',
+  );
 }
 
 class NotificationService {
-  static const String prefPermissionRequested = 'notification_permission_requested';
+  static const String prefPermissionRequested =
+      'notification_permission_requested';
   static const String prefNotificationsEnabled = 'notifications_enabled';
   static const String channelId = 'pu_connection_channel';
   static const String channelName = 'Thông báo PU Connection';
-  static const String channelDesc = 'Kênh nhận thông báo bài viết, tin nhắn và sự kiện trường Đại học Phenikaa';
+  static const String channelDesc =
+      'Kênh nhận thông báo bài viết, tin nhắn và sự kiện Đại học Phenikaa';
 
   // Topic FCM Constants
   static const String topicCampusNews = 'phenikaa_campus_news';
@@ -39,10 +43,10 @@ class NotificationService {
     SharedPreferences? prefs,
     FirebaseMessaging? messaging,
     FirebaseFirestore? firestore,
-  })  : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin(),
-        _prefs = prefs,
-        _messaging = messaging,
-        _firestore = firestore;
+  }) : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin(),
+       _prefs = prefs,
+       _messaging = messaging,
+       _firestore = firestore;
 
   bool _isInitialized = false;
   String? _cachedFcmToken;
@@ -73,7 +77,9 @@ class NotificationService {
   Future<void> init() async {
     if (_isInitialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -95,7 +101,9 @@ class NotificationService {
 
       // Create Android Notification Channel
       final androidImplementation = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidImplementation != null) {
         const androidChannel = AndroidNotificationChannel(
           channelId,
@@ -132,7 +140,8 @@ class NotificationService {
         if (!isNotificationsEnabled()) return;
 
         final notification = message.notification;
-        final title = notification?.title ?? message.data['title'] ?? 'PU Connection';
+        final title =
+            notification?.title ?? message.data['title'] ?? 'PU Connection';
         final body = notification?.body ?? message.data['body'] ?? '';
 
         showNotification(
@@ -198,10 +207,10 @@ class NotificationService {
           .collection(FirebaseConstants.usersCollection)
           .doc(uid)
           .set({
-        'fcmToken': token,
-        'fcmTokens': FieldValue.arrayUnion([token]),
-        'lastTokenUpdated': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+            'fcmToken': token,
+            'fcmTokens': FieldValue.arrayUnion([token]),
+            'lastTokenUpdated': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
 
       // Đăng ký mặc định các topics trường học
       await subscribeToTopic(topicCampusNews);
@@ -224,9 +233,9 @@ class NotificationService {
             .collection(FirebaseConstants.usersCollection)
             .doc(uid)
             .update({
-          'fcmToken': FieldValue.delete(),
-          'fcmTokens': FieldValue.arrayRemove([token]),
-        });
+              'fcmToken': FieldValue.delete(),
+              'fcmTokens': FieldValue.arrayRemove([token]),
+            });
       }
     } catch (e) {
       debugPrint('Error clearing user FCM token: $e');
@@ -293,7 +302,8 @@ class NotificationService {
           sound: true,
           provisional: false,
         );
-        granted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+        granted =
+            settings.authorizationStatus == AuthorizationStatus.authorized ||
             settings.authorizationStatus == AuthorizationStatus.provisional;
       } catch (e) {
         debugPrint('Error requesting FCM permission: $e');
@@ -302,14 +312,19 @@ class NotificationService {
 
     try {
       final androidImplementation = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidImplementation != null) {
-        final bool? result = await androidImplementation.requestNotificationsPermission();
+        final bool? result = await androidImplementation
+            .requestNotificationsPermission();
         granted = result ?? granted;
       }
 
       final iosImplementation = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (iosImplementation != null) {
         final bool? result = await iosImplementation.requestPermissions(
           alert: true,
@@ -383,7 +398,8 @@ class NotificationService {
     await showNotification(
       id: 1001,
       title: 'Chào mừng bạn đến với PU Connection! 🎉',
-      body: 'Thông báo đã được bật. Bạn sẽ nhận được tin nhắn và tin tức mới nhất từ trường Phenikaa!',
+      body:
+          'Thông báo đã được bật. Bạn sẽ nhận được tin nhắn và tin tức mới nhất từ trường Phenikaa!',
       payload: 'welcome',
     );
   }

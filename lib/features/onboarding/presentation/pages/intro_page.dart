@@ -74,7 +74,10 @@ class _IntroPageState extends State<IntroPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 children: [
                   Image.asset(
@@ -91,10 +94,12 @@ class _IntroPageState extends State<IntroPage> {
                   Text(
                     'PU Connection',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.primaryColor(context),
-                      letterSpacing: 0.3,
+                      color: AppTheme.isDark(context)
+                          ? Colors.white
+                          : AppTheme.deepBlue,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ],
@@ -116,24 +121,27 @@ class _IntroPageState extends State<IntroPage> {
                           width: double.infinity,
                           height: 230,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                             border: Border.all(
-                              color: AppTheme.primaryColor(context).withValues(alpha: 0.15),
-                              width: 1,
+                              color: AppTheme.isDark(context)
+                                  ? Colors.white12
+                                  : AppTheme.borderLight,
+                              width: 0.8,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.isDark(context)
                                     ? Colors.black26
-                                    : AppTheme.navyBlue.withValues(alpha: 0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                                    : const Color(0x0A123B63),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(19),
+                            borderRadius: BorderRadius.circular(11),
                             child: Image.asset(
                               slide.imagePath,
                               fit: BoxFit.cover,
@@ -152,13 +160,18 @@ class _IntroPageState extends State<IntroPage> {
                         ),
                         const SizedBox(height: 28),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.orangeContainer(context),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: AppTheme.accentColor(context).withValues(alpha: 0.3),
-                              width: 1,
+                              color: AppTheme.accentColor(
+                                context,
+                              ).withValues(alpha: 0.3),
+                              width: 0.8,
                             ),
                           ),
                           child: Text(
@@ -166,7 +179,7 @@ class _IntroPageState extends State<IntroPage> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 1.0,
+                              letterSpacing: 0.8,
                               color: AppTheme.accentColor(context),
                             ),
                           ),
@@ -176,10 +189,13 @@ class _IntroPageState extends State<IntroPage> {
                           slide.title,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 21,
                             fontWeight: FontWeight.w800,
                             height: 1.25,
-                            color: colorScheme.onSurface,
+                            color: AppTheme.isDark(context)
+                                ? Colors.white
+                                : AppTheme.deepBlue,
+                            letterSpacing: -0.2,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -189,7 +205,9 @@ class _IntroPageState extends State<IntroPage> {
                           style: TextStyle(
                             fontSize: 14.5,
                             height: 1.5,
-                            color: colorScheme.onSurface.withValues(alpha: 0.65),
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.65,
+                            ),
                           ),
                         ),
                       ],
@@ -225,19 +243,27 @@ class _IntroPageState extends State<IntroPage> {
                     onPressed: () => _onNext(slides.length),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor(context),
-                      foregroundColor: AppTheme.isDark(context) ? Colors.black87 : Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 13,
                       ),
-                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _currentPage == slides.length - 1 ? l10n.start_btn : l10n.continue_btn,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          _currentPage == slides.length - 1
+                              ? l10n.start_btn
+                              : l10n.continue_btn,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         const Icon(Icons.arrow_forward_rounded, size: 18),
@@ -267,5 +293,3 @@ class _IntroSlideData {
     required this.description,
   });
 }
-
-

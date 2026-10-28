@@ -44,10 +44,7 @@ class AppCachedImage extends StatelessWidget {
     );
 
     if (borderRadius != null) {
-      image = ClipRRect(
-        borderRadius: borderRadius!,
-        child: image,
-      );
+      image = ClipRRect(borderRadius: borderRadius!, child: image);
     }
 
     return image;
@@ -62,10 +59,7 @@ class AppCachedImage extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: baseColor,
-        borderRadius: borderRadius,
-      ),
+      decoration: BoxDecoration(color: baseColor, borderRadius: borderRadius),
       child: Center(
         child: SizedBox(
           width: 20,

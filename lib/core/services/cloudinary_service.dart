@@ -8,6 +8,18 @@ class CloudinaryService {
   static const String defaultCloudName = 'kh2kphrq';
   static const String defaultUploadPreset = 'pu_connection';
 
+  /// Giới hạn dung lượng an toàn để chống tràn quota và lạm dụng bộ nhớ
+  static const int maxImageSizeBytes = 10 * 1024 * 1024; // 10MB
+  static const int maxDocumentSizeBytes = 25 * 1024 * 1024; // 25MB
+
+  /// Định dạng tệp cho phép
+  static const Set<String> allowedImageExtensions = {
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'
+  };
+  static const Set<String> allowedDocumentExtensions = {
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'
+  };
+
   String cloudName;
   String uploadPreset;
 
@@ -48,8 +60,30 @@ class CloudinaryService {
     String folder = 'pu_connection/images',
   }) async {
     try {
-      final url = 'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
       final cleanFileName = fileName.replaceAll(r'\', '/').split('/').last;
+      final ext = cleanFileName.contains('.')
+          ? cleanFileName.split('.').last.toLowerCase()
+          : '';
+
+      // Kiểm tra dung lượng tệp
+      if (resourceType == 'image') {
+        if (bytes.length > maxImageSizeBytes) {
+          throw Exception('Dung lượng ảnh vượt quá giới hạn 10MB.');
+        }
+        if (ext.isNotEmpty && !allowedImageExtensions.contains(ext)) {
+          throw Exception('Định dạng ảnh .$ext không được hỗ trợ.');
+        }
+      } else {
+        if (bytes.length > maxDocumentSizeBytes) {
+          throw Exception('Dung lượng tệp vượt quá giới hạn 25MB.');
+        }
+        if (ext.isNotEmpty && !allowedDocumentExtensions.contains(ext) && !allowedImageExtensions.contains(ext)) {
+          throw Exception('Định dạng tệp .$ext không được hỗ trợ.');
+        }
+      }
+
+      final url =
+          'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
 
       final formData = FormData.fromMap({
         'file': MultipartFile.fromBytes(bytes, filename: cleanFileName),
@@ -69,15 +103,21 @@ class CloudinaryService {
       if (response.statusCode == 200 && response.data != null) {
         return response.data['secure_url'] as String?;
       } else {
-        final errorMessage = response.data?['error']?['message'] ?? 'Upload failed';
-        throw Exception('Cloudinary upload error: $errorMessage (code: ${response.statusCode})');
+        final errorMessage =
+            response.data?['error']?['message'] ?? 'Upload failed';
+        throw Exception(
+          'Cloudinary upload error: $errorMessage (code: ${response.statusCode})',
+        );
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<String?> uploadImage(File file, {String folder = 'pu_connection/images'}) async {
+  Future<String?> uploadImage(
+    File file, {
+    String folder = 'pu_connection/images',
+  }) async {
     try {
       final bytes = await file.readAsBytes();
       final cleanFileName = file.path.replaceAll(r'\', '/').split('/').last;
@@ -92,7 +132,10 @@ class CloudinaryService {
     }
   }
 
-  Future<String?> uploadDocument(File file, {String folder = 'pu_connection/documents'}) async {
+  Future<String?> uploadDocument(
+    File file, {
+    String folder = 'pu_connection/documents',
+  }) async {
     try {
       final bytes = await file.readAsBytes();
       final cleanFileName = file.path.replaceAll(r'\', '/').split('/').last;
@@ -113,7 +156,8 @@ class CloudinaryService {
     required String folder,
   }) async {
     try {
-      final url = 'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
+      final url =
+          'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
       final fileName = file.path.replaceAll(r'\', '/').split('/').last;
 
       final formData = FormData.fromMap({
@@ -134,8 +178,11 @@ class CloudinaryService {
       if (response.statusCode == 200 && response.data != null) {
         return response.data['secure_url'] as String?;
       } else {
-        final errorMessage = response.data?['error']?['message'] ?? 'Upload failed';
-        throw Exception('Cloudinary upload error: $errorMessage (code: ${response.statusCode})');
+        final errorMessage =
+            response.data?['error']?['message'] ?? 'Upload failed';
+        throw Exception(
+          'Cloudinary upload error: $errorMessage (code: ${response.statusCode})',
+        );
       }
     } catch (e) {
       rethrow;

@@ -21,7 +21,10 @@ class OfflineCacheService {
       final limited = posts.take(30).toList();
       final jsonStr = jsonEncode(limited);
       await prefs.setString(_keyRecentPosts, jsonStr);
-      await prefs.setInt(_keyLastCacheTime, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        _keyLastCacheTime,
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (_) {}
   }
 

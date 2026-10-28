@@ -5,11 +5,7 @@ class OfflineBanner extends StatelessWidget {
   final VoidCallback? onRetry;
   final bool isOffline;
 
-  const OfflineBanner({
-    super.key,
-    this.isOffline = true,
-    this.onRetry,
-  });
+  const OfflineBanner({super.key, this.isOffline = true, this.onRetry});
 
   @override
   Widget build(BuildContext context) {

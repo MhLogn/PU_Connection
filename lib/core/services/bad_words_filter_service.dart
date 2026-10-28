@@ -54,13 +54,19 @@ class BadWordsFilterService {
     _p('v${_sep}l${_sep}o${_sep}n'),
 
     // Tiếng Anh thô tục phổ biến
-    _p('(?:fuck(?:ing|er|ed)?|shit|bullshit|bitch|asshole|bastard|dick|cunt|pussy|motherfucker)'),
+    _p(
+      '(?:fuck(?:ing|er|ed)?|shit|bullshit|bitch|asshole|bastard|dick|cunt|pussy|motherfucker)',
+    ),
 
     // Gian lận học tập tiêu cực
-    _p(r'(?:thi\s*h[oộ]|l[aà]m\s*h[oộ]\s*(?:đ[oồ]\s*[aá]n|b[aà]i\s*t[aậ]p)|hack\s*đi[eêềếệểễ]m(?:\s*portal)?|mua\s*b[aá]n\s*đ[eề]\s*thi)'),
+    _p(
+      r'(?:thi\s*h[oộ]|l[aà]m\s*h[oộ]\s*(?:đ[oồ]\s*[aá]n|b[aà]i\s*t[aậ]p)|hack\s*đi[eêềếệểễ]m(?:\s*portal)?|mua\s*b[aá]n\s*đ[eề]\s*thi)',
+    ),
 
     // Cờ bạc, cá cược, lừa đảo
-    _p(r'(?:c[aá]\s*đ[oộ]\s*(?:b[oó]ng)?|web\s*c[aá]\s*c[uư][oợ]c|l[oô]\s*đ[eề]\s*online|đ[aá]nh\s*b[aà]i\s*ti[eề]n\s*th[aậ]t)'),
+    _p(
+      r'(?:c[aá]\s*đ[oộ]\s*(?:b[oó]ng)?|web\s*c[aá]\s*c[uư][oợ]c|l[oô]\s*đ[eề]\s*online|đ[aá]nh\s*b[aà]i\s*ti[eề]n\s*th[aậ]t)',
+    ),
   ];
 
   /// Kiểm tra nhanh xem chuỗi ký tự có chứa từ ngữ nhạy cảm hay không
@@ -93,24 +99,31 @@ class BadWordsFilterService {
   }
 
   /// Kiểm tra chi tiết và trả về kết quả kèm gợi ý điều chỉnh
-  BadWordsCheckResult check(String text) {
-    if (text.isEmpty) {
+  BadWordsCheckResult check(String text, {String? actionLabel}) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
       return const BadWordsCheckResult(hasBadWords: false);
     }
 
-    final violations = findViolations(text);
+    final violations = findViolations(trimmed);
     if (violations.isEmpty) {
       return const BadWordsCheckResult(hasBadWords: false);
     }
 
     final detectedPreview = violations.take(3).map((w) => '"$w"').join(', ');
-    final extraCount = violations.length > 3 ? ' và ${violations.length - 3} từ khác' : '';
+    final extraCount = violations.length > 3
+        ? ' và ${violations.length - 3} từ khác'
+        : '';
+
+    final actionText = actionLabel != null && actionLabel.trim().isNotEmpty
+        ? ' để ${actionLabel.trim()}'
+        : ' trước khi tiếp tục';
 
     return BadWordsCheckResult(
       hasBadWords: true,
       detectedWords: violations,
       suggestionMessage:
-          'Nội dung chứa từ ngữ không phù hợp với chuẩn mực văn hóa Phenikaa ($detectedPreview$extraCount). Vui lòng điều chỉnh để đăng bài.',
+          'Nội dung chứa từ ngữ không phù hợp với chuẩn mực văn hóa Phenikaa ($detectedPreview$extraCount). Vui lòng điều chỉnh$actionText.',
     );
   }
 

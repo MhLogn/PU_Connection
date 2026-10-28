@@ -37,6 +37,9 @@ import '../../features/saved_posts/presentation/cubit/saved_posts_cubit.dart';
 import '../../features/study_groups/domain/repositories/study_group_repository.dart';
 import '../../features/study_groups/data/repositories/study_group_repository_impl.dart';
 import '../../features/study_groups/presentation/cubit/study_group_cubit.dart';
+import '../../features/notes/domain/repositories/note_repository.dart';
+import '../../features/notes/data/repositories/note_repository_impl.dart';
+import '../../features/notes/presentation/cubit/notes_cubit.dart';
 import '../../features/admin/domain/repositories/admin_repository.dart';
 import '../../features/admin/data/repositories/admin_repository_impl.dart';
 import '../../features/admin/presentation/cubit/admin_cubit.dart';
@@ -59,27 +62,25 @@ Future<void> initDI() async {
   sl.registerFactory(() => ThemeCubit(sharedPreferences: sl()));
   sl.registerFactory(() => LocaleCubit(sharedPreferences: sl()));
 
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(prefs: sl()));
-  sl.registerFactory(() => AuthCubit(authRepository: sl()));
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(prefs: sl()),
+  );
+  sl.registerLazySingleton<AuthCubit>(() => AuthCubit(authRepository: sl()));
 
   sl.registerLazySingleton<PostRepository>(() => PostRepositoryImpl());
-  sl.registerFactory(() => FeedCubit(
-        postRepository: sl(),
-        cloudinaryService: sl(),
-      ));
+  sl.registerFactory(
+    () => FeedCubit(postRepository: sl(), cloudinaryService: sl()),
+  );
 
-  sl.registerLazySingleton<DocumentRepository>(() => DocumentRepositoryImpl(
-        cloudinaryService: sl(),
-      ));
-  sl.registerFactory(() => DocumentCubit(
-        documentRepository: sl(),
-      ));
+  sl.registerLazySingleton<DocumentRepository>(
+    () => DocumentRepositoryImpl(cloudinaryService: sl()),
+  );
+  sl.registerFactory(() => DocumentCubit(documentRepository: sl()));
 
   sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl());
-  sl.registerFactory(() => ChatCubit(
-        chatRepository: sl(),
-        cloudinaryService: sl(),
-      ));
+  sl.registerFactory(
+    () => ChatCubit(chatRepository: sl(), cloudinaryService: sl()),
+  );
 
   // Clubs
   sl.registerLazySingleton<ClubRepository>(() => ClubRepositoryImpl());
@@ -90,31 +91,34 @@ Future<void> initDI() async {
   sl.registerFactory(() => FriendshipCubit(friendRepository: sl()));
 
   // Content Moderation & Blocking
-  sl.registerLazySingleton<ModerationRepository>(() => ModerationRepositoryImpl());
+  sl.registerLazySingleton<ModerationRepository>(
+    () => ModerationRepositoryImpl(),
+  );
   sl.registerFactory(() => ModerationCubit(moderationRepository: sl()));
 
   // In-App Notification Center
   sl.registerLazySingleton<InAppNotificationRepository>(
-      () => InAppNotificationRepositoryImpl());
-  sl.registerFactory(
-      () => InAppNotificationsCubit(repository: sl()));
+    () => InAppNotificationRepositoryImpl(),
+  );
+  sl.registerFactory(() => InAppNotificationsCubit(repository: sl()));
 
   // Saved Posts (Bookmarks)
   sl.registerLazySingleton<SavedPostsRepository>(
-      () => SavedPostsRepositoryImpl());
-  sl.registerFactory(
-      () => SavedPostsCubit(repository: sl()));
+    () => SavedPostsRepositoryImpl(),
+  );
+  sl.registerFactory(() => SavedPostsCubit(repository: sl()));
 
   // Study Group Matchmaker
   sl.registerLazySingleton<StudyGroupRepository>(
-      () => StudyGroupRepositoryImpl());
-  sl.registerFactory(
-      () => StudyGroupCubit(repository: sl()));
+    () => StudyGroupRepositoryImpl(),
+  );
+  sl.registerFactory(() => StudyGroupCubit(repository: sl()));
+
+  // Notes
+  sl.registerLazySingleton<NoteRepository>(() => NoteRepositoryImpl());
+  sl.registerFactory(() => NotesCubit(noteRepository: sl()));
 
   // Admin Portal & Moderation Management
-  sl.registerLazySingleton<AdminRepository>(
-      () => AdminRepositoryImpl());
-  sl.registerFactory(
-      () => AdminCubit(adminRepository: sl()));
+  sl.registerLazySingleton<AdminRepository>(() => AdminRepositoryImpl());
+  sl.registerFactory(() => AdminCubit(adminRepository: sl()));
 }
-

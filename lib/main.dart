@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,6 +21,8 @@ import 'features/moderation/presentation/cubit/moderation_cubit.dart';
 import 'features/notifications/presentation/cubit/in_app_notifications_cubit.dart';
 import 'features/saved_posts/presentation/cubit/saved_posts_cubit.dart';
 import 'features/study_groups/presentation/cubit/study_group_cubit.dart';
+import 'features/notes/presentation/cubit/notes_cubit.dart';
+import 'features/admin/presentation/cubit/admin_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,9 +32,15 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  try {
-    FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
-  } catch (_) {}
+  if (kDebugMode) {
+    try {
+      FirebaseAuth.instance.setSettings(
+        appVerificationDisabledForTesting: true,
+      );
+    } catch (e) {
+      debugPrint('Firebase Auth test mode settings skipped: $e');
+    }
+  }
 
   await initDI();
 
@@ -47,7 +56,7 @@ class PUConnectionApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<ThemeCubit>()),
         BlocProvider(create: (_) => sl<LocaleCubit>()),
-        BlocProvider(create: (_) => sl<AuthCubit>()),
+        BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<FeedCubit>()),
         BlocProvider(create: (_) => sl<ChatCubit>()),
         BlocProvider(create: (_) => sl<ClubCubit>()),
@@ -56,6 +65,8 @@ class PUConnectionApp extends StatelessWidget {
         BlocProvider(create: (_) => sl<InAppNotificationsCubit>()),
         BlocProvider(create: (_) => sl<SavedPostsCubit>()),
         BlocProvider(create: (_) => sl<StudyGroupCubit>()),
+        BlocProvider(create: (_) => sl<NotesCubit>()),
+        BlocProvider(create: (_) => sl<AdminCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
