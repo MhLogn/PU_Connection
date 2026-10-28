@@ -59,16 +59,16 @@ class ReportEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        reporterId,
-        reporterName,
-        targetId,
-        targetType,
-        targetAuthorId,
-        targetAuthorName,
-        reason,
-        details,
-        status,
-        createdAt,
-      ];
+    id,
+    reporterId,
+    reporterName,
+    targetId,
+    targetType,
+    targetAuthorId,
+    targetAuthorName,
+    reason,
+    details,
+    status,
+    createdAt,
+  ];
 }

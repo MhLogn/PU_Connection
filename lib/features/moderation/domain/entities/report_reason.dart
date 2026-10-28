@@ -1,24 +1,27 @@
 enum ReportReason {
+  inappropriate,
   spam,
   harassment,
-  hateSpeech,
-  inappropriate,
+  misinformation,
   academicDishonesty,
+  hateSpeech,
   impersonation,
   other;
 
   String get displayName {
     switch (this) {
+      case ReportReason.inappropriate:
+        return 'Nội dung không phù hợp';
       case ReportReason.spam:
-        return 'Spam / Quảng cáo rác';
+        return 'Spam hoặc quảng cáo';
       case ReportReason.harassment:
-        return 'Quấy rối / Đe dọa / Xúc phạm';
+        return 'Quấy rối hoặc bắt nạt';
+      case ReportReason.misinformation:
+        return 'Thông tin sai lệch';
+      case ReportReason.academicDishonesty:
+        return 'Vi phạm bản quyền / Gian lận học thuật';
       case ReportReason.hateSpeech:
         return 'Phát ngôn thù địch / Kích động';
-      case ReportReason.inappropriate:
-        return 'Nội dung phản cảm / Đồi trụy';
-      case ReportReason.academicDishonesty:
-        return 'Gian lận học tập / Mua bán bài tập';
       case ReportReason.impersonation:
         return 'Mạo danh sinh viên hoặc giảng viên';
       case ReportReason.other:

@@ -19,6 +19,7 @@ class ClubModel extends ClubEntity {
     super.contactEmail,
     super.contactPhone,
     super.colorValue,
+    super.status,
   });
 
   factory ClubModel.fromMap(Map<String, dynamic> map, String id) {
@@ -26,22 +27,35 @@ class ClubModel extends ClubEntity {
       id: id,
       name: map['name'] as String? ?? '',
       category: map['category'] as String? ?? 'Học thuật',
-      description: map['desc'] as String? ?? (map['description'] as String? ?? ''),
+      description:
+          map['desc'] as String? ?? (map['description'] as String? ?? ''),
       avatarUrl: map['avatarUrl'] as String? ?? '',
       coverUrl: map['coverUrl'] as String? ?? '',
       leaderId: map['leaderId'] as String? ?? '',
       leaderName: map['leaderName'] as String? ?? 'Ban Chủ Nhiệm',
-      memberIds: List<String>.from(map['members'] as List? ?? (map['memberIds'] as List? ?? [])),
+      memberIds: List<String>.from(
+        map['members'] as List? ?? (map['memberIds'] as List? ?? []),
+      ),
       membersCount: (map['membersCount'] as num?)?.toInt() ?? 0,
-      schedule: map['schedule'] as String? ?? 'Tối Thứ 4 & Chủ Nhật hàng tuần (18h30 - 20h30)',
-      location: map['location'] as String? ?? 'Tòa A9 (Phòng Hội thảo 2) & Sân thể thao Phenikaa',
-      benefits: List<String>.from(map['benefits'] as List? ?? [
-        'Cộng điểm rèn luyện (ĐRL) tiêu chí Hoạt động phong trào',
-        'Cấp chứng nhận thành viên và cơ hội thi đấu cấp toàn quốc',
-      ]),
+      schedule:
+          map['schedule'] as String? ??
+          'Tối Thứ 4 & Chủ Nhật hàng tuần (18h30 - 20h30)',
+      location:
+          map['location'] as String? ??
+          'Tòa A9 (Phòng Hội thảo 2) & Sân thể thao Phenikaa',
+      benefits: List<String>.from(
+        map['benefits'] as List? ??
+            [
+              'Cộng điểm rèn luyện (ĐRL) tiêu chí Hoạt động phong trào',
+              'Cấp chứng nhận thành viên và cơ hội thi đấu cấp toàn quốc',
+            ],
+      ),
       contactEmail: map['contactEmail'] as String? ?? '',
       contactPhone: map['contactPhone'] as String? ?? '',
-      colorValue: (map['color'] as num?)?.toInt() ?? ((map['colorValue'] as num?)?.toInt() ?? 0xFF0284C7),
+      colorValue:
+          (map['color'] as num?)?.toInt() ??
+          ((map['colorValue'] as num?)?.toInt() ?? 0xFF0284C7),
+      status: map['status'] as String? ?? 'approved',
     );
   }
 
@@ -70,6 +84,7 @@ class ClubModel extends ClubEntity {
       'contactPhone': contactPhone,
       'color': colorValue,
       'colorValue': colorValue,
+      'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

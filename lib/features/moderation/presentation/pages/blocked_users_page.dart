@@ -19,11 +19,15 @@ class BlockedUsersPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Người dùng đã chặn', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Người dùng đã chặn',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: BlocConsumer<ModerationCubit, ModerationState>(
         listener: (context, state) {
-          if (state.message != null && state.status == ModerationActionStatus.success) {
+          if (state.message != null &&
+              state.status == ModerationActionStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message!),
@@ -47,7 +51,9 @@ class BlockedUsersPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.1),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -59,7 +65,9 @@ class BlockedUsersPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'Danh sách chặn trống',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -85,19 +93,38 @@ class BlockedUsersPage extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.isDark(context)
+                        ? Colors.white10
+                        : AppTheme.borderLight,
+                    width: 0.8,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x06123B63),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: colorScheme.surfaceContainerHighest,
-                      backgroundImage: user.userAvatar.isNotEmpty ? NetworkImage(user.userAvatar) : null,
+                      backgroundImage: user.userAvatar.isNotEmpty
+                          ? NetworkImage(user.userAvatar)
+                          : null,
                       child: user.userAvatar.isEmpty
                           ? Text(
-                              user.userName.isNotEmpty ? user.userName[0].toUpperCase() : '?',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              user.userName.isNotEmpty
+                                  ? user.userName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             )
                           : null,
                     ),
@@ -108,16 +135,23 @@ class BlockedUsersPage extends StatelessWidget {
                         children: [
                           Text(
                             user.userName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            user.userFaculty.isNotEmpty ? user.userFaculty : 'Sinh viên Phenikaa',
+                            user.userFaculty.isNotEmpty
+                                ? user.userFaculty
+                                : 'Sinh viên Phenikaa',
                             style: TextStyle(
                               fontSize: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -128,8 +162,13 @@ class BlockedUsersPage extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             title: const Text('Bỏ chặn người dùng?'),
-                            content: Text('Bạn có chắc chắn muốn bỏ chặn ${user.userName}? Họ sẽ có thể xem lại bài viết và nhắn tin cho bạn.'),
+                            content: Text(
+                              'Bạn có chắc chắn muốn bỏ chặn ${user.userName}? Họ sẽ có thể xem lại bài viết và nhắn tin cho bạn.',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx),
@@ -139,10 +178,15 @@ class BlockedUsersPage extends StatelessWidget {
                                 onPressed: () {
                                   Navigator.pop(ctx);
                                   context.read<ModerationCubit>().unblockUser(
-                                        currentUserId: currentUid,
-                                        blockedUserId: user.userId,
-                                      );
+                                    currentUserId: currentUid,
+                                    blockedUserId: user.userId,
+                                  );
                                 },
+                                style: FilledButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
                                 child: const Text('Bỏ chặn'),
                               ),
                             ],
@@ -150,10 +194,21 @@ class BlockedUsersPage extends StatelessWidget {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: const Text('Bỏ chặn', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Bỏ chặn',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

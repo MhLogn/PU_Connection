@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../domain/entities/study_group_entity.dart';
 import '../cubit/study_group_cubit.dart';
 
@@ -108,6 +110,34 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final title = _titleController.text.trim();
+    final subject = _subjectController.text.trim();
+    final desc = _descController.text.trim();
+    final location = _locationController.text.trim();
+
+    // Tiền kiểm tra từ ngữ không phù hợp (Bad Words Filter)
+    if (sl.isRegistered<BadWordsFilterService>()) {
+      final filter = sl<BadWordsFilterService>();
+      final fullTextToCheck = '$title $subject $desc $location';
+      final checkResult = filter.check(
+        fullTextToCheck,
+        actionLabel: 'tạo nhóm học tập',
+      );
+      if (!checkResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              checkResult.suggestionMessage ??
+                  'Thông tin nhóm học tập chứa từ ngữ không phù hợp với chuẩn mực văn hóa Phenikaa.',
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() => _isSubmitting = true);
 
     final newGroup = StudyGroupEntity(
@@ -175,7 +205,10 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                     SizedBox(width: 8),
                     Text(
                       'Tạo nhóm học tập',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -197,7 +230,13 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Môn học
-                    const Text('Môn học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Môn học',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _subjectController,
@@ -205,10 +244,15 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                         hintText: 'Nhập tên môn học (VD: Giải tích 2)...',
                         prefixIcon: const Icon(Icons.school_rounded, size: 20),
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Vui lòng nhập môn học' : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? 'Vui lòng nhập môn học'
+                          : null,
                     ),
                     const SizedBox(height: 8),
 
@@ -230,34 +274,58 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                     const SizedBox(height: 16),
 
                     // Tiêu đề nhóm học
-                    const Text('Tiêu đề bài đăng tìm nhóm', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Tiêu đề bài đăng tìm nhóm',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _titleController,
                       decoration: InputDecoration(
-                        hintText: 'VD: Tìm 2 bạn cùng ôn thi Giải tích 2 kỳ này...',
+                        hintText:
+                            'VD: Tìm 2 bạn cùng ôn thi Giải tích 2 kỳ này...',
                         prefixIcon: const Icon(Icons.title_rounded, size: 20),
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Vui lòng nhập tiêu đề' : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? 'Vui lòng nhập tiêu đề'
+                          : null,
                     ),
                     const SizedBox(height: 16),
 
                     // Mục tiêu & mô tả
-                    const Text('Mô tả mục tiêu & kế hoạch học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Mô tả mục tiêu & kế hoạch học',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _descController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        hintText: 'Mô tả dạng bài cần giải, mục tiêu điểm số, yêu cầu với thành viên...',
+                        hintText:
+                            'Mô tả dạng bài cần giải, mục tiêu điểm số, yêu cầu với thành viên...',
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Vui lòng nhập mô tả' : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? 'Vui lòng nhập mô tả'
+                          : null,
                     ),
                     const SizedBox(height: 16),
 
@@ -265,8 +333,20 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Số lượng thành viên tối đa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text('$_maxMembers bạn', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
+                        const Text(
+                          'Số lượng thành viên tối đa',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          '$_maxMembers bạn',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0284C7),
+                          ),
+                        ),
                       ],
                     ),
                     Slider(
@@ -284,29 +364,58 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                     const SizedBox(height: 8),
 
                     // Thời gian học
-                    const Text('Thời gian học dự kiến', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Thời gian học dự kiến',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     InkWell(
                       onTap: _pickDateTime,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          ),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_month_rounded, size: 20, color: Color(0xFF0284C7)),
+                            const Icon(
+                              Icons.calendar_month_rounded,
+                              size: 20,
+                              color: Color(0xFF0284C7),
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 '${_studyTime.hour.toString().padLeft(2, '0')}:${_studyTime.minute.toString().padLeft(2, '0')} ngày ${_studyTime.day}/${_studyTime.month}/${_studyTime.year}',
-                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            const Text('Thay đổi', style: TextStyle(fontSize: 12, color: Color(0xFF0284C7), fontWeight: FontWeight.bold)),
+                            const Text(
+                              'Thay đổi',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF0284C7),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -314,7 +423,13 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                     const SizedBox(height: 16),
 
                     // Địa điểm học
-                    const Text('Địa điểm học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Địa điểm học',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _locationController,
@@ -322,10 +437,15 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                         hintText: 'VD: Thư viện Tòa A9, Online Google Meet...',
                         prefixIcon: const Icon(Icons.place_rounded, size: 20),
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Vui lòng nhập địa điểm' : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? 'Vui lòng nhập địa điểm'
+                          : null,
                     ),
                     const SizedBox(height: 24),
 
@@ -339,10 +459,16 @@ class _CreateStudyGroupSheetState extends State<CreateStudyGroupSheet> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.check_circle_rounded),
-                        label: const Text('Đăng bài tìm nhóm ngay', style: TextStyle(fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'Đăng bài tìm nhóm ngay',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],

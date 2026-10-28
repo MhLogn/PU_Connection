@@ -50,9 +50,18 @@ class ReportBottomSheet extends StatefulWidget {
 }
 
 class _ReportBottomSheetState extends State<ReportBottomSheet> {
-  ReportReason _selectedReason = ReportReason.spam;
+  ReportReason? _selectedReason;
   final TextEditingController _detailsController = TextEditingController();
   bool _isSubmitting = false;
+
+  static const List<ReportReason> _displayReasons = [
+    ReportReason.inappropriate,
+    ReportReason.spam,
+    ReportReason.harassment,
+    ReportReason.misinformation,
+    ReportReason.academicDishonesty,
+    ReportReason.other,
+  ];
 
   @override
   void dispose() {
@@ -61,10 +70,25 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
   }
 
   Future<void> _submitReport() async {
+    if (_selectedReason == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Vui lòng chọn một lý do báo cáo vi phạm trước khi gửi.',
+          ),
+          backgroundColor: AppTheme.accentColor(context),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng đăng nhập để thực hiện báo cáo!')),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thực hiện báo cáo!'),
+        ),
       );
       return;
     }
@@ -80,8 +104,9 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
       targetType: widget.targetType,
       targetAuthorId: widget.targetAuthorId,
       targetAuthorName: widget.targetAuthorName,
-      reason: _selectedReason,
+      reason: _selectedReason!,
       details: _detailsController.text.trim(),
+      status: 'pending',
       createdAt: DateTime.now(),
     );
 
@@ -91,7 +116,9 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã gửi báo cáo vi phạm. Cảm ơn bạn đã giữ gìn cộng đồng Phenikaa văn minh!'),
+            content: const Text(
+              'Đã gửi báo cáo vi phạm. Cảm ơn bạn đã giữ gìn cộng đồng Phenikaa văn minh!',
+            ),
             backgroundColor: AppTheme.primaryColor(context),
             behavior: SnackBarBehavior.floating,
           ),
@@ -100,10 +127,12 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
+        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi khi gửi báo cáo: $e'),
+            content: Text(cleanMsg),
             backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -114,6 +143,7 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = AppTheme.isDark(context);
 
     return Container(
       padding: EdgeInsets.only(
@@ -136,11 +166,26 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.report_problem_rounded, color: Colors.amber.shade800),
-                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentOrange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.flag_outlined,
+                        color: AppTheme.accentOrange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
                     Text(
                       'Báo cáo ${widget.targetType.displayName.toLowerCase()}',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppTheme.deepBlue,
+                      ),
                     ),
                   ],
                 ),
@@ -150,39 +195,69 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             Text(
-              'Hãy chọn lý do vi phạm tiêu chuẩn cộng đồng trường Đại học Phenikaa:',
-              style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.7)),
+              'Hãy chọn lý do vi phạm tiêu chuẩn cộng đồng sinh viên Phenikaa:',
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
             const SizedBox(height: 14),
 
             // Radio choices of reasons
-            ...ReportReason.values.map((reason) {
+            ..._displayReasons.map((reason) {
               final isSelected = _selectedReason == reason;
-              return InkWell(
-                onTap: () => setState(() => _selectedReason = reason),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                        color: isSelected ? AppTheme.primaryColor(context) : colorScheme.outline,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          reason.displayName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppTheme.primaryColor(context).withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppTheme.primaryColor(context).withValues(alpha: 0.4)
+                        : (isDark ? Colors.white12 : AppTheme.borderLight),
+                    width: 0.9,
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () => setState(() => _selectedReason = reason),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: isSelected
+                              ? AppTheme.primaryColor(context)
+                              : colorScheme.outline,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            reason.displayName,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? (isDark ? Colors.white : AppTheme.deepBlue)
+                                  : colorScheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -191,29 +266,64 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
             const SizedBox(height: 14),
             TextField(
               controller: _detailsController,
-              maxLines: 2,
+              maxLines: 3,
+              maxLength: 300,
               decoration: InputDecoration(
                 hintText: 'Mô tả thêm chi tiết vi phạm (không bắt buộc)...',
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintStyle: TextStyle(
+                  fontSize: 12.5,
+                  color: colorScheme.onSurface.withValues(alpha: 0.45),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white24 : AppTheme.borderLight,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppTheme.primaryColor(context),
+                    width: 1.5,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
             FilledButton(
               onPressed: _isSubmitting ? null : _submitReport,
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
+                backgroundColor: AppTheme.primaryColor(context),
+                disabledBackgroundColor: AppTheme.primaryColor(
+                  context,
+                ).withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: _isSubmitting
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Text('Gửi báo cáo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  : const Text(
+                      'Gửi báo cáo vi phạm',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.5,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ],
         ),

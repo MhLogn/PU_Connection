@@ -39,7 +39,9 @@ class BlockedUserModel extends BlockedUserEntity {
       'userName': userName,
       'userAvatar': userAvatar,
       'userFaculty': userFaculty,
-      'blockedAt': blockedAt != null ? Timestamp.fromDate(blockedAt!) : FieldValue.serverTimestamp(),
+      'blockedAt': blockedAt != null
+          ? Timestamp.fromDate(blockedAt!)
+          : FieldValue.serverTimestamp(),
     };
   }
 }

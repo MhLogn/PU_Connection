@@ -13,8 +13,8 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
   StreamSubscription<List<Map<String, dynamic>>>? _friendsSub;
 
   FriendshipCubit({required FriendRepository friendRepository})
-      : _friendRepository = friendRepository,
-        super(const FriendshipState());
+    : _friendRepository = friendRepository,
+      super(const FriendshipState());
 
   void initRelationship({
     required String currentUserId,
@@ -31,12 +31,12 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
           targetUserId: targetUserId,
         )
         .listen((relationship) {
-      emit(state.copyWith(relationship: relationship));
-    });
+          emit(state.copyWith(relationship: relationship));
+        });
 
-    _friendsSub = _friendRepository
-        .getFriendsStream(targetUserId)
-        .listen((friends) {
+    _friendsSub = _friendRepository.getFriendsStream(targetUserId).listen((
+      friends,
+    ) {
       emit(state.copyWith(friendsList: friends));
     });
   }
@@ -48,8 +48,8 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
     _requestsSub = _friendRepository
         .getReceivedFriendRequestsStream(currentUserId)
         .listen((requests) {
-      emit(state.copyWith(receivedRequests: requests));
-    });
+          emit(state.copyWith(receivedRequests: requests));
+        });
   }
 
   Future<void> toggleFollow({
@@ -63,25 +63,31 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
           currentUserId: currentUserId,
           targetUserId: targetUserId,
         );
-        emit(state.copyWith(
-          actionStatus: FriendshipActionStatus.success,
-          message: 'Đã hủy theo dõi',
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: FriendshipActionStatus.success,
+            message: 'Đã hủy theo dõi',
+          ),
+        );
       } else {
         await _friendRepository.followUser(
           currentUserId: currentUserId,
           targetUserId: targetUserId,
         );
-        emit(state.copyWith(
-          actionStatus: FriendshipActionStatus.success,
-          message: 'Đang theo dõi người dùng này',
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: FriendshipActionStatus.success,
+            message: 'Đang theo dõi người dùng này',
+          ),
+        );
       }
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Lỗi khi cập nhật theo dõi: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Lỗi khi cập nhật theo dõi: $e',
+        ),
+      );
     }
   }
 
@@ -103,15 +109,19 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
         targetUserId: targetUserId,
         targetUserName: targetUserName,
       );
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.success,
-        message: 'Đã gửi lời mời kết bạn!',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.success,
+          message: 'Đã gửi lời mời kết bạn!',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Không thể gửi lời mời kết bạn: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Không thể gửi lời mời kết bạn: $e',
+        ),
+      );
     }
   }
 
@@ -125,15 +135,19 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
         currentUserId: currentUserId,
         targetUserId: targetUserId,
       );
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.success,
-        message: 'Đã hủy lời mời kết bạn',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.success,
+          message: 'Đã hủy lời mời kết bạn',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Lỗi khi hủy lời mời: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Lỗi khi hủy lời mời: $e',
+        ),
+      );
     }
   }
 
@@ -159,15 +173,19 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
         senderAvatar: senderAvatar,
         senderFaculty: senderFaculty,
       );
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.success,
-        message: 'Đã trở thành bạn bè với $senderName!',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.success,
+          message: 'Đã trở thành bạn bè với $senderName!',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Lỗi khi chấp nhận kết bạn: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Lỗi khi chấp nhận kết bạn: $e',
+        ),
+      );
     }
   }
 
@@ -181,15 +199,19 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
         currentUserId: currentUserId,
         senderId: senderId,
       );
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.success,
-        message: 'Đã từ chối lời mời kết bạn',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.success,
+          message: 'Đã từ chối lời mời kết bạn',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Lỗi khi từ chối: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Lỗi khi từ chối: $e',
+        ),
+      );
     }
   }
 
@@ -203,20 +225,29 @@ class FriendshipCubit extends BlocBase<FriendshipState> {
         currentUserId: currentUserId,
         friendId: friendId,
       );
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.success,
-        message: 'Đã hủy kết bạn',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.success,
+          message: 'Đã hủy kết bạn',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        actionStatus: FriendshipActionStatus.failure,
-        message: 'Lỗi khi hủy kết bạn: $e',
-      ));
+      emit(
+        state.copyWith(
+          actionStatus: FriendshipActionStatus.failure,
+          message: 'Lỗi khi hủy kết bạn: $e',
+        ),
+      );
     }
   }
 
   void clearMessage() {
-    emit(state.copyWith(actionStatus: FriendshipActionStatus.initial, message: null));
+    emit(
+      state.copyWith(
+        actionStatus: FriendshipActionStatus.initial,
+        message: null,
+      ),
+    );
   }
 
   @override

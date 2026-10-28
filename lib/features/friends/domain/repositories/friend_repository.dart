@@ -52,7 +52,9 @@ abstract class FriendRepository {
     required String friendId,
   });
 
-  Stream<List<FriendRequestEntity>> getReceivedFriendRequestsStream(String currentUserId);
+  Stream<List<FriendRequestEntity>> getReceivedFriendRequestsStream(
+    String currentUserId,
+  );
 
   Stream<List<Map<String, dynamic>>> getFriendsStream(String userId);
 }

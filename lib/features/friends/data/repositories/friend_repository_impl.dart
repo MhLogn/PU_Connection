@@ -11,7 +11,8 @@ import '../models/friend_request_model.dart';
 class FriendRepositoryImpl implements FriendRepository {
   final FirebaseFirestore? _customFirestore;
 
-  FriendRepositoryImpl({FirebaseFirestore? firestore}) : _customFirestore = firestore;
+  FriendRepositoryImpl({FirebaseFirestore? firestore})
+    : _customFirestore = firestore;
 
   FirebaseFirestore? get _firestore {
     if (_customFirestore != null) return _customFirestore;
@@ -24,13 +25,19 @@ class FriendRepositoryImpl implements FriendRepository {
   }
 
   // --- In-memory mock storage for tests and offline mode ---
-  static final Map<String, Set<String>> _memoryFollowing = {}; // userId -> Set<targetUserId>
-  static final Map<String, Set<String>> _memoryFollowers = {}; // userId -> Set<followerUserId>
-  static final Map<String, Set<String>> _memoryFriends = {}; // userId -> Set<friendUserId>
-  static final Map<String, Map<String, dynamic>> _memoryUsersInfo = {}; // userId -> user info map
-  static final List<FriendRequestEntity> _memoryRequests = []; // All pending/active requests
+  static final Map<String, Set<String>> _memoryFollowing =
+      {}; // userId -> Set<targetUserId>
+  static final Map<String, Set<String>> _memoryFollowers =
+      {}; // userId -> Set<followerUserId>
+  static final Map<String, Set<String>> _memoryFriends =
+      {}; // userId -> Set<friendUserId>
+  static final Map<String, Map<String, dynamic>> _memoryUsersInfo =
+      {}; // userId -> user info map
+  static final List<FriendRequestEntity> _memoryRequests =
+      []; // All pending/active requests
 
-  static final StreamController<void> _changeNotifier = StreamController<void>.broadcast();
+  static final StreamController<void> _changeNotifier =
+      StreamController<void>.broadcast();
 
   static void resetMemory() {
     _memoryFollowing.clear();
@@ -49,24 +56,30 @@ class FriendRepositoryImpl implements FriendRepository {
     if (firestore == null) {
       return Stream.multi((controller) {
         void emitCurrent() {
-          final isFollowing = _memoryFollowing[currentUserId]?.contains(targetUserId) ?? false;
-          final isFriend = _memoryFriends[currentUserId]?.contains(targetUserId) ?? false;
+          final isFollowing =
+              _memoryFollowing[currentUserId]?.contains(targetUserId) ?? false;
+          final isFriend =
+              _memoryFriends[currentUserId]?.contains(targetUserId) ?? false;
 
           FriendshipStatus status = FriendshipStatus.none;
           if (isFriend) {
             status = FriendshipStatus.friends;
           } else {
-            final sentReq = _memoryRequests.any((r) =>
-                r.senderId == currentUserId &&
-                r.receiverId == targetUserId &&
-                r.status == 'pending');
+            final sentReq = _memoryRequests.any(
+              (r) =>
+                  r.senderId == currentUserId &&
+                  r.receiverId == targetUserId &&
+                  r.status == 'pending',
+            );
             if (sentReq) {
               status = FriendshipStatus.requestSent;
             } else {
-              final recvReq = _memoryRequests.any((r) =>
-                  r.senderId == targetUserId &&
-                  r.receiverId == currentUserId &&
-                  r.status == 'pending');
+              final recvReq = _memoryRequests.any(
+                (r) =>
+                    r.senderId == targetUserId &&
+                    r.receiverId == currentUserId &&
+                    r.status == 'pending',
+              );
               if (recvReq) {
                 status = FriendshipStatus.requestReceived;
               }
@@ -77,13 +90,15 @@ class FriendRepositoryImpl implements FriendRepository {
           final followingCount = _memoryFollowing[targetUserId]?.length ?? 0;
           final friendsCount = _memoryFriends[targetUserId]?.length ?? 0;
 
-          controller.add(RelationshipEntity(
-            isFollowing: isFollowing,
-            friendshipStatus: status,
-            followersCount: followersCount,
-            followingCount: followingCount,
-            friendsCount: friendsCount,
-          ));
+          controller.add(
+            RelationshipEntity(
+              isFollowing: isFollowing,
+              friendshipStatus: status,
+              followersCount: followersCount,
+              followingCount: followingCount,
+              friendsCount: friendsCount,
+            ),
+          );
         }
 
         emitCurrent();
@@ -121,8 +136,8 @@ class FriendRepositoryImpl implements FriendRepository {
           .doc(targetUserId)
           .snapshots()
           .listen((doc) {
-        updateAndEmit(isFollowing: doc.exists);
-      });
+            updateAndEmit(isFollowing: doc.exists);
+          });
 
       // 2. Friends check
       final friendSub = firestore
@@ -132,10 +147,10 @@ class FriendRepositoryImpl implements FriendRepository {
           .doc(targetUserId)
           .snapshots()
           .listen((doc) {
-        if (doc.exists) {
-          updateAndEmit(friendshipStatus: FriendshipStatus.friends);
-        }
-      });
+            if (doc.exists) {
+              updateAndEmit(friendshipStatus: FriendshipStatus.friends);
+            }
+          });
 
       // 3. Sent request check
       final sentReqSub = firestore
@@ -145,12 +160,14 @@ class FriendRepositoryImpl implements FriendRepository {
           .doc('sent_$targetUserId')
           .snapshots()
           .listen((doc) {
-        if (doc.exists && latest.friendshipStatus != FriendshipStatus.friends) {
-          updateAndEmit(friendshipStatus: FriendshipStatus.requestSent);
-        } else if (!doc.exists && latest.friendshipStatus == FriendshipStatus.requestSent) {
-          updateAndEmit(friendshipStatus: FriendshipStatus.none);
-        }
-      });
+            if (doc.exists &&
+                latest.friendshipStatus != FriendshipStatus.friends) {
+              updateAndEmit(friendshipStatus: FriendshipStatus.requestSent);
+            } else if (!doc.exists &&
+                latest.friendshipStatus == FriendshipStatus.requestSent) {
+              updateAndEmit(friendshipStatus: FriendshipStatus.none);
+            }
+          });
 
       // 4. Received request check
       final recvReqSub = firestore
@@ -160,49 +177,85 @@ class FriendRepositoryImpl implements FriendRepository {
           .doc('recv_$targetUserId')
           .snapshots()
           .listen((doc) {
-        if (doc.exists && latest.friendshipStatus != FriendshipStatus.friends) {
-          updateAndEmit(friendshipStatus: FriendshipStatus.requestReceived);
-        } else if (!doc.exists && latest.friendshipStatus == FriendshipStatus.requestReceived) {
-          updateAndEmit(friendshipStatus: FriendshipStatus.none);
-        }
-      });
+            if (doc.exists &&
+                latest.friendshipStatus != FriendshipStatus.friends) {
+              updateAndEmit(friendshipStatus: FriendshipStatus.requestReceived);
+            } else if (!doc.exists &&
+                latest.friendshipStatus == FriendshipStatus.requestReceived) {
+              updateAndEmit(friendshipStatus: FriendshipStatus.none);
+            }
+          });
 
-      // 5. Counters from target user's collections
-      final targetFollowersSub = firestore
+      // 5. Counters directly from target user's document [PERF-001]
+      // Tránh việc tải toàn bộ subcollection (followers, following, friends)
+      final targetUserSub = firestore
           .collection(FirebaseConstants.usersCollection)
           .doc(targetUserId)
-          .collection(FirebaseConstants.followersSubcollection)
           .snapshots()
-          .listen((snap) {
-        updateAndEmit(followersCount: snap.docs.length);
-      });
+          .listen((userSnap) async {
+            if (userSnap.exists) {
+              final data = userSnap.data();
+              int? followersCount = (data?['followersCount'] as num?)?.toInt();
+              int? followingCount = (data?['followingCount'] as num?)?.toInt();
+              int? friendsCount = (data?['friendsCount'] as num?)?.toInt();
 
-      final targetFollowingSub = firestore
-          .collection(FirebaseConstants.usersCollection)
-          .doc(targetUserId)
-          .collection(FirebaseConstants.followingSubcollection)
-          .snapshots()
-          .listen((snap) {
-        updateAndEmit(followingCount: snap.docs.length);
-      });
+              // Fallback dùng aggregation count().get() nếu trường tài liệu chưa có
+              if (followersCount == null) {
+                try {
+                  final snap = await firestore
+                      .collection(FirebaseConstants.usersCollection)
+                      .doc(targetUserId)
+                      .collection(FirebaseConstants.followersSubcollection)
+                      .count()
+                      .get();
+                  followersCount = snap.count ?? 0;
+                } catch (_) {
+                  followersCount = 0;
+                }
+              }
 
-      final targetFriendsSub = firestore
-          .collection(FirebaseConstants.usersCollection)
-          .doc(targetUserId)
-          .collection(FirebaseConstants.friendsSubcollection)
-          .snapshots()
-          .listen((snap) {
-        updateAndEmit(friendsCount: snap.docs.length);
-      });
+              if (followingCount == null) {
+                try {
+                  final snap = await firestore
+                      .collection(FirebaseConstants.usersCollection)
+                      .doc(targetUserId)
+                      .collection(FirebaseConstants.followingSubcollection)
+                      .count()
+                      .get();
+                  followingCount = snap.count ?? 0;
+                } catch (_) {
+                  followingCount = 0;
+                }
+              }
+
+              if (friendsCount == null) {
+                try {
+                  final snap = await firestore
+                      .collection(FirebaseConstants.usersCollection)
+                      .doc(targetUserId)
+                      .collection(FirebaseConstants.friendsSubcollection)
+                      .count()
+                      .get();
+                  friendsCount = snap.count ?? 0;
+                } catch (_) {
+                  friendsCount = 0;
+                }
+              }
+
+              updateAndEmit(
+                followersCount: followersCount < 0 ? 0 : followersCount,
+                followingCount: followingCount < 0 ? 0 : followingCount,
+                friendsCount: friendsCount < 0 ? 0 : friendsCount,
+              );
+            }
+          });
 
       controller.onCancel = () {
         followSub.cancel();
         friendSub.cancel();
         sentReqSub.cancel();
         recvReqSub.cancel();
-        targetFollowersSub.cancel();
-        targetFollowingSub.cancel();
-        targetFriendsSub.cancel();
+        targetUserSub.cancel();
       };
     });
   }
@@ -212,7 +265,11 @@ class FriendRepositoryImpl implements FriendRepository {
     required String currentUserId,
     required String targetUserId,
   }) async {
-    if (currentUserId.isEmpty || targetUserId.isEmpty || currentUserId == targetUserId) return;
+    if (currentUserId.isEmpty ||
+        targetUserId.isEmpty ||
+        currentUserId == targetUserId) {
+      return;
+    }
 
     final firestore = _firestore;
     if (firestore != null) {
@@ -238,6 +295,19 @@ class FriendRepositoryImpl implements FriendRepository {
           'userId': currentUserId,
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        final currentUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(currentUserId);
+        final targetUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(targetUserId);
+        batch.set(currentUserRef, {
+          'followingCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+        batch.set(targetUserRef, {
+          'followersCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
 
         await batch.commit();
         return;
@@ -276,6 +346,19 @@ class FriendRepositoryImpl implements FriendRepository {
         batch.delete(myFollowingRef);
         batch.delete(targetFollowerRef);
 
+        final currentUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(currentUserId);
+        final targetUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(targetUserId);
+        batch.set(currentUserRef, {
+          'followingCount': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+        batch.set(targetUserRef, {
+          'followersCount': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+
         await batch.commit();
         return;
       } catch (_) {}
@@ -295,7 +378,11 @@ class FriendRepositoryImpl implements FriendRepository {
     required String targetUserId,
     required String targetUserName,
   }) async {
-    if (currentUserId.isEmpty || targetUserId.isEmpty || currentUserId == targetUserId) return;
+    if (currentUserId.isEmpty ||
+        targetUserId.isEmpty ||
+        currentUserId == targetUserId) {
+      return;
+    }
 
     final firestore = _firestore;
     if (firestore != null) {
@@ -342,18 +429,21 @@ class FriendRepositoryImpl implements FriendRepository {
 
     // In-memory fallback
     _memoryRequests.removeWhere(
-        (r) => r.senderId == currentUserId && r.receiverId == targetUserId);
-    _memoryRequests.add(FriendRequestEntity(
-      id: 'req_${currentUserId}_$targetUserId',
-      senderId: currentUserId,
-      senderName: currentUserName,
-      senderAvatar: currentUserAvatar,
-      senderFaculty: currentUserFaculty,
-      receiverId: targetUserId,
-      receiverName: targetUserName,
-      createdAt: DateTime.now(),
-      status: 'pending',
-    ));
+      (r) => r.senderId == currentUserId && r.receiverId == targetUserId,
+    );
+    _memoryRequests.add(
+      FriendRequestEntity(
+        id: 'req_${currentUserId}_$targetUserId',
+        senderId: currentUserId,
+        senderName: currentUserName,
+        senderAvatar: currentUserAvatar,
+        senderFaculty: currentUserFaculty,
+        receiverId: targetUserId,
+        receiverName: targetUserName,
+        createdAt: DateTime.now(),
+        status: 'pending',
+      ),
+    );
     _changeNotifier.add(null);
   }
 
@@ -389,7 +479,8 @@ class FriendRepositoryImpl implements FriendRepository {
     }
 
     _memoryRequests.removeWhere(
-        (r) => r.senderId == currentUserId && r.receiverId == targetUserId);
+      (r) => r.senderId == currentUserId && r.receiverId == targetUserId,
+    );
     _changeNotifier.add(null);
   }
 
@@ -456,15 +547,30 @@ class FriendRepositoryImpl implements FriendRepository {
           'connectedAt': FieldValue.serverTimestamp(),
         });
 
+        final currentUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(currentUserId);
+        final senderUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(senderId);
+        batch.set(currentUserRef, {
+          'friendsCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+        batch.set(senderUserRef, {
+          'friendsCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+
         await batch.commit();
         return;
       } catch (_) {}
     }
 
     // In-memory fallback
-    _memoryRequests.removeWhere((r) =>
-        (r.senderId == senderId && r.receiverId == currentUserId) ||
-        (r.senderId == currentUserId && r.receiverId == senderId));
+    _memoryRequests.removeWhere(
+      (r) =>
+          (r.senderId == senderId && r.receiverId == currentUserId) ||
+          (r.senderId == currentUserId && r.receiverId == senderId),
+    );
 
     _memoryFriends.putIfAbsent(currentUserId, () => {}).add(senderId);
     _memoryFriends.putIfAbsent(senderId, () => {}).add(currentUserId);
@@ -517,7 +623,8 @@ class FriendRepositoryImpl implements FriendRepository {
     }
 
     _memoryRequests.removeWhere(
-        (r) => r.senderId == senderId && r.receiverId == currentUserId);
+      (r) => r.senderId == senderId && r.receiverId == currentUserId,
+    );
     _changeNotifier.add(null);
   }
 
@@ -547,6 +654,19 @@ class FriendRepositoryImpl implements FriendRepository {
         batch.delete(myFriendRef);
         batch.delete(otherFriendRef);
 
+        final currentUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(currentUserId);
+        final otherUserRef = firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(friendId);
+        batch.set(currentUserRef, {
+          'friendsCount': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+        batch.set(otherUserRef, {
+          'friendsCount': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+
         await batch.commit();
         return;
       } catch (_) {}
@@ -558,13 +678,17 @@ class FriendRepositoryImpl implements FriendRepository {
   }
 
   @override
-  Stream<List<FriendRequestEntity>> getReceivedFriendRequestsStream(String currentUserId) {
+  Stream<List<FriendRequestEntity>> getReceivedFriendRequestsStream(
+    String currentUserId,
+  ) {
     final firestore = _firestore;
     if (firestore == null) {
       return Stream.multi((controller) {
         void emitRequests() {
           final list = _memoryRequests
-              .where((r) => r.receiverId == currentUserId && r.status == 'pending')
+              .where(
+                (r) => r.receiverId == currentUserId && r.status == 'pending',
+              )
               .toList();
           controller.add(list);
         }
@@ -582,8 +706,10 @@ class FriendRepositoryImpl implements FriendRepository {
         .where('type', isEqualTo: 'received')
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => FriendRequestModel.fromFirestore(doc)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => FriendRequestModel.fromFirestore(doc))
+              .toList();
+        });
   }
 
   @override
@@ -617,15 +743,15 @@ class FriendRepositoryImpl implements FriendRepository {
         .collection(FirebaseConstants.friendsSubcollection)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'userId': doc.id,
-          'displayName': data['displayName'] ?? 'Sinh viên Phenikaa',
-          'avatarUrl': data['avatarUrl'] ?? '',
-          'faculty': data['faculty'] ?? '',
-        };
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return {
+              'userId': doc.id,
+              'displayName': data['displayName'] ?? 'Sinh viên Phenikaa',
+              'avatarUrl': data['avatarUrl'] ?? '',
+              'faculty': data['faculty'] ?? '',
+            };
+          }).toList();
+        });
   }
 }

@@ -23,9 +23,17 @@ class StudyGroupDetailPage extends StatelessWidget {
   Map<String, String> _getStudentInfo(String id) {
     final s = PhenikaaStudentDirectory.getStudentById(id);
     if (s != null) {
-      return {'name': s.fullName, 'faculty': s.faculty, 'studentId': s.studentId};
+      return {
+        'name': s.fullName,
+        'faculty': s.faculty,
+        'studentId': s.studentId,
+      };
     }
-    return {'name': 'Sinh viên Phenikaa ($id)', 'faculty': 'Đại học Phenikaa', 'studentId': id};
+    return {
+      'name': 'Sinh viên Phenikaa ($id)',
+      'faculty': 'Đại học Phenikaa',
+      'studentId': id,
+    };
   }
 
   @override
@@ -37,20 +45,25 @@ class StudyGroupDetailPage extends StatelessWidget {
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!), backgroundColor: colorScheme.error),
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: colorScheme.error,
+            ),
           );
           context.read<StudyGroupCubit>().clearMessage();
         } else if (state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.successMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.successMessage!)));
           context.read<StudyGroupCubit>().clearMessage();
         }
       },
       builder: (context, state) {
         // Lấy dữ liệu live mới nhất của group từ state nếu có
         final matchingGroups = state.groups.where((g) => g.id == group.id);
-        final currentGroup = matchingGroups.isNotEmpty ? matchingGroups.first : group;
+        final currentGroup = matchingGroups.isNotEmpty
+            ? matchingGroups.first
+            : group;
 
         final isCreator = currentGroup.isCreator(currentUserId);
         final isMember = currentGroup.isMember(currentUserId);
@@ -58,9 +71,12 @@ class StudyGroupDetailPage extends StatelessWidget {
         final isFull = currentGroup.isFull;
 
         return Scaffold(
-          backgroundColor: colorScheme.surface,
+          backgroundColor: colorScheme.surfaceContainerLowest,
           appBar: AppBar(
-            title: const Text('Chi tiết nhóm học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            title: const Text(
+              'Chi tiết nhóm học',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
             elevation: 0,
             scrolledUnderElevation: 1,
             actions: [
@@ -72,15 +88,30 @@ class StudyGroupDetailPage extends StatelessWidget {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         title: const Text('Đóng nhóm học tập'),
-                        content: const Text('Bạn có chắc muốn đóng nhóm này? Nhóm sẽ không nhận thêm thành viên mới.'),
+                        content: const Text(
+                          'Bạn có chắc muốn đóng nhóm này? Nhóm sẽ không nhận thêm thành viên mới.',
+                        ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Hủy'),
+                          ),
                           ElevatedButton(
                             onPressed: () {
                               Navigator.pop(ctx);
-                              context.read<StudyGroupCubit>().closeGroup(currentGroup.id);
+                              context.read<StudyGroupCubit>().closeGroup(
+                                currentGroup.id,
+                              );
                             },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                             child: const Text('Xác nhận'),
                           ),
                         ],
@@ -100,32 +131,42 @@ class StudyGroupDetailPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0284C7).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         currentGroup.subject,
                         style: const TextStyle(
                           color: Color(0xFF0284C7),
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12.5,
                         ),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: currentGroup.isOpen
                             ? const Color(0xFF10B981).withValues(alpha: 0.12)
                             : Colors.grey.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        currentGroup.isOpen ? 'Đang nhận thành viên' : 'Đã đóng',
+                        currentGroup.isOpen
+                            ? 'Đang nhận thành viên'
+                            : 'Đã đóng',
                         style: TextStyle(
-                          color: currentGroup.isOpen ? const Color(0xFF10B981) : Colors.grey,
+                          color: currentGroup.isOpen
+                              ? const Color(0xFF10B981)
+                              : Colors.grey,
                           fontSize: 11.5,
                           fontWeight: FontWeight.bold,
                         ),
@@ -138,7 +179,11 @@ class StudyGroupDetailPage extends StatelessWidget {
                 // Title
                 Text(
                   currentGroup.title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.3),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    height: 1.3,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -147,38 +192,68 @@ class StudyGroupDetailPage extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(14),
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
                   ),
                   child: Text(
                     currentGroup.description,
-                    style: TextStyle(fontSize: 14, height: 1.45, color: colorScheme.onSurface.withValues(alpha: 0.85)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.45,
+                      color: colorScheme.onSurface.withValues(alpha: 0.85),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
 
                 // Thông tin chi tiết buổi học (Thời gian, địa điểm, slot)
-                const Text('Kế hoạch học tập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Kế hoạch học tập',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.schedule_rounded, color: Color(0xFF0284C7), size: 20),
+                          const Icon(
+                            Icons.schedule_rounded,
+                            color: Color(0xFF0284C7),
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Thời gian dự kiến', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                Text(_formatDateTime(currentGroup.studyTime), style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                const Text(
+                                  'Thời gian dự kiến',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  _formatDateTime(currentGroup.studyTime),
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -187,14 +262,30 @@ class StudyGroupDetailPage extends StatelessWidget {
                       const Divider(height: 20),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_rounded, color: Colors.redAccent, size: 20),
+                          const Icon(
+                            Icons.location_on_rounded,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Địa điểm học', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                Text(currentGroup.location, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                const Text(
+                                  'Địa điểm học',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  currentGroup.location,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -203,14 +294,30 @@ class StudyGroupDetailPage extends StatelessWidget {
                       const Divider(height: 20),
                       Row(
                         children: [
-                          const Icon(Icons.group_rounded, color: Color(0xFF10B981), size: 20),
+                          const Icon(
+                            Icons.group_rounded,
+                            color: Color(0xFF10B981),
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Quy mô nhóm', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                Text('${currentGroup.currentMembersCount} / ${currentGroup.maxMembers} thành viên', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                const Text(
+                                  'Quy mô nhóm',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  '${currentGroup.currentMembersCount} / ${currentGroup.maxMembers} thành viên',
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -222,24 +329,49 @@ class StudyGroupDetailPage extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Trưởng nhóm
-                const Text('Người tạo nhóm', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Người tạo nhóm',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF0284C7).withValues(alpha: 0.15),
-                    backgroundImage: (currentGroup.creatorAvatar != null && currentGroup.creatorAvatar!.isNotEmpty)
+                    backgroundColor: const Color(
+                      0xFF0284C7,
+                    ).withValues(alpha: 0.15),
+                    backgroundImage:
+                        (currentGroup.creatorAvatar != null &&
+                            currentGroup.creatorAvatar!.isNotEmpty)
                         ? NetworkImage(currentGroup.creatorAvatar!)
                         : null,
-                    child: (currentGroup.creatorAvatar == null || currentGroup.creatorAvatar!.isEmpty)
-                        ? Text(currentGroup.creatorName.isNotEmpty ? currentGroup.creatorName[0].toUpperCase() : 'U')
+                    child:
+                        (currentGroup.creatorAvatar == null ||
+                            currentGroup.creatorAvatar!.isEmpty)
+                        ? Text(
+                            currentGroup.creatorName.isNotEmpty
+                                ? currentGroup.creatorName[0].toUpperCase()
+                                : 'U',
+                          )
                         : null,
                   ),
-                  title: Text(currentGroup.creatorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  title: Text(
+                    currentGroup.creatorName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                   subtitle: Text(
                     '${currentGroup.creatorFaculty.isNotEmpty ? currentGroup.creatorFaculty : 'Đại học Phenikaa'} • MSSV: ${currentGroup.creatorStudentId.isNotEmpty ? currentGroup.creatorStudentId : currentGroup.creatorId}',
                     style: const TextStyle(fontSize: 11.5),
@@ -266,8 +398,20 @@ class StudyGroupDetailPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Thành viên (${currentGroup.memberIds.length})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('Tối đa ${currentGroup.maxMembers} bạn', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                    Text(
+                      'Thành viên (${currentGroup.memberIds.length})',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Tối đa ${currentGroup.maxMembers} bạn',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -284,27 +428,60 @@ class StudyGroupDetailPage extends StatelessWidget {
                     return ListTile(
                       dense: true,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                          width: 0.8,
+                        ),
                       ),
                       leading: CircleAvatar(
                         radius: 16,
-                        child: Text(info['name']!.isNotEmpty ? info['name']![0].toUpperCase() : 'S'),
+                        child: Text(
+                          info['name']!.isNotEmpty
+                              ? info['name']![0].toUpperCase()
+                              : 'S',
+                        ),
                       ),
                       title: Row(
                         children: [
-                          Flexible(child: Text(info['name']!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                          Flexible(
+                            child: Text(
+                              info['name']!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
                           if (isLead) ...[
                             const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                              decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
-                              child: const Text('Trưởng nhóm', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.orange)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Trưởng nhóm',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ),
+                              ),
                             ),
                           ],
                         ],
                       ),
-                      subtitle: Text(info['faculty']!, style: const TextStyle(fontSize: 11)),
+                      subtitle: Text(
+                        info['faculty']!,
+                        style: const TextStyle(fontSize: 11),
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -327,11 +504,19 @@ class StudyGroupDetailPage extends StatelessWidget {
                 if (isCreator && currentGroup.pendingRequestIds.isNotEmpty) ...[
                   Row(
                     children: [
-                      const Icon(Icons.notification_important_rounded, size: 18, color: Colors.orange),
+                      const Icon(
+                        Icons.notification_important_rounded,
+                        size: 18,
+                        color: Colors.orange,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Yêu cầu xin gia nhập (${currentGroup.pendingRequestIds.length})',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
                       ),
                     ],
                   ),
@@ -349,8 +534,11 @@ class StudyGroupDetailPage extends StatelessWidget {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                            width: 0.8,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -363,23 +551,49 @@ class StudyGroupDetailPage extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(info['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text(info['faculty']!, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                  Text(
+                                    info['name']!,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    info['faculty']!,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 24),
+                              icon: const Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.green,
+                                size: 24,
+                              ),
                               tooltip: 'Duyệt vào nhóm',
                               onPressed: () {
-                                context.read<StudyGroupCubit>().acceptRequest(currentGroup.id, reqUserId);
+                                context.read<StudyGroupCubit>().acceptRequest(
+                                  currentGroup.id,
+                                  reqUserId,
+                                );
                               },
                             ),
                             IconButton(
-                              icon: const Icon(Icons.cancel_rounded, color: Colors.red, size: 24),
+                              icon: const Icon(
+                                Icons.cancel_rounded,
+                                color: Colors.red,
+                                size: 24,
+                              ),
                               tooltip: 'Từ chối',
                               onPressed: () {
-                                context.read<StudyGroupCubit>().rejectRequest(currentGroup.id, reqUserId);
+                                context.read<StudyGroupCubit>().rejectRequest(
+                                  currentGroup.id,
+                                  reqUserId,
+                                );
                               },
                             ),
                           ],
@@ -397,11 +611,25 @@ class StudyGroupDetailPage extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        context.read<StudyGroupCubit>().leaveGroup(currentGroup.id, currentUserId);
+                        context.read<StudyGroupCubit>().leaveGroup(
+                          currentGroup.id,
+                          currentUserId,
+                        );
                         Navigator.pop(context);
                       },
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                       icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                      label: const Text('Rời khỏi nhóm này', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'Rời khỏi nhóm này',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   )
                 else if (!isCreator && hasRequested)
@@ -409,10 +637,27 @@ class StudyGroupDetailPage extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        context.read<StudyGroupCubit>().cancelRequest(currentGroup.id, currentUserId);
+                        context.read<StudyGroupCubit>().cancelRequest(
+                          currentGroup.id,
+                          currentUserId,
+                        );
                       },
-                      icon: const Icon(Icons.close_rounded, color: Colors.orange),
-                      label: const Text('Hủy yêu cầu tham gia', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.orange,
+                      ),
+                      label: const Text(
+                        'Hủy yêu cầu tham gia',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   )
                 else if (!isCreator && !isFull && currentGroup.isOpen)
@@ -421,10 +666,24 @@ class StudyGroupDetailPage extends StatelessWidget {
                     height: 48,
                     child: FilledButton.icon(
                       onPressed: () {
-                        context.read<StudyGroupCubit>().requestToJoin(currentGroup.id, currentUserId);
+                        context.read<StudyGroupCubit>().requestToJoin(
+                          currentGroup.id,
+                          currentUserId,
+                        );
                       },
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                       icon: const Icon(Icons.person_add_rounded),
-                      label: const Text('Gửi yêu cầu gia nhập nhóm', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      label: const Text(
+                        'Gửi yêu cầu gia nhập nhóm',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
                 const SizedBox(height: 30),

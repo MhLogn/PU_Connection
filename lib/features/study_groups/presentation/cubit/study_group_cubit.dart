@@ -8,10 +8,9 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   final StudyGroupRepository _repository;
   StreamSubscription<List<StudyGroupEntity>>? _subscription;
 
-  StudyGroupCubit({
-    required StudyGroupRepository repository,
-  })  : _repository = repository,
-        super(const StudyGroupState());
+  StudyGroupCubit({required StudyGroupRepository repository})
+    : _repository = repository,
+      super(const StudyGroupState());
 
   void init() {
     _subscription?.cancel();
@@ -19,16 +18,15 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
 
     _subscription = _repository.watchStudyGroups().listen(
       (groups) {
-        emit(state.copyWith(
-          status: StudyGroupStatus.loaded,
-          groups: groups,
-        ));
+        emit(state.copyWith(status: StudyGroupStatus.loaded, groups: groups));
       },
       onError: (err) {
-        emit(state.copyWith(
-          status: StudyGroupStatus.error,
-          errorMessage: 'Lỗi tải danh sách nhóm học: $err',
-        ));
+        emit(
+          state.copyWith(
+            status: StudyGroupStatus.error,
+            errorMessage: 'Lỗi tải danh sách nhóm học: $err',
+          ),
+        );
       },
     );
   }
@@ -44,9 +42,11 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> createGroup(StudyGroupEntity group) async {
     try {
       await _repository.createStudyGroup(group);
-      emit(state.copyWith(
-        successMessage: 'Đã tạo nhóm học tập "${group.title}" thành công!',
-      ));
+      emit(
+        state.copyWith(
+          successMessage: 'Đã tạo nhóm học tập "${group.title}" thành công!',
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Không thể tạo nhóm học: $e'));
     }
@@ -55,9 +55,9 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> requestToJoin(String groupId, String userId) async {
     try {
       await _repository.requestToJoin(groupId, userId);
-      emit(state.copyWith(
-        successMessage: 'Đã gửi yêu cầu tham gia nhóm học tập!',
-      ));
+      emit(
+        state.copyWith(successMessage: 'Đã gửi yêu cầu tham gia nhóm học tập!'),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi xin gia nhập nhóm: $e'));
     }
@@ -66,9 +66,7 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> cancelRequest(String groupId, String userId) async {
     try {
       await _repository.cancelRequest(groupId, userId);
-      emit(state.copyWith(
-        successMessage: 'Đã hủy yêu cầu tham gia nhóm!',
-      ));
+      emit(state.copyWith(successMessage: 'Đã hủy yêu cầu tham gia nhóm!'));
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi hủy yêu cầu: $e'));
     }
@@ -77,9 +75,9 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> acceptRequest(String groupId, String userId) async {
     try {
       await _repository.acceptRequest(groupId, userId);
-      emit(state.copyWith(
-        successMessage: 'Đã phê duyệt thành viên vào nhóm học!',
-      ));
+      emit(
+        state.copyWith(successMessage: 'Đã phê duyệt thành viên vào nhóm học!'),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi duyệt thành viên: $e'));
     }
@@ -88,9 +86,7 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> rejectRequest(String groupId, String userId) async {
     try {
       await _repository.rejectRequest(groupId, userId);
-      emit(state.copyWith(
-        successMessage: 'Đã từ chối yêu cầu tham gia',
-      ));
+      emit(state.copyWith(successMessage: 'Đã từ chối yêu cầu tham gia'));
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi từ chối yêu cầu: $e'));
     }
@@ -99,9 +95,7 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> leaveGroup(String groupId, String userId) async {
     try {
       await _repository.leaveGroup(groupId, userId);
-      emit(state.copyWith(
-        successMessage: 'Đã rời khỏi nhóm học tập',
-      ));
+      emit(state.copyWith(successMessage: 'Đã rời khỏi nhóm học tập'));
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi rời nhóm: $e'));
     }
@@ -110,9 +104,11 @@ class StudyGroupCubit extends Cubit<StudyGroupState> {
   Future<void> closeGroup(String groupId) async {
     try {
       await _repository.closeGroup(groupId);
-      emit(state.copyWith(
-        successMessage: 'Đã đóng nhóm học tập (Ngừng nhận thành viên mới)',
-      ));
+      emit(
+        state.copyWith(
+          successMessage: 'Đã đóng nhóm học tập (Ngừng nhận thành viên mới)',
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi khi đóng nhóm: $e'));
     }

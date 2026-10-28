@@ -83,21 +83,21 @@ class StudyGroupEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        creatorId,
-        creatorName,
-        creatorAvatar,
-        creatorStudentId,
-        creatorFaculty,
-        title,
-        subject,
-        description,
-        maxMembers,
-        memberIds,
-        pendingRequestIds,
-        studyTime,
-        location,
-        createdAt,
-        isOpen,
-      ];
+    id,
+    creatorId,
+    creatorName,
+    creatorAvatar,
+    creatorStudentId,
+    creatorFaculty,
+    title,
+    subject,
+    description,
+    maxMembers,
+    memberIds,
+    pendingRequestIds,
+    studyTime,
+    location,
+    createdAt,
+    isOpen,
+  ];
 }

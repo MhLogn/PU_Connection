@@ -49,7 +49,9 @@ class FriendRequestModel extends FriendRequestEntity {
       'senderFaculty': senderFaculty,
       'receiverId': receiverId,
       'receiverName': receiverName,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'status': status,
     };
   }

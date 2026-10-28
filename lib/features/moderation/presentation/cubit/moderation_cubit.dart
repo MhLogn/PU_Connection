@@ -10,8 +10,8 @@ class ModerationCubit extends Cubit<ModerationState> {
   StreamSubscription<List<BlockedUserEntity>>? _blockedSub;
 
   ModerationCubit({required ModerationRepository moderationRepository})
-      : _moderationRepository = moderationRepository,
-        super(const ModerationState());
+    : _moderationRepository = moderationRepository,
+      super(const ModerationState());
 
   void init(String currentUserId) {
     _blockedSub?.cancel();
@@ -20,12 +20,9 @@ class ModerationCubit extends Cubit<ModerationState> {
     _blockedSub = _moderationRepository
         .getBlockedUsersStream(currentUserId)
         .listen((list) {
-      final ids = list.map((u) => u.userId).toSet();
-      emit(state.copyWith(
-        blockedUsers: list,
-        blockedUserIds: ids,
-      ));
-    });
+          final ids = list.map((u) => u.userId).toSet();
+          emit(state.copyWith(blockedUsers: list, blockedUserIds: ids));
+        });
   }
 
   Future<void> submitReport(ReportEntity report) async {
@@ -38,16 +35,23 @@ class ModerationCubit extends Cubit<ModerationState> {
         newHidden.add(report.targetId);
       }
 
-      emit(state.copyWith(
-        status: ModerationActionStatus.success,
-        hiddenPostIds: newHidden,
-        message: 'Cảm ơn bạn đã báo cáo. Ban quản trị PU Connection sẽ xem xét xử lý trong thời gian sớm nhất!',
-      ));
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.success,
+          hiddenPostIds: newHidden,
+          message:
+              'Cảm ơn bạn đã báo cáo. Ban quản trị PU Connection sẽ xem xét xử lý trong thời gian sớm nhất!',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ModerationActionStatus.failure,
-        message: 'Không thể gửi báo cáo: $e',
-      ));
+      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.failure,
+          message: cleanMsg,
+        ),
+      );
+      rethrow;
     }
   }
 
@@ -62,17 +66,23 @@ class ModerationCubit extends Cubit<ModerationState> {
         blockedUser: blockedUser,
       );
 
-      final newIds = Set<String>.from(state.blockedUserIds)..add(blockedUser.userId);
-      emit(state.copyWith(
-        status: ModerationActionStatus.success,
-        blockedUserIds: newIds,
-        message: 'Đã chặn người dùng ${blockedUser.userName}. Bạn sẽ không còn nhìn thấy nội dung từ người này.',
-      ));
+      final newIds = Set<String>.from(state.blockedUserIds)
+        ..add(blockedUser.userId);
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.success,
+          blockedUserIds: newIds,
+          message:
+              'Đã chặn người dùng ${blockedUser.userName}. Bạn sẽ không còn nhìn thấy nội dung từ người này.',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ModerationActionStatus.failure,
-        message: 'Lỗi khi chặn người dùng: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.failure,
+          message: 'Lỗi khi chặn người dùng: $e',
+        ),
+      );
     }
   }
 
@@ -87,17 +97,22 @@ class ModerationCubit extends Cubit<ModerationState> {
         blockedUserId: blockedUserId,
       );
 
-      final newIds = Set<String>.from(state.blockedUserIds)..remove(blockedUserId);
-      emit(state.copyWith(
-        status: ModerationActionStatus.success,
-        blockedUserIds: newIds,
-        message: 'Đã bỏ chặn người dùng.',
-      ));
+      final newIds = Set<String>.from(state.blockedUserIds)
+        ..remove(blockedUserId);
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.success,
+          blockedUserIds: newIds,
+          message: 'Đã bỏ chặn người dùng.',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ModerationActionStatus.failure,
-        message: 'Lỗi khi bỏ chặn: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: ModerationActionStatus.failure,
+          message: 'Lỗi khi bỏ chặn: $e',
+        ),
+      );
     }
   }
 

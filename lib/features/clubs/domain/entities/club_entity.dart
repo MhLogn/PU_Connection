@@ -17,6 +17,7 @@ class ClubEntity extends Equatable {
   final String contactEmail;
   final String contactPhone;
   final int colorValue;
+  final String status; // 'approved', 'pending', 'rejected'
 
   const ClubEntity({
     required this.id,
@@ -38,12 +39,17 @@ class ClubEntity extends Equatable {
     this.contactEmail = '',
     this.contactPhone = '',
     this.colorValue = 0xFF0284C7,
+    this.status = 'approved',
   });
 
   bool isMember(String userId, [String? secondaryId]) {
-    if (userId.isEmpty && (secondaryId == null || secondaryId.isEmpty)) return false;
+    if (userId.isEmpty && (secondaryId == null || secondaryId.isEmpty)) {
+      return false;
+    }
     if (userId.isNotEmpty && memberIds.contains(userId)) return true;
-    if (secondaryId != null && secondaryId.isNotEmpty && memberIds.contains(secondaryId)) {
+    if (secondaryId != null &&
+        secondaryId.isNotEmpty &&
+        memberIds.contains(secondaryId)) {
       return true;
     }
     return false;
@@ -69,6 +75,7 @@ class ClubEntity extends Equatable {
     String? contactEmail,
     String? contactPhone,
     int? colorValue,
+    String? status,
   }) {
     return ClubEntity(
       id: id ?? this.id,
@@ -87,26 +94,28 @@ class ClubEntity extends Equatable {
       contactEmail: contactEmail ?? this.contactEmail,
       contactPhone: contactPhone ?? this.contactPhone,
       colorValue: colorValue ?? this.colorValue,
+      status: status ?? this.status,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        description,
-        avatarUrl,
-        coverUrl,
-        leaderId,
-        leaderName,
-        memberIds,
-        membersCount,
-        schedule,
-        location,
-        benefits,
-        contactEmail,
-        contactPhone,
-        colorValue,
-      ];
+    id,
+    name,
+    category,
+    description,
+    avatarUrl,
+    coverUrl,
+    leaderId,
+    leaderName,
+    memberIds,
+    membersCount,
+    schedule,
+    location,
+    benefits,
+    contactEmail,
+    contactPhone,
+    colorValue,
+    status,
+  ];
 }

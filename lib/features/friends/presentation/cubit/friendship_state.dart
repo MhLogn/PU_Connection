@@ -37,10 +37,10 @@ class FriendshipState extends Equatable {
 
   @override
   List<Object?> get props => [
-        relationship,
-        receivedRequests,
-        friendsList,
-        actionStatus,
-        message,
-      ];
+    relationship,
+    receivedRequests,
+    friendsList,
+    actionStatus,
+    message,
+  ];
 }

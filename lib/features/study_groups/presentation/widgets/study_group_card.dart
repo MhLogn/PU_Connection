@@ -19,11 +19,18 @@ class StudyGroupCard extends StatelessWidget {
     final s = subject.toLowerCase();
     if (s.contains('toán') || s.contains('giải tích') || s.contains('đại số')) {
       return const Color(0xFF0284C7); // Blue
-    } else if (s.contains('lập trình') || s.contains('it') || s.contains('code') || s.contains('flutter')) {
+    } else if (s.contains('lập trình') ||
+        s.contains('it') ||
+        s.contains('code') ||
+        s.contains('flutter')) {
       return const Color(0xFF10B981); // Emerald Green
-    } else if (s.contains('anh') || s.contains('toeic') || s.contains('ielts')) {
+    } else if (s.contains('anh') ||
+        s.contains('toeic') ||
+        s.contains('ielts')) {
       return const Color(0xFFF97316); // Orange
-    } else if (s.contains('kinh tế') || s.contains('marketing') || s.contains('quản trị')) {
+    } else if (s.contains('kinh tế') ||
+        s.contains('marketing') ||
+        s.contains('quản trị')) {
       return const Color(0xFF8B5CF6); // Purple
     }
     return const Color(0xFF0EA5E9);
@@ -44,27 +51,31 @@ class StudyGroupCard extends StatelessWidget {
     final isFull = group.isFull;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-          width: 1,
+          color: AppTheme.isDark(context)
+              ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+              : AppTheme.borderLight,
+          width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: AppTheme.isDark(context)
+                ? Colors.black26
+                : const Color(0x06123B63),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.push(
               context,
@@ -86,7 +97,10 @@ class StudyGroupCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: subjectColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
@@ -98,7 +112,11 @@ class StudyGroupCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.auto_stories_rounded, size: 14, color: subjectColor),
+                          Icon(
+                            Icons.auto_stories_rounded,
+                            size: 14,
+                            color: subjectColor,
+                          ),
                           const SizedBox(width: 5),
                           Text(
                             group.subject,
@@ -112,11 +130,16 @@ class StudyGroupCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 3.5,
+                      ),
                       decoration: BoxDecoration(
                         color: isFull
                             ? Colors.red.withValues(alpha: 0.1)
-                            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            : colorScheme.surfaceContainerHighest.withValues(
+                                alpha: 0.5,
+                              ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -125,7 +148,9 @@ class StudyGroupCard extends StatelessWidget {
                           Icon(
                             Icons.groups_rounded,
                             size: 15,
-                            color: isFull ? Colors.red : colorScheme.onSurfaceVariant,
+                            color: isFull
+                                ? Colors.red
+                                : colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -133,7 +158,9 @@ class StudyGroupCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: isFull ? Colors.red : colorScheme.onSurfaceVariant,
+                              color: isFull
+                                  ? Colors.red
+                                  : colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -171,19 +198,28 @@ class StudyGroupCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.25,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.primaryColor(context)),
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: AppTheme.primaryColor(context),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _formatDateTime(group.studyTime),
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -191,14 +227,21 @@ class StudyGroupCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_rounded, size: 14, color: Colors.redAccent),
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 14,
+                            color: Colors.redAccent,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               group.location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -218,13 +261,23 @@ class StudyGroupCard extends StatelessWidget {
                         CircleAvatar(
                           radius: 14,
                           backgroundColor: subjectColor.withValues(alpha: 0.15),
-                          backgroundImage: (group.creatorAvatar != null && group.creatorAvatar!.isNotEmpty)
+                          backgroundImage:
+                              (group.creatorAvatar != null &&
+                                  group.creatorAvatar!.isNotEmpty)
                               ? NetworkImage(group.creatorAvatar!)
                               : null,
-                          child: (group.creatorAvatar == null || group.creatorAvatar!.isEmpty)
+                          child:
+                              (group.creatorAvatar == null ||
+                                  group.creatorAvatar!.isEmpty)
                               ? Text(
-                                  group.creatorName.isNotEmpty ? group.creatorName[0].toUpperCase() : 'U',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: subjectColor),
+                                  group.creatorName.isNotEmpty
+                                      ? group.creatorName[0].toUpperCase()
+                                      : 'U',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: subjectColor,
+                                  ),
                                 )
                               : null,
                         ),
@@ -234,13 +287,18 @@ class StudyGroupCard extends StatelessWidget {
                           children: [
                             Text(
                               group.creatorName,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               'Trưởng nhóm',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                           ],
@@ -263,10 +321,15 @@ class StudyGroupCard extends StatelessWidget {
                           );
                         },
                         icon: const Icon(Icons.settings_rounded, size: 15),
-                        label: const Text('Quản lý', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          'Quản lý',
+                          style: TextStyle(fontSize: 12),
+                        ),
                         style: OutlinedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       )
                     else if (isMember)
@@ -282,25 +345,51 @@ class StudyGroupCard extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
-                        label: const Text('Đã tham gia', style: TextStyle(fontSize: 12, color: Color(0xFF10B981))),
+                        icon: const Icon(
+                          Icons.check_circle_rounded,
+                          size: 15,
+                          color: Color(0xFF10B981),
+                        ),
+                        label: const Text(
+                          'Đã tham gia',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          backgroundColor: const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: 0.12),
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       )
                     else if (hasRequested)
                       OutlinedButton.icon(
                         onPressed: () {
-                          context.read<StudyGroupCubit>().cancelRequest(group.id, currentUserId);
+                          context.read<StudyGroupCubit>().cancelRequest(
+                            group.id,
+                            currentUserId,
+                          );
                         },
-                        icon: const Icon(Icons.close_rounded, size: 15, color: Colors.orange),
-                        label: const Text('Hủy yêu cầu', style: TextStyle(fontSize: 12, color: Colors.orange)),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 15,
+                          color: Colors.orange,
+                        ),
+                        label: const Text(
+                          'Hủy yêu cầu',
+                          style: TextStyle(fontSize: 12, color: Colors.orange),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.orange),
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       )
                     else if (isFull)
@@ -308,20 +397,36 @@ class StudyGroupCard extends StatelessWidget {
                         onPressed: null,
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        child: const Text('Nhóm đã đầy', style: TextStyle(fontSize: 12)),
+                        child: const Text(
+                          'Nhóm đã đầy',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       )
                     else
                       FilledButton.icon(
                         onPressed: () {
-                          context.read<StudyGroupCubit>().requestToJoin(group.id, currentUserId);
+                          context.read<StudyGroupCubit>().requestToJoin(
+                            group.id,
+                            currentUserId,
+                          );
                         },
                         icon: const Icon(Icons.person_add_rounded, size: 15),
-                        label: const Text('Xin gia nhập', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'Xin gia nhập',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
                   ],

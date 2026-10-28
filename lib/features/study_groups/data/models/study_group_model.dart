@@ -64,8 +64,16 @@ class StudyGroupModel extends StudyGroupEntity {
       subject: map['subject'] as String? ?? 'Chung',
       description: map['description'] as String? ?? '',
       maxMembers: (map['maxMembers'] as num?)?.toInt() ?? 5,
-      memberIds: (map['memberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      pendingRequestIds: (map['pendingRequestIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      memberIds:
+          (map['memberIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      pendingRequestIds:
+          (map['pendingRequestIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       studyTime: parseDate(map['studyTime']),
       location: map['location'] as String? ?? 'Thư viện Phenikaa',
       createdAt: parseDate(map['createdAt']),

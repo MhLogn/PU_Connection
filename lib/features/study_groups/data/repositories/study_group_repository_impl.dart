@@ -14,7 +14,7 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
       StreamController<List<StudyGroupEntity>>.broadcast();
 
   StudyGroupRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore {
+    : _firestore = firestore {
     _initSeedData();
   }
 
@@ -38,7 +38,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
         creatorFaculty: 'Khoa Công nghệ thông tin',
         title: 'Ôn thi cấp tốc Giải tích 2 (Kỳ phụ & Cải thiện điểm)',
         subject: 'Giải tích 2',
-        description: 'Nhóm tập trung giải các dạng đề thi trắc nghiệm & tự luận tích phân bội, phương trình vi phân. Đã có tài liệu ôn tập chuẩn từ thầy cô.',
+        description:
+            'Nhóm tập trung giải các dạng đề thi trắc nghiệm & tự luận tích phân bội, phương trình vi phân. Đã có tài liệu ôn tập chuẩn từ thầy cô.',
         maxMembers: 5,
         memberIds: const ['sv_math_lead', '23010390', '22010888'],
         pendingRequestIds: const [],
@@ -55,7 +56,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
         creatorFaculty: 'Khoa Công nghệ thông tin',
         title: 'Team Lập trình Mobile Flutter - Dự án PU Connection',
         subject: 'Lập trình Mobile',
-        description: 'Cùng nhau code Clean Architecture, State Management BLoC và kết nối Firebase / Cloudinary. Hoan nghênh các bạn K16, K17!',
+        description:
+            'Cùng nhau code Clean Architecture, State Management BLoC và kết nối Firebase / Cloudinary. Hoan nghênh các bạn K16, K17!',
         maxMembers: 4,
         memberIds: const ['sv_dev_01', 'sv_dev_02'],
         pendingRequestIds: const [],
@@ -72,7 +74,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
         creatorFaculty: 'Khoa Ngoại ngữ & Du lịch',
         title: 'Luyện đề TOEIC 650+ chuẩn đầu ra tốt nghiệp Phenikaa',
         subject: 'Tiếng Anh B1 / TOEIC',
-        description: 'Mỗi buổi cùng bấm giờ giải 1 đề Listening + Reading, sau đó chữa chi tiết từ vựng và bẫy đề thi. Học đều đặn thứ 3 và thứ 6.',
+        description:
+            'Mỗi buổi cùng bấm giờ giải 1 đề Listening + Reading, sau đó chữa chi tiết từ vựng và bẫy đề thi. Học đều đặn thứ 3 và thứ 6.',
         maxMembers: 6,
         memberIds: const ['sv_eng_lead', 'sv_eng_02', 'sv_eng_03', 'sv_eng_04'],
         pendingRequestIds: const [],
@@ -89,7 +92,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
         creatorFaculty: 'Khoa Kinh tế & Kinh doanh',
         title: 'Nhóm học Kinh tế Vi mô & Xác suất Thống kê',
         subject: 'Kinh tế Vi mô',
-        description: 'Giải bài tập mô hình cung cầu, thặng dư tiêu dùng và bài tập xác suất phân phối nhị thức. Chuẩn bị cho kỳ thi giữa kỳ.',
+        description:
+            'Giải bài tập mô hình cung cầu, thặng dư tiêu dùng và bài tập xác suất phân phối nhị thức. Chuẩn bị cho kỳ thi giữa kỳ.',
         maxMembers: 5,
         memberIds: const ['sv_econ_lead'],
         pendingRequestIds: const [],
@@ -127,22 +131,23 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
         query = query.where('subject', isEqualTo: subject);
       }
 
-      return query.snapshots().map((snapshot) {
-        if (snapshot.docs.isEmpty) {
-          // Trả về seed data nếu collection Firestore chưa có documents
-          if (subject != null && subject.isNotEmpty && subject != 'Tất cả') {
-            return _inMemoryGroups.where((g) => g.subject == subject).toList();
-          }
-          return _inMemoryGroups;
-        }
+      return query
+          .snapshots()
+          .map((snapshot) {
+            if (snapshot.docs.isEmpty) {
+              return const <StudyGroupEntity>[];
+            }
 
-        final list = snapshot.docs
-            .map<StudyGroupEntity>((doc) => StudyGroupModel.fromSnapshot(doc))
-            .toList();
-        return list;
-      }).handleError((_) {
-        return _inMemoryGroups;
-      });
+            final list = snapshot.docs
+                .map<StudyGroupEntity>(
+                  (doc) => StudyGroupModel.fromSnapshot(doc),
+                )
+                .toList();
+            return list;
+          })
+          .handleError((_) {
+            return const <StudyGroupEntity>[];
+          });
     } catch (_) {
       Timer.run(() => _notify());
       return _controller.stream;
@@ -167,8 +172,12 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
           return snapshot.docs
               .map<StudyGroupEntity>((doc) => StudyGroupModel.fromSnapshot(doc))
               .toList();
+        } else {
+          return const <StudyGroupEntity>[];
         }
-      } catch (_) {}
+      } catch (_) {
+        return const <StudyGroupEntity>[];
+      }
     }
 
     if (subject != null && subject.isNotEmpty && subject != 'Tất cả') {
@@ -202,8 +211,10 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
     final index = _inMemoryGroups.indexWhere((g) => g.id == groupId);
     if (index != -1) {
       final g = _inMemoryGroups[index];
-      if (!g.pendingRequestIds.contains(userId) && !g.memberIds.contains(userId)) {
-        final updatedRequests = List<String>.from(g.pendingRequestIds)..add(userId);
+      if (!g.pendingRequestIds.contains(userId) &&
+          !g.memberIds.contains(userId)) {
+        final updatedRequests = List<String>.from(g.pendingRequestIds)
+          ..add(userId);
         _inMemoryGroups[index] = g.copyWith(pendingRequestIds: updatedRequests);
         _notify();
       }
@@ -216,8 +227,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
             .collection(FirebaseConstants.studyGroupsCollection)
             .doc(groupId)
             .update({
-          'pendingRequestIds': FieldValue.arrayUnion([userId]),
-        });
+              'pendingRequestIds': FieldValue.arrayUnion([userId]),
+            });
       } catch (_) {}
     }
   }
@@ -227,7 +238,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
     final index = _inMemoryGroups.indexWhere((g) => g.id == groupId);
     if (index != -1) {
       final g = _inMemoryGroups[index];
-      final updatedRequests = List<String>.from(g.pendingRequestIds)..remove(userId);
+      final updatedRequests = List<String>.from(g.pendingRequestIds)
+        ..remove(userId);
       _inMemoryGroups[index] = g.copyWith(pendingRequestIds: updatedRequests);
       _notify();
     }
@@ -239,8 +251,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
             .collection(FirebaseConstants.studyGroupsCollection)
             .doc(groupId)
             .update({
-          'pendingRequestIds': FieldValue.arrayRemove([userId]),
-        });
+              'pendingRequestIds': FieldValue.arrayRemove([userId]),
+            });
       } catch (_) {}
     }
   }
@@ -250,7 +262,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
     final index = _inMemoryGroups.indexWhere((g) => g.id == groupId);
     if (index != -1) {
       final g = _inMemoryGroups[index];
-      final updatedRequests = List<String>.from(g.pendingRequestIds)..remove(userId);
+      final updatedRequests = List<String>.from(g.pendingRequestIds)
+        ..remove(userId);
       final updatedMembers = List<String>.from(g.memberIds);
       if (!updatedMembers.contains(userId)) updatedMembers.add(userId);
 
@@ -268,9 +281,9 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
             .collection(FirebaseConstants.studyGroupsCollection)
             .doc(groupId)
             .update({
-          'pendingRequestIds': FieldValue.arrayRemove([userId]),
-          'memberIds': FieldValue.arrayUnion([userId]),
-        });
+              'pendingRequestIds': FieldValue.arrayRemove([userId]),
+              'memberIds': FieldValue.arrayUnion([userId]),
+            });
       } catch (_) {}
     }
   }
@@ -297,8 +310,8 @@ class StudyGroupRepositoryImpl implements StudyGroupRepository {
             .collection(FirebaseConstants.studyGroupsCollection)
             .doc(groupId)
             .update({
-          'memberIds': FieldValue.arrayRemove([userId]),
-        });
+              'memberIds': FieldValue.arrayRemove([userId]),
+            });
       } catch (_) {}
     }
   }

@@ -43,7 +43,8 @@ class EventTicketDialog extends StatelessWidget {
     final isDark = AppTheme.isDark(context);
     final l10n = AppLocalizations.of(context)!;
     final dateFormat = DateFormat('dd/MM/yyyy • HH:mm');
-    final ticketCode = 'PU-${event.id.hashCode.abs().toString().padLeft(6, '0').substring(0, 6)}-${studentId.isNotEmpty ? studentId : "ST"}';
+    final ticketCode =
+        'PU-${event.id.hashCode.abs().toString().padLeft(6, '0').substring(0, 6)}-${studentId.isNotEmpty ? studentId : "ST"}';
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -90,7 +91,11 @@ class EventTicketDialog extends StatelessWidget {
                                 'assets/logo/phenikaa_logo.png',
                                 width: 22,
                                 height: 22,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.school, color: AppTheme.oceanBlue, size: 18),
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.school,
+                                  color: AppTheme.oceanBlue,
+                                  size: 18,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -112,7 +117,10 @@ class EventTicketDialog extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(12),
@@ -153,10 +161,14 @@ class EventTicketDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                     child: Column(
@@ -182,7 +194,11 @@ class EventTicketDialog extends StatelessWidget {
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.qr_code_2_rounded, size: 24, color: AppTheme.oceanBlue),
+                                child: const Icon(
+                                  Icons.qr_code_2_rounded,
+                                  size: 24,
+                                  color: AppTheme.oceanBlue,
+                                ),
                               ),
                             ],
                           ),
@@ -201,14 +217,20 @@ class EventTicketDialog extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 14,
+                              color: Color(0xFF10B981),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Vé đã xác thực • Hợp lệ khi check-in',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                                color: isDark
+                                    ? const Color(0xFF34D399)
+                                    : const Color(0xFF059669),
                               ),
                             ),
                           ],
@@ -220,9 +242,17 @@ class EventTicketDialog extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Student & Event info
-                  _buildTicketRow('${l10n.full_name}:', studentName.isNotEmpty ? studentName : 'Sinh viên Phenikaa', theme),
+                  _buildTicketRow(
+                    '${l10n.full_name}:',
+                    studentName.isNotEmpty ? studentName : 'Sinh viên Phenikaa',
+                    theme,
+                  ),
                   const SizedBox(height: 6),
-                  _buildTicketRow('${l10n.student_id}:', studentId.isNotEmpty ? studentId : 'Chưa cập nhật', theme),
+                  _buildTicketRow(
+                    '${l10n.student_id}:',
+                    studentId.isNotEmpty ? studentId : 'Chưa cập nhật',
+                    theme,
+                  ),
                   if (faculty.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     _buildTicketRow('${l10n.faculty}:', faculty, theme),
@@ -231,7 +261,11 @@ class EventTicketDialog extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 8),
                     child: Divider(height: 1),
                   ),
-                  _buildTicketRow('Thời gian:', dateFormat.format(event.startDate), theme),
+                  _buildTicketRow(
+                    'Thời gian:',
+                    dateFormat.format(event.startDate),
+                    theme,
+                  ),
                   const SizedBox(height: 6),
                   _buildTicketRow('Địa điểm:', event.location, theme),
                 ],
@@ -247,9 +281,14 @@ class EventTicketDialog extends StatelessWidget {
                   backgroundColor: AppTheme.primaryColor(context),
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(46),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: Text(AppLocalizations.of(context)!.close, style: const TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(
+                  AppLocalizations.of(context)!.close,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -275,10 +314,7 @@ class EventTicketDialog extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -300,20 +336,36 @@ class _SimulatedQrPainter extends CustomPainter {
         final isTopLeft = r < 5 && c < 5;
         final isTopRight = r < 5 && c >= cols - 5;
         final isBottomLeft = r >= rows - 5 && c < 5;
-        final isCenter = (r >= rows / 2 - 2 && r <= rows / 2 + 2) && (c >= cols / 2 - 2 && c <= cols / 2 + 2);
+        final isCenter =
+            (r >= rows / 2 - 2 && r <= rows / 2 + 2) &&
+            (c >= cols / 2 - 2 && c <= cols / 2 + 2);
 
         if (isCenter) continue;
 
         if (isTopLeft || isTopRight || isBottomLeft) {
-          if (r == 0 || r == 4 || c == 0 || c == 4 || (r >= 1 && r <= 3 && c >= 1 && c <= 3 && (r == 2 && c == 2))) {
+          if (r == 0 ||
+              r == 4 ||
+              c == 0 ||
+              c == 4 ||
+              (r >= 1 && r <= 3 && c >= 1 && c <= 3 && (r == 2 && c == 2))) {
             canvas.drawRect(
-              Rect.fromLTWH(c * cellSize, r * cellSize, cellSize - 0.5, cellSize - 0.5),
+              Rect.fromLTWH(
+                c * cellSize,
+                r * cellSize,
+                cellSize - 0.5,
+                cellSize - 0.5,
+              ),
               paint,
             );
           }
         } else if ((r * 7 + c * 13 + (r % 3)) % 2 == 0) {
           canvas.drawRect(
-            Rect.fromLTWH(c * cellSize, r * cellSize, cellSize - 0.5, cellSize - 0.5),
+            Rect.fromLTWH(
+              c * cellSize,
+              r * cellSize,
+              cellSize - 0.5,
+              cellSize - 0.5,
+            ),
             paint,
           );
         }

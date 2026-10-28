@@ -41,7 +41,8 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
       ),
       body: BlocConsumer<FriendshipCubit, FriendshipState>(
         listener: (context, state) {
-          if (state.message != null && state.actionStatus == FriendshipActionStatus.success) {
+          if (state.message != null &&
+              state.actionStatus == FriendshipActionStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message!),
@@ -65,7 +66,9 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.1),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -105,15 +108,18 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    color: AppTheme.isDark(context)
+                        ? Colors.white10
+                        : AppTheme.borderLight,
+                    width: 0.8,
                   ),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: Color(0x06123B63),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
                     ),
                   ],
                 ),
@@ -174,7 +180,9 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                 : 'Sinh viên Phenikaa',
                             style: TextStyle(
                               fontSize: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -191,19 +199,27 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                               .read<FriendshipCubit>()
                                               .acceptFriendRequest(
                                                 currentUserId: currentUser.uid,
-                                                currentUserName: currentUser.displayName,
-                                                currentUserAvatar: currentUser.avatarUrl,
-                                                currentUserFaculty: currentUser.faculty,
+                                                currentUserName:
+                                                    currentUser.displayName,
+                                                currentUserAvatar:
+                                                    currentUser.avatarUrl,
+                                                currentUserFaculty:
+                                                    currentUser.faculty,
                                                 senderId: req.senderId,
                                                 senderName: req.senderName,
                                                 senderAvatar: req.senderAvatar,
-                                                senderFaculty: req.senderFaculty,
+                                                senderFaculty:
+                                                    req.senderFaculty,
                                               );
                                         },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryColor(context),
+                                    backgroundColor: AppTheme.primaryColor(
+                                      context,
+                                    ),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -211,7 +227,10 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                   ),
                                   child: const Text(
                                     'Chấp nhận',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -229,14 +248,19 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                               );
                                         },
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   child: const Text(
                                     'Xóa',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),

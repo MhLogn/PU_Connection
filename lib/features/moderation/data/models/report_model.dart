@@ -70,7 +70,9 @@ class ReportModel extends ReportEntity {
       'reason': reason.name,
       'details': details,
       'status': status,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
     };
   }
 }

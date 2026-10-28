@@ -37,7 +37,8 @@ class EventEntity {
   }
 
   int get currentParticipants => registeredStudentIds.length;
-  int get spotsRemaining => (maxParticipants - currentParticipants).clamp(0, maxParticipants);
+  int get spotsRemaining =>
+      (maxParticipants - currentParticipants).clamp(0, maxParticipants);
   bool get isFull => currentParticipants >= maxParticipants;
 
   EventEntity copyWith({

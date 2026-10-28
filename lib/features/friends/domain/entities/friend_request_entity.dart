@@ -49,14 +49,14 @@ class FriendRequestEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        senderId,
-        senderName,
-        senderAvatar,
-        senderFaculty,
-        receiverId,
-        receiverName,
-        createdAt,
-        status,
-      ];
+    id,
+    senderId,
+    senderName,
+    senderAvatar,
+    senderFaculty,
+    receiverId,
+    receiverName,
+    createdAt,
+    status,
+  ];
 }

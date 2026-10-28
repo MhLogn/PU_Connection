@@ -21,16 +21,20 @@ class StudyGroupState {
 
   List<StudyGroupEntity> get filteredGroups {
     return groups.where((g) {
-      final matchSubject = selectedSubjectFilter == null ||
+      final matchSubject =
+          selectedSubjectFilter == null ||
           selectedSubjectFilter!.isEmpty ||
           selectedSubjectFilter == 'Tất cả' ||
           g.subject.toLowerCase() == selectedSubjectFilter!.toLowerCase();
 
-      final matchQuery = searchQuery == null ||
+      final matchQuery =
+          searchQuery == null ||
           searchQuery!.trim().isEmpty ||
           g.title.toLowerCase().contains(searchQuery!.trim().toLowerCase()) ||
           g.subject.toLowerCase().contains(searchQuery!.trim().toLowerCase()) ||
-          g.description.toLowerCase().contains(searchQuery!.trim().toLowerCase()) ||
+          g.description.toLowerCase().contains(
+            searchQuery!.trim().toLowerCase(),
+          ) ||
           g.location.toLowerCase().contains(searchQuery!.trim().toLowerCase());
 
       return matchSubject && matchQuery;

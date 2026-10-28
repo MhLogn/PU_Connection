@@ -34,10 +34,10 @@ class RelationshipEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        isFollowing,
-        friendshipStatus,
-        followersCount,
-        followingCount,
-        friendsCount,
-      ];
+    isFollowing,
+    friendshipStatus,
+    followersCount,
+    followingCount,
+    friendsCount,
+  ];
 }

@@ -25,10 +25,8 @@ class FriendListPage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FriendListPage(
-          userId: user.uid,
-          displayName: user.displayName,
-        ),
+        builder: (_) =>
+            FriendListPage(userId: user.uid, displayName: user.displayName),
       ),
     );
   }
@@ -41,12 +39,17 @@ class FriendListPage extends StatelessWidget {
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           title: const Row(
             children: [
               Icon(Icons.person_search_rounded, color: Color(0xFF0056B3)),
               SizedBox(width: 8),
-              Text('Tìm bạn bằng MSSV / QR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                'Tìm bạn bằng MSSV / QR',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ],
           ),
           content: Column(
@@ -65,12 +68,16 @@ class FriendListPage extends StatelessWidget {
                   hintText: 'Nhập MSSV hoặc dán mã QR...',
                   hintStyle: const TextStyle(fontSize: 12),
                   prefixIcon: const Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.paste_rounded, size: 18),
                     tooltip: 'Dán từ bộ nhớ tạm',
                     onPressed: () async {
-                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                      final data = await Clipboard.getData(
+                        Clipboard.kTextPlain,
+                      );
                       if (data?.text != null) {
                         textController.text = data!.text!.trim();
                       }
@@ -113,9 +120,12 @@ class FriendListPage extends StatelessWidget {
 
                         if (query.startsWith('{') && query.endsWith('}')) {
                           try {
-                            final map = jsonDecode(query) as Map<String, dynamic>;
+                            final map =
+                                jsonDecode(query) as Map<String, dynamic>;
                             targetUid = map['uid'] as String?;
-                            targetName = map['displayName'] as String? ?? map['name'] as String?;
+                            targetName =
+                                map['displayName'] as String? ??
+                                map['name'] as String?;
                             targetStudentId = map['studentId'] as String?;
                             targetFaculty = map['faculty'] as String?;
                           } catch (_) {}
@@ -132,8 +142,11 @@ class FriendListPage extends StatelessWidget {
                             final doc = querySnap.docs.first;
                             final data = doc.data();
                             targetUid = doc.id;
-                            targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
-                            targetStudentId = data['studentId'] as String? ?? query;
+                            targetName =
+                                data['displayName'] as String? ??
+                                'Sinh viên Phenikaa';
+                            targetStudentId =
+                                data['studentId'] as String? ?? query;
                             targetFaculty = data['faculty'] as String? ?? '';
                             targetAvatar = data['avatarUrl'] as String? ?? '';
                           } else {
@@ -144,8 +157,11 @@ class FriendListPage extends StatelessWidget {
                             if (docSnap.exists) {
                               final data = docSnap.data()!;
                               targetUid = docSnap.id;
-                              targetName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
-                              targetStudentId = data['studentId'] as String? ?? '';
+                              targetName =
+                                  data['displayName'] as String? ??
+                                  'Sinh viên Phenikaa';
+                              targetStudentId =
+                                  data['studentId'] as String? ?? '';
                               targetFaculty = data['faculty'] as String? ?? '';
                               targetAvatar = data['avatarUrl'] as String? ?? '';
                             }
@@ -171,7 +187,9 @@ class FriendListPage extends StatelessWidget {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Không tìm thấy sinh viên với thông tin: "$query"'),
+                              content: Text(
+                                'Không tìm thấy sinh viên với thông tin: "$query"',
+                              ),
                               backgroundColor: Colors.orange.shade800,
                             ),
                           );
@@ -180,11 +198,19 @@ class FriendListPage extends StatelessWidget {
                         if (dialogCtx.mounted) {
                           setDialogState(() => isSearching = false);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi tra cứu: $e'), backgroundColor: Colors.red),
+                            SnackBar(
+                              content: Text('Lỗi tra cứu: $e'),
+                              backgroundColor: Colors.red,
+                            ),
                           );
                         }
                       }
                     },
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('Tìm kiếm'),
             ),
           ],
@@ -278,7 +304,10 @@ class FriendListPage extends StatelessWidget {
               // Count header
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 color: colorScheme.surface,
                 child: Text(
                   '${docs.length} bạn bè',
@@ -293,12 +322,14 @@ class FriendListPage extends StatelessWidget {
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: docs.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, indent: 72),
                   itemBuilder: (context, index) {
                     final doc = docs[index];
                     final data = doc.data() as Map<String, dynamic>;
                     final friendId = data['userId'] as String? ?? doc.id;
-                    final friendName = data['displayName'] as String? ?? 'Sinh viên Phenikaa';
+                    final friendName =
+                        data['displayName'] as String? ?? 'Sinh viên Phenikaa';
                     final friendAvatar = data['avatarUrl'] as String? ?? '';
                     final friendFaculty = data['faculty'] as String? ?? '';
                     final connectedAt = data['connectedAt'] is Timestamp
@@ -360,7 +391,9 @@ class _FriendTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       leading: CircleAvatar(
         radius: 26,
-        backgroundImage: avatarUrl.isNotEmpty ? AppTheme.imageProvider(avatarUrl) : null,
+        backgroundImage: avatarUrl.isNotEmpty
+            ? AppTheme.imageProvider(avatarUrl)
+            : null,
         backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.15),
         child: avatarUrl.isEmpty
             ? Text(
@@ -383,12 +416,18 @@ class _FriendTile extends StatelessWidget {
           if (faculty.isNotEmpty)
             Text(
               faculty,
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           if (connectedLabel.isNotEmpty)
             Text(
               connectedLabel,
-              style: TextStyle(fontSize: 11.5, color: AppTheme.primaryColor(context).withValues(alpha: 0.7)),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: AppTheme.primaryColor(context).withValues(alpha: 0.7),
+              ),
             ),
         ],
       ),

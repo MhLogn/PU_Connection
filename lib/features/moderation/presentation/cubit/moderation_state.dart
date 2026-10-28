@@ -6,7 +6,8 @@ enum ModerationActionStatus { initial, loading, success, failure }
 class ModerationState extends Equatable {
   final List<BlockedUserEntity> blockedUsers;
   final Set<String> blockedUserIds;
-  final Set<String> hiddenPostIds; // Local optimistic hiding for reported/blocked posts
+  final Set<String>
+  hiddenPostIds; // Local optimistic hiding for reported/blocked posts
   final ModerationActionStatus status;
   final String? message;
 
@@ -36,10 +37,10 @@ class ModerationState extends Equatable {
 
   @override
   List<Object?> get props => [
-        blockedUsers,
-        blockedUserIds,
-        hiddenPostIds,
-        status,
-        message,
-      ];
+    blockedUsers,
+    blockedUserIds,
+    hiddenPostIds,
+    status,
+    message,
+  ];
 }

@@ -1,16 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../domain/entities/event_entity.dart';
 
 class EventRepository {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _customFirestore;
 
   EventRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _customFirestore = firestore;
+
+  FirebaseFirestore? get _firestore {
+    if (_customFirestore != null) return _customFirestore;
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        return FirebaseFirestore.instance;
+      } catch (_) {}
+    }
+    return null;
+  }
 
   static bool enableSeedEvents = false;
-  static List<EventEntity> get seedEvents => enableSeedEvents ? defaultEvents : const <EventEntity>[];
+  static List<EventEntity> get seedEvents =>
+      enableSeedEvents ? defaultEvents : const <EventEntity>[];
 
   static final List<EventEntity> defaultEvents = [
     EventEntity(
@@ -106,33 +118,41 @@ class EventRepository {
   ];
 
   Stream<List<EventEntity>> streamEvents() {
-    return _firestore
+    final firestore = _firestore;
+    if (firestore == null) {
+      return Stream.value(defaultEvents);
+    }
+    return firestore
         .collection(FirebaseConstants.eventsCollection)
         .snapshots()
         .map((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        return seedEvents;
-      }
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        final rawReg = data['registeredStudentIds'] as List<dynamic>? ?? [];
-        return EventEntity(
-          id: doc.id,
-          title: data['title'] as String? ?? 'Sự kiện Phenikaa',
-          description: data['description'] as String? ?? '',
-          category: data['category'] as String? ?? 'Học thuật',
-          location: data['location'] as String? ?? 'Phenikaa University',
-          startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          endDate: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          organizer: data['organizer'] as String? ?? 'Đại học Phenikaa',
-          maxParticipants: (data['maxParticipants'] as num?)?.toInt() ?? 100,
-          registeredStudentIds: rawReg.map((e) => e.toString()).toList(),
-          colorType: data['colorType'] as String? ?? 'blue',
-          icon: _mapIcon(data['iconName'] as String?),
-          isOnline: data['isOnline'] as bool? ?? false,
-        );
-      }).toList();
-    }).handleError((_) => seedEvents);
+          if (snapshot.docs.isEmpty) {
+            return seedEvents;
+          }
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            final rawReg = data['registeredStudentIds'] as List<dynamic>? ?? [];
+            return EventEntity(
+              id: doc.id,
+              title: data['title'] as String? ?? 'Sự kiện Phenikaa',
+              description: data['description'] as String? ?? '',
+              category: data['category'] as String? ?? 'Học thuật',
+              location: data['location'] as String? ?? 'Phenikaa University',
+              startDate:
+                  (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              endDate:
+                  (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              organizer: data['organizer'] as String? ?? 'Đại học Phenikaa',
+              maxParticipants:
+                  (data['maxParticipants'] as num?)?.toInt() ?? 100,
+              registeredStudentIds: rawReg.map((e) => e.toString()).toList(),
+              colorType: data['colorType'] as String? ?? 'blue',
+              icon: _mapIcon(data['iconName'] as String?),
+              isOnline: data['isOnline'] as bool? ?? false,
+            );
+          }).toList();
+        })
+        .handleError((_) => seedEvents);
   }
 
   IconData _mapIcon(String? iconName) {
@@ -159,40 +179,54 @@ class EventRepository {
     required String studentId,
   }) async {
     if (eventId.isEmpty || studentId.isEmpty) return;
-    try {
-      final docRef = _firestore.collection(FirebaseConstants.eventsCollection).doc(eventId);
+    final firestore = _firestore;
+    if (firestore != null) {
+      final docRef = firestore
+          .collection(FirebaseConstants.eventsCollection)
+          .doc(eventId);
       final doc = await docRef.get();
       if (!doc.exists) {
-        // Initialize doc with default if missing
-        final defaultEvent = defaultEvents.firstWhere(
-          (e) => e.id == eventId,
-          orElse: () => defaultEvents.first,
-        );
-        await docRef.set({
-          'title': defaultEvent.title,
-          'description': defaultEvent.description,
-          'category': defaultEvent.category,
-          'location': defaultEvent.location,
-          'startDate': Timestamp.fromDate(defaultEvent.startDate),
-          'endDate': Timestamp.fromDate(defaultEvent.endDate),
-          'organizer': defaultEvent.organizer,
-          'maxParticipants': defaultEvent.maxParticipants,
-          'colorType': defaultEvent.colorType,
-          'registeredStudentIds': [studentId],
-        });
-      } else {
-        await docRef.update({
-          'registeredStudentIds': FieldValue.arrayUnion([studentId]),
-        });
+        throw Exception('Sự kiện chưa mở đăng ký chính thức trên hệ thống.');
       }
-    } catch (_) {
-      // Local fallback in memory
+      final data = doc.data() ?? {};
+      final registered = List<String>.from(
+        (data['registeredStudentIds'] as List<dynamic>?) ?? [],
+      );
+      if (registered.contains(studentId)) {
+        throw Exception('Bạn đã đăng ký tham gia sự kiện này rồi.');
+      }
+      final maxParticipants = (data['maxParticipants'] as num?)?.toInt() ?? 0;
+      if (maxParticipants > 0 && registered.length >= maxParticipants) {
+        throw Exception('Sự kiện đã đủ số lượng người đăng ký.');
+      }
+
+      await docRef.update({
+        'registeredStudentIds': FieldValue.arrayUnion([studentId]),
+      });
+
+      // Cập nhật bộ nhớ cục bộ nếu trùng id sự kiện
       for (final e in defaultEvents) {
         if (e.id == eventId && !e.registeredStudentIds.contains(studentId)) {
           e.registeredStudentIds.add(studentId);
         }
       }
+      return;
     }
+
+    // In-memory fallback (chỉ phục vụ unit test offline khi firestore == null)
+    for (final e in defaultEvents) {
+      if (e.id == eventId) {
+        if (e.registeredStudentIds.contains(studentId)) {
+          throw Exception('Bạn đã đăng ký tham gia sự kiện này rồi.');
+        }
+        if (e.isFull) {
+          throw Exception('Sự kiện đã đủ số lượng người đăng ký.');
+        }
+        e.registeredStudentIds.add(studentId);
+        return;
+      }
+    }
+    throw Exception('Sự kiện không tồn tại.');
   }
 
   Future<void> unregisterFromEvent({
@@ -200,16 +234,28 @@ class EventRepository {
     required String studentId,
   }) async {
     if (eventId.isEmpty || studentId.isEmpty) return;
-    try {
-      final docRef = _firestore.collection(FirebaseConstants.eventsCollection).doc(eventId);
-      await docRef.update({
-        'registeredStudentIds': FieldValue.arrayRemove([studentId]),
-      });
-    } catch (_) {
+    final firestore = _firestore;
+    if (firestore != null) {
+      final docRef = firestore
+          .collection(FirebaseConstants.eventsCollection)
+          .doc(eventId);
+      final doc = await docRef.get();
+      if (doc.exists) {
+        await docRef.update({
+          'registeredStudentIds': FieldValue.arrayRemove([studentId]),
+        });
+      }
       for (final e in defaultEvents) {
         if (e.id == eventId) {
           e.registeredStudentIds.remove(studentId);
         }
+      }
+      return;
+    }
+
+    for (final e in defaultEvents) {
+      if (e.id == eventId) {
+        e.registeredStudentIds.remove(studentId);
       }
     }
   }

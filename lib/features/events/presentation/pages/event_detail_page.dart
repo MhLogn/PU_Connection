@@ -13,10 +13,7 @@ import '../widgets/event_ticket_dialog.dart';
 class EventDetailPage extends StatefulWidget {
   final EventEntity event;
 
-  const EventDetailPage({
-    super.key,
-    required this.event,
-  });
+  const EventDetailPage({super.key, required this.event});
 
   @override
   State<EventDetailPage> createState() => _EventDetailPageState();
@@ -46,17 +43,23 @@ class _EventDetailPageState extends State<EventDetailPage> {
     }
   }
 
-  Future<void> _handleRegister(String studentId, String studentName, String faculty) async {
+  Future<void> _handleRegister(
+    String studentId,
+    String studentName,
+    String faculty,
+  ) async {
     if (studentId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng đăng nhập với mã sinh viên để đăng ký!')),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập với mã sinh viên để đăng ký!'),
+        ),
       );
       return;
     }
     if (_currentEvent.isFull) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sự kiện đã hết chỗ!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sự kiện đã hết chỗ!')));
       return;
     }
 
@@ -67,7 +70,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
         studentId: studentId,
       );
       setState(() {
-        final updated = List<String>.from(_currentEvent.registeredStudentIds)..add(studentId);
+        final updated = List<String>.from(_currentEvent.registeredStudentIds)
+          ..add(studentId);
         _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
       });
       if (mounted) {
@@ -87,9 +91,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Có lỗi xảy ra: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -105,14 +109,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(l10n.cancel_registration_confirm_title),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 22,
             ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.cancel_registration_confirm_title)),
           ],
         ),
         content: Text(
@@ -122,14 +128,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Text(l10n.cancel_registration),
           ),
@@ -146,7 +157,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
         studentId: studentId,
       );
       setState(() {
-        final updated = List<String>.from(_currentEvent.registeredStudentIds)..remove(studentId);
+        final updated = List<String>.from(_currentEvent.registeredStudentIds)
+          ..remove(studentId);
         _currentEvent = _currentEvent.copyWith(registeredStudentIds: updated);
       });
       if (mounted) {
@@ -159,9 +171,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Có lỗi xảy ra: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -178,12 +190,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
     final dateFormat = DateFormat('EEEE, dd/MM/yyyy • HH:mm', 'vi');
 
     final authState = context.watch<AuthCubit>().state;
-    final studentId = authState is Authenticated ? authState.user.studentId : '';
-    final studentName = authState is Authenticated ? authState.user.displayName : '';
+    final studentId = authState is Authenticated
+        ? authState.user.studentId
+        : '';
+    final studentName = authState is Authenticated
+        ? authState.user.displayName
+        : '';
     final faculty = authState is Authenticated ? authState.user.faculty : '';
 
     final isRegistered = _currentEvent.isRegistered(studentId);
-    final percent = (_currentEvent.currentParticipants / _currentEvent.maxParticipants).clamp(0.0, 1.0);
+    final percent =
+        (_currentEvent.currentParticipants / _currentEvent.maxParticipants)
+            .clamp(0.0, 1.0);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -194,7 +212,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
             icon: const Icon(Icons.share_outlined),
             tooltip: 'Chia sẻ',
             onPressed: () {
-              Clipboard.setData(ClipboardData(text: '${_currentEvent.title} - Địa điểm: ${_currentEvent.location}'));
+              Clipboard.setData(
+                ClipboardData(
+                  text:
+                      '${_currentEvent.title} - Địa điểm: ${_currentEvent.location}',
+                ),
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Đã sao chép link sự kiện!')),
               );
@@ -206,11 +229,17 @@ class _EventDetailPageState extends State<EventDetailPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          boxShadow: [
+          border: Border(
+            top: BorderSide(
+              color: isDark ? Colors.white10 : AppTheme.borderLight,
+              width: 0.8,
+            ),
+          ),
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
+              color: Color(0x06123B63),
+              blurRadius: 6,
+              offset: Offset(0, -2),
             ),
           ],
         ),
@@ -218,41 +247,57 @@ class _EventDetailPageState extends State<EventDetailPage> {
           top: false,
           child: Row(
             children: [
-              if (isRegistered) ...[ 
+              if (isRegistered) ...[
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _isLoading
                         ? null
                         : () => EventTicketDialog.show(
-                              context,
-                              event: _currentEvent,
-                              studentName: studentName,
-                              studentId: studentId,
-                              faculty: faculty,
-                            ),
+                            context,
+                            event: _currentEvent,
+                            studentName: studentName,
+                            studentId: studentId,
+                            faculty: faculty,
+                          ),
                     icon: const Icon(Icons.qr_code_rounded, size: 20),
                     label: Text(l10n.view_ticket),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primaryColor(context),
-                      side: BorderSide(color: AppTheme.primaryColor(context)),
+                      side: BorderSide(
+                        color: AppTheme.primaryColor(context),
+                        width: 1.0,
+                      ),
                       minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton.icon(
-                  onPressed: _isLoading ? null : () => _handleUnregister(studentId),
-                  icon: const Icon(Icons.cancel_outlined, size: 18, color: Colors.redAccent),
+                  onPressed: _isLoading
+                      ? null
+                      : () => _handleUnregister(studentId),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    size: 18,
+                    color: Colors.redAccent,
+                  ),
                   label: Text(
                     l10n.cancel_registration,
-                    style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.redAccent,
-                    side: const BorderSide(color: Colors.redAccent),
+                    side: const BorderSide(color: Colors.redAccent, width: 1.0),
                     minimumSize: const Size(0, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                 ),
@@ -261,22 +306,34 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   child: ElevatedButton(
                     onPressed: _isLoading || _currentEvent.isFull
                         ? null
-                        : () => _handleRegister(studentId, studentName, faculty),
+                        : () =>
+                              _handleRegister(studentId, studentName, faculty),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentColor(context),
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
-                            _currentEvent.isFull ? l10n.register_event_full : l10n.register_event,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            _currentEvent.isFull
+                                ? l10n.register_event_full
+                                : l10n.register_event,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                   ),
                 ),
@@ -294,14 +351,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color.withValues(alpha: isDark ? 0.4 : 0.85),
-                    color.withValues(alpha: 0.6),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: isDark ? const Color(0xFF1E293B) : AppTheme.deepBlue,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,10 +359,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _currentEvent.category,
@@ -326,8 +379,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       const Spacer(),
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: Icon(_currentEvent.icon, color: Colors.white, size: 24),
+                        backgroundColor: Colors.white.withValues(alpha: 0.16),
+                        child: Icon(
+                          _currentEvent.icon,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ],
                   ),
@@ -344,12 +401,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(Icons.school_outlined, size: 16, color: Colors.white70),
+                      const Icon(
+                        Icons.school_outlined,
+                        size: 16,
+                        color: Colors.white70,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           _currentEvent.organizer,
-                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -369,10 +434,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        color: isDark ? Colors.white10 : AppTheme.borderLight,
+                        width: 0.8,
                       ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x06123B63),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -410,30 +483,49 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.people_alt_outlined, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                            Icon(
+                              Icons.people_alt_outlined,
+                              size: 14,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Còn ${_currentEvent.spotsRemaining} suất đăng ký',
                               style: TextStyle(
                                 fontSize: 11.5,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                             const Spacer(),
                             if (isRegistered)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.green.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Row(
                                   children: [
-                                    Icon(Icons.check_circle_rounded, size: 12, color: Colors.green),
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 12,
+                                      color: Colors.green,
+                                    ),
                                     SizedBox(width: 4),
                                     Text(
                                       'Bạn đã đăng ký',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -451,10 +543,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        color: isDark ? Colors.white10 : AppTheme.borderLight,
+                        width: 0.8,
                       ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x06123B63),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -479,7 +579,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           icon: Icons.stars_rounded,
                           color: AppTheme.primaryColor(context),
                           title: 'Quyền lợi sinh viên',
-                          subtitle: 'Cộng điểm rèn luyện (ĐRL) & cấp giấy chứng nhận tham gia sự kiện',
+                          subtitle:
+                              'Cộng điểm rèn luyện (ĐRL) & cấp giấy chứng nhận tham gia sự kiện',
                         ),
                       ],
                     ),
@@ -509,11 +610,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: AppTheme.blueContainer(context),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.2),
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor(context)),
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: AppTheme.primaryColor(context),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -562,7 +672,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 title,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.55),
                   fontWeight: FontWeight.w500,
                 ),
               ),

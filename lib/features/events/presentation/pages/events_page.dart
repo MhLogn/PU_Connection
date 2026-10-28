@@ -13,10 +13,7 @@ import '../widgets/event_ticket_dialog.dart';
 class EventsPage extends StatefulWidget {
   final String? initialCategory;
 
-  const EventsPage({
-    super.key,
-    this.initialCategory,
-  });
+  const EventsPage({super.key, this.initialCategory});
 
   @override
   State<EventsPage> createState() => _EventsPageState();
@@ -64,14 +61,16 @@ class _EventsPageState extends State<EventsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(l10n.cancel_registration_confirm_title),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 22,
             ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.cancel_registration_confirm_title)),
           ],
         ),
         content: Text(
@@ -81,14 +80,19 @@ class _EventsPageState extends State<EventsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Text(l10n.cancel_registration),
           ),
@@ -113,9 +117,9 @@ class _EventsPageState extends State<EventsPage> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Có lỗi xảy ra: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $e')));
       }
     }
   }
@@ -161,16 +165,19 @@ class _EventsPageState extends State<EventsPage> {
     final l10n = AppLocalizations.of(context)!;
 
     final authState = context.watch<AuthCubit>().state;
-    final currentStudentId = authState is Authenticated ? authState.user.studentId : '';
-    final currentStudentName = authState is Authenticated ? authState.user.displayName : '';
-    final currentFaculty = authState is Authenticated ? authState.user.faculty : '';
+    final currentStudentId = authState is Authenticated
+        ? authState.user.studentId
+        : '';
+    final currentStudentName = authState is Authenticated
+        ? authState.user.displayName
+        : '';
+    final currentFaculty = authState is Authenticated
+        ? authState.user.faculty
+        : '';
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: AppBar(
-        title: Text(l10n.event_list_title),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text(l10n.event_list_title), elevation: 0),
       body: Column(
         children: [
           // Search Box
@@ -179,18 +186,23 @@ class _EventsPageState extends State<EventsPage> {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
-                borderRadius: BorderRadius.circular(22),
+                color: isDark
+                    ? colorScheme.surfaceContainerHighest
+                    : AppTheme.borderSubtle,
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isDark ? Colors.white10 : AppTheme.borderLight,
-                  width: 1,
+                  width: 0.8,
                 ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Center(
                 child: TextField(
                   controller: _searchController,
-                  style: TextStyle(color: colorScheme.onSurface, fontSize: 13.5),
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontSize: 13.5,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Tìm sự kiện, workshop, giải đấu...',
                     hintStyle: TextStyle(
@@ -200,7 +212,11 @@ class _EventsPageState extends State<EventsPage> {
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
-                    icon: Icon(Icons.search_rounded, size: 18, color: AppTheme.oceanBlue),
+                    icon: Icon(
+                      Icons.search_rounded,
+                      size: 18,
+                      color: AppTheme.oceanBlue,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -224,23 +240,27 @@ class _EventsPageState extends State<EventsPage> {
                   onTap: () => setState(() => _selectedCategory = cat),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      gradient: isSelected ? AppTheme.oceanGradient : null,
-                      color: isSelected ? null : colorScheme.surface,
-                      borderRadius: BorderRadius.circular(20),
+                      color: isSelected
+                          ? AppTheme.primaryColor(context)
+                          : colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected
                             ? Colors.transparent
-                            : colorScheme.outlineVariant.withValues(alpha: 0.4),
-                        width: 1,
+                            : (isDark ? Colors.white12 : AppTheme.borderLight),
+                        width: 0.8,
                       ),
                       boxShadow: isSelected
-                          ? [
+                          ? const [
                               BoxShadow(
-                                color: AppTheme.oceanBlue.withValues(alpha: 0.25),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                color: Color(0x06123B63),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
                               ),
                             ]
                           : null,
@@ -249,8 +269,12 @@ class _EventsPageState extends State<EventsPage> {
                       child: Text(
                         _getCategoryLabel(context, cat),
                         style: TextStyle(
-                          color: isSelected ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.8),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : colorScheme.onSurface.withValues(alpha: 0.8),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 12.5,
                         ),
                       ),
@@ -268,11 +292,13 @@ class _EventsPageState extends State<EventsPage> {
             child: StreamBuilder<List<EventEntity>>(
               stream: _repository.streamEvents(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final allEvents = snapshot.data ?? EventRepository.defaultEvents;
+                final allEvents =
+                    snapshot.data ?? EventRepository.defaultEvents;
                 final query = _searchController.text.trim().toLowerCase();
 
                 final filteredEvents = allEvents.where((e) {
@@ -284,7 +310,9 @@ class _EventsPageState extends State<EventsPage> {
 
                   if (query.isNotEmpty) {
                     final matchTitle = e.title.toLowerCase().contains(query);
-                    final matchDesc = e.description.toLowerCase().contains(query);
+                    final matchDesc = e.description.toLowerCase().contains(
+                      query,
+                    );
                     final matchLoc = e.location.toLowerCase().contains(query);
                     final matchOrg = e.organizer.toLowerCase().contains(query);
                     return matchTitle || matchDesc || matchLoc || matchOrg;
@@ -313,7 +341,9 @@ class _EventsPageState extends State<EventsPage> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -323,7 +353,10 @@ class _EventsPageState extends State<EventsPage> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   itemCount: filteredEvents.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
@@ -364,27 +397,25 @@ class _EventsPageState extends State<EventsPage> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => EventDetailPage(event: event),
-          ),
+          MaterialPageRoute(builder: (_) => EventDetailPage(event: event)),
         );
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isRegistered
-                ? Colors.green.withValues(alpha: 0.5)
-                : (isDark ? colorScheme.outlineVariant.withValues(alpha: 0.25) : AppTheme.borderLight),
-            width: isRegistered ? 1.5 : 1,
+                ? AppTheme.accentColor(context).withValues(alpha: 0.6)
+                : (isDark ? Colors.white10 : AppTheme.borderLight),
+            width: 0.8,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFF0284C7).withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
+              color: Color(0x06123B63),
+              blurRadius: 4,
+              offset: Offset(0, 1),
             ),
           ],
         ),
@@ -408,7 +439,10 @@ class _EventsPageState extends State<EventsPage> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(6),
@@ -425,18 +459,29 @@ class _EventsPageState extends State<EventsPage> {
                           const Spacer(),
                           if (isRegistered)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.qr_code_rounded, size: 12, color: Colors.green),
+                                  const Icon(
+                                    Icons.qr_code_rounded,
+                                    size: 12,
+                                    color: Colors.green,
+                                  ),
                                   const SizedBox(width: 3),
                                   Text(
                                     l10n.view_ticket,
-                                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.green),
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -462,7 +507,11 @@ class _EventsPageState extends State<EventsPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.access_time_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 14,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
                 const SizedBox(width: 5),
                 Text(
                   dateFormat.format(event.startDate),
@@ -473,7 +522,11 @@ class _EventsPageState extends State<EventsPage> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Icon(Icons.location_on_outlined, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -494,11 +547,18 @@ class _EventsPageState extends State<EventsPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.group_outlined, size: 14, color: AppTheme.oceanBlue),
+                    Icon(
+                      Icons.group_outlined,
+                      size: 14,
+                      color: AppTheme.oceanBlue,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${event.currentParticipants}/${event.maxParticipants} ${l10n.registered.toLowerCase()}',
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -519,7 +579,10 @@ class _EventsPageState extends State<EventsPage> {
                         style: TextButton.styleFrom(
                           foregroundColor: AppTheme.primaryColor(context),
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                         ),
                       ),
                       TextButton.icon(
@@ -528,15 +591,25 @@ class _EventsPageState extends State<EventsPage> {
                           event: event,
                           studentId: currentStudentId,
                         ),
-                        icon: const Icon(Icons.cancel_outlined, size: 14, color: Colors.redAccent),
+                        icon: const Icon(
+                          Icons.cancel_outlined,
+                          size: 14,
+                          color: Colors.redAccent,
+                        ),
                         label: Text(
                           l10n.cancel_registration,
-                          style: const TextStyle(color: Colors.redAccent, fontSize: 11.5),
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 11.5,
+                          ),
                         ),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.redAccent,
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
                         ),
                       ),
                     ],

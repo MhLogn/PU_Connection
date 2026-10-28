@@ -33,10 +33,10 @@ class BlockedUserEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        userId,
-        userName,
-        userAvatar,
-        userFaculty,
-        blockedAt,
-      ];
+    userId,
+    userName,
+    userAvatar,
+    userFaculty,
+    blockedAt,
+  ];
 }
