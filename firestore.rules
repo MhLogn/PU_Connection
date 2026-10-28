@@ -1,0 +1,358 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Xác thực quyền Quản trị viên (Admin):
+    // 1. Kiểm tra Custom Claims trong Firebase Auth Token (được gán bởi Admin SDK / Cloud Functions)
+    // 2. Tài khoản quản trị trường Đại học Phenikaa được phân quyền
+    // 3. Hoặc kiểm tra document có trường active == true trong collection bảo mật /admins
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'admin' ||
+        request.auth.token.email == 'admin@phenikaa-uni.edu.vn' ||
+        request.auth.uid == 'LKcVXxg15RZTeSBxfL8HLODbPSZ2' ||
+        (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+        )
+      );
+    }
+
+    // =========================================================================
+    // 1. Collection 'admins': Quản lý danh sách Quản trị viên
+    // - Chỉ Admin đã xác thực mới đọc được
+    // - TUYỆT ĐỐI CẤM WRITE từ client-side (chỉ cho phép qua Admin SDK phía backend)
+    // =========================================================================
+    match /admins/{adminId} {
+      allow read: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // 2. Collection 'users': Hồ sơ người dùng & sinh viên
+    // =========================================================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+
+      // Quản trị viên hoặc sinh viên tạo tài khoản (sinh viên cấm tự gán userType = 'admin')
+      allow create: if isAdmin() || (
+        isOwner(userId) &&
+        request.resource.data.userType != 'admin' &&
+        (!('isBanned' in request.resource.data) || request.resource.data.isBanned == false)
+      );
+
+      // Sinh viên cập nhật: không được tự thay đổi các trường phân quyền & thông tin học vụ
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'userType',
+          'role',
+          'isBanned',
+          'banReason',
+          'isVerified',
+          'gpa',
+          'creditsEarned',
+          'trainingPoints',
+          'studentId',
+          'cohort',
+          'faculty',
+          'major'
+        ])
+      );
+
+      allow delete: if isAdmin();
+
+      // Subcollection 'followers': Danh sách người theo dõi
+      match /followers/{followerId} {
+        allow read: if isAuthenticated();
+        allow create, delete: if isAuthenticated() && (request.auth.uid == followerId || isOwner(userId) || isAdmin());
+      }
+
+      // Subcollection 'following': Danh sách đang theo dõi
+      match /following/{followingId} {
+        allow read: if isAuthenticated();
+        allow create, delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+
+      // Subcollection 'friends': Danh sách bạn bè chính thức
+      match /friends/{friendId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && (request.auth.uid == userId || request.auth.uid == friendId || isAdmin());
+      }
+
+      // Subcollection 'friend_requests': Lời mời kết bạn
+      match /friend_requests/{reqId} {
+        allow read: if isAuthenticated() && (isOwner(userId) || request.auth.uid == reqId || isAdmin());
+        allow create: if isAuthenticated() && request.auth.uid == reqId;
+        allow update, delete: if isAuthenticated() && (isOwner(userId) || request.auth.uid == reqId || isAdmin());
+      }
+
+      // Subcollection 'notifications': Thông báo cá nhân
+      match /notifications/{notifId} {
+        allow read, update, delete: if isOwner(userId) || isAdmin();
+        allow create: if isAuthenticated();
+      }
+
+      // Subcollection 'blocked_users': Danh sách người dùng bị chặn
+      match /blocked_users/{blockedId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Các subcollection riêng tư khác
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // =========================================================================
+    // 3. Collection 'admin_audit_logs': Nhật ký kiểm duyệt & quản trị
+    // =========================================================================
+    match /admin_audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false; // Bất biến để lưu vết kiểm toán minh bạch
+    }
+
+    // =========================================================================
+    // 4. Collection 'reports': Báo cáo vi phạm từ cộng đồng
+    // =========================================================================
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() &&
+        request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.reporterId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 5. Collection 'posts': Bài viết News Feed
+    // =========================================================================
+    match /posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'likesCount',
+          'likedUserIds',
+          'commentsCount',
+          'sharesCount'
+        ])
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin()
+      );
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && (
+          resource.data.authorId == request.auth.uid ||
+          isAdmin()
+        );
+      }
+    }
+
+    // =========================================================================
+    // 6. Collection 'study_documents': Tài liệu học tập DocsHub
+    // =========================================================================
+    match /study_documents/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloads', 'rating'])
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // =========================================================================
+    // 7. Collection 'notes': Ghi chú trạng thái ngắn (Notes 1-150 ký tự)
+    // =========================================================================
+    match /notes/{noteId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 150;
+      allow update: if isAuthenticated() &&
+        resource.data.authorId == request.auth.uid &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 150;
+      allow delete: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // =========================================================================
+    // 8. Collection 'clubs': Câu lạc bộ
+    // =========================================================================
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() || (
+        isAuthenticated() && 
+        request.resource.data.leaderId == request.auth.uid
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.leaderId == request.auth.uid ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'memberIds',
+          'members',
+          'membersCount',
+          'updatedAt'
+        ])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 8.1 Collection 'club_requests': Đề xuất thành lập Câu lạc bộ
+    // =========================================================================
+    match /club_requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || resource.data.founderId == request.auth.uid
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.founderId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isAuthenticated() && (
+        isAdmin() || (
+          resource.data.founderId == request.auth.uid &&
+          resource.data.status == 'pending'
+        )
+      );
+      allow delete: if isAdmin() || (
+        isAuthenticated() &&
+        resource.data.founderId == request.auth.uid &&
+        resource.data.status == 'pending'
+      );
+    }
+
+    // =========================================================================
+    // 9. Collection 'announcements': Thông báo khẩn cấp toàn trường
+    // =========================================================================
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // =========================================================================
+    // 10. Collection 'phenikaa_students': Danh bạ mã sinh viên
+    // - Cho phép tra cứu từng sinh viên cụ thể (get) để phục vụ kích hoạt tài khoản
+    // - Chỉ Admin mới có quyền liệt kê (list) toàn bộ danh bạ để quản lý và tránh cào dữ liệu
+    // =========================================================================
+    match /phenikaa_students/{studentId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      // Cho phép cập nhật cờ kích hoạt an toàn khi sinh viên hoàn thành kích hoạt
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isActivated']) &&
+        request.resource.data.isActivated == true
+      );
+    }
+
+    // =========================================================================
+    // 11. Collection 'chats': Nhắn tin riêng tư & Nhóm học tập
+    // - Chỉ người có UID trong participantIds mới được đọc và gửi tin
+    // =========================================================================
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        request.auth.uid in request.resource.data.participantIds ||
+        (isAdmin() && request.resource.data.isGroup == true && ('clubId' in request.resource.data))
+      );
+      allow update: if isAuthenticated() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds ||
+          isAdmin()
+        );
+        allow create: if isAuthenticated() &&
+          request.resource.data.senderId == request.auth.uid &&
+          (
+            request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds ||
+            isAdmin()
+          );
+        allow update, delete: if isAuthenticated() && (
+          resource.data.senderId == request.auth.uid ||
+          isAdmin()
+        );
+      }
+
+      match /typing/{userId} {
+        allow read, write: if isAuthenticated() && (
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds
+        );
+      }
+    }
+
+    // =========================================================================
+    // 12. Collection 'study_groups': Nhóm học tập cùng tiến
+    // - Chỉ người tạo hoặc Admin mới được xóa / đổi quản trị
+    // - Cho phép thành viên cập nhật danh sách xin gia nhập / rời nhóm
+    // =========================================================================
+    match /study_groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'memberIds',
+          'pendingRequestIds',
+          'isOpen'
+        ])
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // =========================================================================
+    // 13. Collection 'events': Sự kiện trường Đại học Phenikaa
+    // =========================================================================
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredStudentIds'])
+      );
+    }
+  }
+}
