@@ -14,11 +14,11 @@ class PostAttachment extends Equatable {
   });
 
   Map<String, dynamic> toMap() => {
-        'url': url,
-        'name': name,
-        'sizeBytes': sizeBytes,
-        'type': type,
-      };
+    'url': url,
+    'name': name,
+    'sizeBytes': sizeBytes,
+    'type': type,
+  };
 
   factory PostAttachment.fromMap(Map<String, dynamic> map) {
     return PostAttachment(
@@ -51,6 +51,11 @@ class PostEntity extends Equatable {
   final List<String> likedUsers;
   final int likeCount;
   final int commentCount;
+  final int sharesCount;
+  final String? sharedPostId;
+  final String? sharedPostAuthorName;
+  final String? sharedPostAuthorAvatar;
+  final String? sharedPostContent;
   final DateTime? createdAt;
 
   const PostEntity({
@@ -71,6 +76,11 @@ class PostEntity extends Equatable {
     this.likedUsers = const [],
     this.likeCount = 0,
     this.commentCount = 0,
+    this.sharesCount = 0,
+    this.sharedPostId,
+    this.sharedPostAuthorName,
+    this.sharedPostAuthorAvatar,
+    this.sharedPostContent,
     this.createdAt,
   });
 
@@ -94,6 +104,11 @@ class PostEntity extends Equatable {
     List<String>? likedUsers,
     int? likeCount,
     int? commentCount,
+    int? sharesCount,
+    String? sharedPostId,
+    String? sharedPostAuthorName,
+    String? sharedPostAuthorAvatar,
+    String? sharedPostContent,
     DateTime? createdAt,
   }) {
     return PostEntity(
@@ -114,29 +129,40 @@ class PostEntity extends Equatable {
       likedUsers: likedUsers ?? this.likedUsers,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      sharedPostId: sharedPostId ?? this.sharedPostId,
+      sharedPostAuthorName: sharedPostAuthorName ?? this.sharedPostAuthorName,
+      sharedPostAuthorAvatar:
+          sharedPostAuthorAvatar ?? this.sharedPostAuthorAvatar,
+      sharedPostContent: sharedPostContent ?? this.sharedPostContent,
       createdAt: createdAt ?? this.createdAt,
     );
   }
 
   @override
   List<Object?> get props => [
-        postId,
-        authorId,
-        authorName,
-        authorAvatar,
-        authorStudentId,
-        authorFaculty,
-        content,
-        postType,
-        category,
-        subjectCode,
-        attachments,
-        tags,
-        taggedUserIds,
-        taggedUserNames,
-        likedUsers,
-        likeCount,
-        commentCount,
-        createdAt,
-      ];
+    postId,
+    authorId,
+    authorName,
+    authorAvatar,
+    authorStudentId,
+    authorFaculty,
+    content,
+    postType,
+    category,
+    subjectCode,
+    attachments,
+    tags,
+    taggedUserIds,
+    taggedUserNames,
+    likedUsers,
+    likeCount,
+    commentCount,
+    sharesCount,
+    sharedPostId,
+    sharedPostAuthorName,
+    sharedPostAuthorAvatar,
+    sharedPostContent,
+    createdAt,
+  ];
 }

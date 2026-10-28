@@ -20,6 +20,11 @@ class PostModel extends PostEntity {
     super.likedUsers,
     super.likeCount,
     super.commentCount,
+    super.sharesCount,
+    super.sharedPostId,
+    super.sharedPostAuthorName,
+    super.sharedPostAuthorAvatar,
+    super.sharedPostContent,
     super.createdAt,
   });
 
@@ -36,18 +41,28 @@ class PostModel extends PostEntity {
       category: map['category'] as String? ?? 'Thảo luận',
       subjectCode: map['subjectCode'] as String?,
       attachments: (map['attachments'] as List? ?? [])
-          .map((item) => PostAttachment.fromMap(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) =>
+                PostAttachment.fromMap(Map<String, dynamic>.from(item as Map)),
+          )
           .toList(),
       tags: List<String>.from(map['tags'] as List? ?? []),
       taggedUserIds: List<String>.from(map['taggedUserIds'] as List? ?? []),
       taggedUserNames: (map['taggedUserNames'] is Map)
-          ? Map<String, String>.from((map['taggedUserNames'] as Map).map(
-              (key, value) => MapEntry(key.toString(), value.toString()),
-            ))
+          ? Map<String, String>.from(
+              (map['taggedUserNames'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value.toString()),
+              ),
+            )
           : const {},
       likedUsers: List<String>.from(map['likedUsers'] as List? ?? []),
       likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
       commentCount: (map['commentCount'] as num?)?.toInt() ?? 0,
+      sharesCount: (map['sharesCount'] as num?)?.toInt() ?? 0,
+      sharedPostId: map['sharedPostId'] as String?,
+      sharedPostAuthorName: map['sharedPostAuthorName'] as String?,
+      sharedPostAuthorAvatar: map['sharedPostAuthorAvatar'] as String?,
+      sharedPostContent: map['sharedPostContent'] as String?,
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
@@ -77,7 +92,16 @@ class PostModel extends PostEntity {
       'likedUsers': likedUsers,
       'likeCount': likeCount,
       'commentCount': commentCount,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'sharesCount': sharesCount,
+      if (sharedPostId != null) 'sharedPostId': sharedPostId,
+      if (sharedPostAuthorName != null)
+        'sharedPostAuthorName': sharedPostAuthorName,
+      if (sharedPostAuthorAvatar != null)
+        'sharedPostAuthorAvatar': sharedPostAuthorAvatar,
+      if (sharedPostContent != null) 'sharedPostContent': sharedPostContent,
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -101,6 +125,11 @@ class PostModel extends PostEntity {
     List<String>? likedUsers,
     int? likeCount,
     int? commentCount,
+    int? sharesCount,
+    String? sharedPostId,
+    String? sharedPostAuthorName,
+    String? sharedPostAuthorAvatar,
+    String? sharedPostContent,
     DateTime? createdAt,
   }) {
     return PostModel(
@@ -121,6 +150,12 @@ class PostModel extends PostEntity {
       likedUsers: likedUsers ?? this.likedUsers,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      sharedPostId: sharedPostId ?? this.sharedPostId,
+      sharedPostAuthorName: sharedPostAuthorName ?? this.sharedPostAuthorName,
+      sharedPostAuthorAvatar:
+          sharedPostAuthorAvatar ?? this.sharedPostAuthorAvatar,
+      sharedPostContent: sharedPostContent ?? this.sharedPostContent,
       createdAt: createdAt ?? this.createdAt,
     );
   }

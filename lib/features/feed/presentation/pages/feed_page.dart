@@ -5,17 +5,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../auth/data/datasources/phenikaa_student_directory.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
-import '../../../events/presentation/pages/events_page.dart';
 import '../../domain/entities/post_entity.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/feed_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/create_post_bottom_sheet.dart';
 import '../widgets/post_comments_bottom_sheet.dart';
+import '../widgets/share_post_bottom_sheet.dart';
 import '../../../chat/presentation/pages/conversations_page.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
@@ -23,8 +22,7 @@ import '../../../chat/presentation/cubit/chat_state.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_cubit.dart';
 import '../../../notifications/presentation/cubit/in_app_notifications_state.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
-import '../../../study_groups/presentation/pages/study_groups_page.dart';
-import '../../../main/presentation/pages/main_navigation_page.dart';
+import '../../../notes/presentation/widgets/notes_feed_section.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -38,6 +36,23 @@ class _FeedPageState extends State<FeedPage> {
   int _searchTab = 0; // 0: Posts, 1: Students
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _hasSubmittedSearch = false;
+  String _submittedQuery = '';
+
+  void _performSearch(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        _hasSubmittedSearch = false;
+        _submittedQuery = '';
+      });
+      return;
+    }
+    setState(() {
+      _hasSubmittedSearch = true;
+      _submittedQuery = trimmed;
+    });
+  }
 
   final List<String> _filterCategories = [
     'Tất cả',
@@ -47,23 +62,6 @@ class _FeedPageState extends State<FeedPage> {
     'Thảo luận',
     'Thông báo',
   ];
-
-  final List<Map<String, dynamic>> _highlights = [
-    {'title': 'Nhóm học', 'icon': Icons.diversity_3_rounded, 'type': 'blue', 'route': 'study_groups'},
-    {'title': 'CLB Sinh viên', 'icon': Icons.groups_rounded, 'type': 'orange', 'route': 'clubs'},
-    {'title': 'Học bổng K17', 'icon': Icons.school_rounded, 'type': 'blue', 'category': 'Học thuật'},
-    {'title': 'Hội thao PU', 'icon': Icons.sports_soccer_rounded, 'type': 'orange', 'category': 'Thể thao'},
-    {'title': 'Hackathon IT', 'icon': Icons.code_rounded, 'type': 'blue', 'category': 'Học thuật'},
-    {'title': 'Acoustic Night', 'icon': Icons.music_note_rounded, 'type': 'orange', 'category': 'Văn nghệ'},
-    {'title': 'Sự kiện PU', 'icon': Icons.celebration_rounded, 'type': 'blue', 'category': 'Tất cả'},
-  ];
-
-  Color _getHighlightColor(BuildContext context, String type) {
-    if (type == 'orange') {
-      return AppTheme.accentColor(context);
-    }
-    return AppTheme.primaryColor(context);
-  }
 
   @override
   void initState() {
@@ -147,77 +145,96 @@ class _FeedPageState extends State<FeedPage> {
     NotificationsPage.showAsBottomSheet(context);
   }
 
-  void _openEventsPage({String? category}) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EventsPage(initialCategory: category),
-      ),
-    );
-  }
-
   Widget _buildStudentSearchResults(
     BuildContext context,
     String currentUserId,
     String currentUserName,
   ) {
-    final query = _searchController.text.trim().toLowerCase();
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = AppTheme.isDark(context);
+
+    if (!_hasSubmittedSearch || _submittedQuery.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.person_search_rounded,
+                  size: 64,
+                  color: colorScheme.onSurface.withValues(alpha: 0.35),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tìm kiếm sinh viên Phenikaa',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Nhập họ tên, mã sinh viên hoặc ngành học rồi bấm Tìm kiếm để tra cứu hồ sơ.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final query = _submittedQuery.toLowerCase();
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(FirebaseConstants.usersCollection)
           .snapshots(),
       builder: (context, snapshot) {
-        final firestoreUsers = snapshot.data?.docs ?? [];
-        final Map<String, Map<String, dynamic>> studentsMap = {};
-
-        // 1. Static Phenikaa directory
-        for (final s in PhenikaaStudentDirectory.defaultStudents) {
-          studentsMap[s.studentId] = {
-            'uid': s.studentId,
-            'studentId': s.studentId,
-            'name': s.fullName,
-            'faculty': s.faculty,
-            'major': s.major,
-            'cohort': s.cohort,
-            'avatar': '',
-          };
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        // 2. Overlay with registered users
+        final firestoreUsers = snapshot.data?.docs ?? [];
+        final List<Map<String, dynamic>> matched = [];
+
         for (final doc in firestoreUsers) {
           final data = doc.data() as Map<String, dynamic>?;
           if (data != null) {
             final stId = data['studentId'] as String? ?? '';
             final name = data['displayName'] as String? ?? '';
             final faculty = data['faculty'] as String? ?? '';
+            final major = data['major'] as String? ?? '';
             final cohort = (data['cohort'] as num?)?.toInt() ?? 17;
             final avatar = data['avatarUrl'] as String? ?? '';
 
-            final key = stId.isNotEmpty ? stId : doc.id;
-            studentsMap[key] = {
-              'uid': doc.id,
-              'studentId': stId,
-              'name': name.isNotEmpty ? name : (studentsMap[key]?['name'] ?? 'Sinh viên PU'),
-              'faculty': faculty.isNotEmpty ? faculty : (studentsMap[key]?['faculty'] ?? ''),
-              'major': studentsMap[key]?['major'] ?? '',
-              'cohort': cohort,
-              'avatar': avatar,
-            };
+            if (name.toLowerCase().contains(query) ||
+                stId.toLowerCase().contains(query) ||
+                faculty.toLowerCase().contains(query) ||
+                major.toLowerCase().contains(query)) {
+              matched.add({
+                'uid': doc.id,
+                'studentId': stId,
+                'name': name.isNotEmpty ? name : 'Sinh viên PU',
+                'faculty': faculty,
+                'major': major,
+                'cohort': cohort,
+                'avatar': avatar,
+              });
+            }
           }
         }
-
-        final allStudents = studentsMap.values.toList();
-        final matched = allStudents.where((s) {
-          if (query.isEmpty) return true;
-          final name = (s['name'] as String).toLowerCase();
-          final id = (s['studentId'] as String).toLowerCase();
-          final fac = (s['faculty'] as String).toLowerCase();
-          final maj = (s['major'] as String).toLowerCase();
-          return name.contains(query) || id.contains(query) || fac.contains(query) || maj.contains(query);
-        }).toList();
 
         if (matched.isEmpty) {
           return SliverFillRemaining(
@@ -235,7 +252,7 @@ class _FeedPageState extends State<FeedPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Không tìm thấy sinh viên cho "$query"',
+                      'Không tìm thấy sinh viên cho "$_submittedQuery"',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -258,224 +275,248 @@ class _FeedPageState extends State<FeedPage> {
         }
 
         return SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final student = matched[index];
-              final sUid = student['uid'] as String;
-              final sName = student['name'] as String;
-              final sId = student['studentId'] as String;
-              final sFac = student['faculty'] as String;
-              final sMajor = student['major'] as String;
-              final sCohort = student['cohort'] as int;
-              final sAvatar = student['avatar'] as String;
-              final isSelf = currentUserId.isNotEmpty && (currentUserId == sUid || currentUserId == sId);
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final student = matched[index];
+            final sUid = student['uid'] as String;
+            final sName = student['name'] as String;
+            final sId = student['studentId'] as String;
+            final sFac = student['faculty'] as String;
+            final sMajor = student['major'] as String;
+            final sCohort = student['cohort'] as int;
+            final sAvatar = student['avatar'] as String;
+            final isSelf =
+                currentUserId.isNotEmpty &&
+                (currentUserId == sUid || currentUserId == sId);
 
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                padding: const EdgeInsets.all(13),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? colorScheme.outlineVariant.withValues(alpha: 0.25) : AppTheme.borderLight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+                      : AppTheme.borderLight,
                 ),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => UserProfilePage(
-                              userId: sUid,
-                              userName: sName,
-                              studentId: sId,
-                              faculty: sFac,
-                              avatarUrl: sAvatar,
-                            ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black26
+                        : Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UserProfilePage(
+                            userId: sUid,
+                            userName: sName,
+                            studentId: sId,
+                            faculty: sFac,
+                            avatarUrl: sAvatar,
                           ),
-                        );
-                      },
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: AppTheme.blueContainer(context),
-                        child: Text(
-                          sName.isNotEmpty ? sName.trim().split(' ').last[0].toUpperCase() : 'P',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor(context),
-                          ),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppTheme.blueContainer(context),
+                      child: Text(
+                        sName.isNotEmpty
+                            ? sName.trim().split(' ').last[0].toUpperCase()
+                            : 'P',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor(context),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => UserProfilePage(
-                                          userId: sUid,
-                                          userName: sName,
-                                          studentId: sId,
-                                          faculty: sFac,
-                                          avatarUrl: sAvatar,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    sName,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(Icons.verified_rounded, size: 14, color: AppTheme.primaryColor(context)),
-                              if (sCohort > 0) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'K$sCohort',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor(context),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            sId.isNotEmpty ? 'MSSV: $sId' : 'Sinh viên Phenikaa',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          if (sFac.isNotEmpty || sMajor.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              [if (sFac.isNotEmpty) sFac, if (sMajor.isNotEmpty) sMajor].join(' • '),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton.filledTonal(
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppTheme.blueContainer(context),
-                            foregroundColor: AppTheme.primaryColor(context),
-                            minimumSize: const Size(36, 36),
-                            padding: EdgeInsets.zero,
-                          ),
-                          icon: const Icon(Icons.person_rounded, size: 18),
-                          tooltip: 'Hồ sơ',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => UserProfilePage(
-                                  userId: sUid,
-                                  userName: sName,
-                                  studentId: sId,
-                                  faculty: sFac,
-                                  avatarUrl: sAvatar,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        if (!isSelf && currentUserId.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          IconButton.filled(
-                            style: IconButton.styleFrom(
-                              backgroundColor: AppTheme.accentColor(context),
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(36, 36),
-                              padding: EdgeInsets.zero,
-                            ),
-                            icon: const Icon(Icons.chat_bubble_rounded, size: 16),
-                            tooltip: 'Nhắn tin',
-                            onPressed: () async {
-                              try {
-                                final convId = await context.read<ChatCubit>().startDirectChat(
-                                      currentUserId: currentUserId,
-                                      currentUserName: currentUserName,
-                                      otherUserId: sUid,
-                                      otherUserName: sName,
-                                      otherUserFaculty: sFac,
-                                    );
-                                if (context.mounted) {
+                        Row(
+                          children: [
+                            Flexible(
+                              child: GestureDetector(
+                                onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ChatDetailPage(
-                                        conversationId: convId,
-                                        otherUserId: sUid,
-                                        otherUserName: sName,
-                                        otherUserFaculty: sFac,
-                                        participantIds: [currentUserId, sUid]..sort(),
+                                      builder: (_) => UserProfilePage(
+                                        userId: sUid,
+                                        userName: sName,
+                                        studentId: sId,
+                                        faculty: sFac,
+                                        avatarUrl: sAvatar,
                                       ),
                                     ),
                                   );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Không thể mở tin nhắn: $e')),
-                                  );
-                                }
-                              }
-                            },
+                                },
+                                child: Text(
+                                  sName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified_rounded,
+                              size: 14,
+                              color: AppTheme.primaryColor(context),
+                            ),
+                            if (sCohort > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor(
+                                    context,
+                                  ).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'K$sCohort',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          sId.isNotEmpty ? 'MSSV: $sId' : 'Sinh viên Phenikaa',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (sFac.isNotEmpty || sMajor.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              if (sFac.isNotEmpty) sFac,
+                              if (sMajor.isNotEmpty) sMajor,
+                            ].join(' • '),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ],
                     ),
-                  ],
-                ),
-              );
-            },
-            childCount: matched.length,
-          ),
+                  ),
+                  const SizedBox(width: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton.filledTonal(
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppTheme.blueContainer(context),
+                          foregroundColor: AppTheme.primaryColor(context),
+                          minimumSize: const Size(36, 36),
+                          padding: EdgeInsets.zero,
+                        ),
+                        icon: const Icon(Icons.person_rounded, size: 18),
+                        tooltip: 'Hồ sơ',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UserProfilePage(
+                                userId: sUid,
+                                userName: sName,
+                                studentId: sId,
+                                faculty: sFac,
+                                avatarUrl: sAvatar,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      if (!isSelf && currentUserId.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        IconButton.filled(
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppTheme.accentColor(context),
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(36, 36),
+                            padding: EdgeInsets.zero,
+                          ),
+                          icon: const Icon(Icons.chat_bubble_rounded, size: 16),
+                          tooltip: 'Nhắn tin',
+                          onPressed: () async {
+                            try {
+                              final convId = await context
+                                  .read<ChatCubit>()
+                                  .startDirectChat(
+                                    currentUserId: currentUserId,
+                                    currentUserName: currentUserName,
+                                    otherUserId: sUid,
+                                    otherUserName: sName,
+                                    otherUserFaculty: sFac,
+                                  );
+                              if (context.mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatDetailPage(
+                                      conversationId: convId,
+                                      otherUserId: sUid,
+                                      otherUserName: sName,
+                                      otherUserFaculty: sFac,
+                                      participantIds: [currentUserId, sUid]
+                                        ..sort(),
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Không thể mở tin nhắn: $e'),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }, childCount: matched.length),
         );
       },
     );
@@ -489,8 +530,12 @@ class _FeedPageState extends State<FeedPage> {
     final l10n = AppLocalizations.of(context)!;
     final authState = context.watch<AuthCubit>().state;
     final currentUserId = authState is Authenticated ? authState.user.uid : '';
-    final currentUserName = authState is Authenticated ? authState.user.displayName : 'Bạn';
-    final currentUserStudentId = authState is Authenticated ? authState.user.studentId : '';
+    final currentUserName = authState is Authenticated
+        ? authState.user.displayName
+        : 'Bạn';
+    final currentUserStudentId = authState is Authenticated
+        ? authState.user.studentId
+        : '';
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -499,10 +544,14 @@ class _FeedPageState extends State<FeedPage> {
             ? Container(
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.isDark(context) ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
+                  color: AppTheme.isDark(context)
+                      ? colorScheme.surfaceContainerHighest
+                      : AppTheme.borderSubtle,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppTheme.isDark(context) ? Colors.white10 : AppTheme.borderLight,
+                    color: AppTheme.isDark(context)
+                        ? Colors.white10
+                        : AppTheme.borderLight,
                     width: 1,
                   ),
                 ),
@@ -511,56 +560,115 @@ class _FeedPageState extends State<FeedPage> {
                   child: TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (val) => _performSearch(val),
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 14,
+                    ),
                     cursorColor: AppTheme.oceanBlue,
                     decoration: InputDecoration(
-                      hintText: _searchTab == 0 ? l10n.search_posts_hint : 'Tìm sinh viên theo Tên, MSSV...',
-                      hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
+                      hintText: _searchTab == 0
+                          ? l10n.search_posts_hint
+                          : 'Tìm sinh viên theo Tên, MSSV...',
+                      hintStyle: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 13,
+                      ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
-                      icon: Icon(Icons.search_rounded, size: 18, color: AppTheme.oceanBlue),
+                      icon: Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: AppTheme.oceanBlue,
+                      ),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 16),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _hasSubmittedSearch = false;
+                                  _submittedQuery = '';
+                                });
+                              },
+                            ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                            color: AppTheme.oceanBlue,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Tìm kiếm',
+                            onPressed: () => _performSearch(_searchController.text),
+                          ),
+                        ],
+                      ),
                     ),
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (val) {
+                      if (val.trim().isEmpty && _hasSubmittedSearch) {
+                        setState(() {
+                          _hasSubmittedSearch = false;
+                          _submittedQuery = '';
+                        });
+                      } else {
+                        setState(() {});
+                      }
+                    },
                   ),
                 ),
               )
             : Row(
                 children: [
                   Container(
+                    width: 32,
+                    height: 32,
                     padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: AppTheme.oceanToOrangeGradient,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colorScheme.surface,
+                      color: colorScheme.surface,
+                      border: Border.all(
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.3),
+                        width: 1,
                       ),
-                      child: Image.asset(
-                        'assets/logo/phenikaa_logo.png',
-                        width: 28,
-                        height: 28,
-                        errorBuilder: (_, __, ___) => Icon(Icons.school, color: AppTheme.primaryColor(context), size: 24),
+                    ),
+                    child: Image.asset(
+                      'assets/logo/phenikaa_logo.png',
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.school_rounded,
+                        color: AppTheme.primaryColor(context),
+                        size: 20,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  ShaderMask(
-                    shaderCallback: (bounds) => AppTheme.oceanToOrangeGradient.createShader(bounds),
-                    child: const Text(
-                      'PU Connection',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
-                        color: Colors.white,
-                        letterSpacing: -0.4,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'PU Connection',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 19,
+                          color: AppTheme.isDark(context)
+                              ? Colors.white
+                              : AppTheme.deepBlue,
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -577,108 +685,155 @@ class _FeedPageState extends State<FeedPage> {
                 if (!_isSearching) {
                   _searchController.clear();
                   _searchTab = 0;
+                  _hasSubmittedSearch = false;
+                  _submittedQuery = '';
                 }
               });
             },
           ),
-          BlocBuilder<ChatCubit, ChatState>(
-            builder: (context, chatState) {
-              final authUser = context.read<AuthCubit>().state is Authenticated
-                  ? (context.read<AuthCubit>().state as Authenticated).user
-                  : null;
-              final currentUserId = authUser?.uid ?? '';
-              final totalUnread = chatState.conversations.fold<int>(
-                0,
-                (total, conv) => total + (conv.unreadCounts[currentUserId] ?? 0),
-              );
+          if (!_isSearching) ...[
+            BlocBuilder<ChatCubit, ChatState>(
+              builder: (context, chatState) {
+                final authUser = context.read<AuthCubit>().state is Authenticated
+                    ? (context.read<AuthCubit>().state as Authenticated).user
+                    : null;
+                final currentUserId = authUser?.uid ?? '';
+                final totalUnread = chatState.conversations.fold<int>(
+                  0,
+                  (total, conv) =>
+                      total + (conv.unreadCounts[currentUserId] ?? 0),
+                );
 
-              return Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.forum_outlined, color: colorScheme.onSurface),
-                    tooltip: 'Tin nhắn',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ConversationsPage()),
-                      );
-                    },
-                  ),
-                  if (totalUnread > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.orangeAccent,
-                          shape: BoxShape.circle,
-                        ),
+                return Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.forum_outlined,
+                        color: colorScheme.onSurface,
                       ),
+                      tooltip: 'Tin nhắn',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ConversationsPage(),
+                          ),
+                        );
+                      },
                     ),
-                ],
-              );
-            },
-          ),
-          BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
-            builder: (context, notifState) {
-              final unread = notifState.unreadCount;
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      unread > 0 ? Icons.notifications_rounded : Icons.notifications_none_rounded,
-                      color: unread > 0 ? AppTheme.accentColor(context) : colorScheme.onSurface,
-                    ),
-                    tooltip: l10n.notifications,
-                    onPressed: () => _showNotificationsModal(context),
-                  ),
-                  if (unread > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentColor(context),
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                        child: Text(
-                          unread > 9 ? '9+' : unread.toString(),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            height: 1,
+                    if (totalUnread > 0)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: colorScheme.surface,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              totalUnread > 99 ? '99+' : '$totalUnread',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                height: 1.0,
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                  ],
+                );
+              },
+            ),
+            BlocBuilder<InAppNotificationsCubit, InAppNotificationsState>(
+              builder: (context, notifState) {
+                final unread = notifState.unreadCount;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        unread > 0
+                            ? Icons.notifications_rounded
+                            : Icons.notifications_none_rounded,
+                        color: unread > 0
+                            ? AppTheme.accentColor(context)
+                            : colorScheme.onSurface,
+                      ),
+                      tooltip: l10n.notifications,
+                      onPressed: () => _showNotificationsModal(context),
                     ),
-                ],
-              );
-            },
-          ),
+                    if (unread > 0)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor(context),
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unread > 9 ? '9+' : unread.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => context.read<FeedCubit>().loadFeed(refresh: true),
+        onRefresh: () async =>
+            context.read<FeedCubit>().loadFeed(refresh: true),
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
             if (_isSearching)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.borderSubtle,
-                      borderRadius: BorderRadius.circular(16),
+                      color: isDark
+                          ? colorScheme.surfaceContainerHighest
+                          : AppTheme.borderSubtle,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : AppTheme.borderLight,
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -686,21 +841,13 @@ class _FeedPageState extends State<FeedPage> {
                           child: GestureDetector(
                             onTap: () => setState(() => _searchTab = 0),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
+                              duration: const Duration(milliseconds: 150),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
-                                gradient: _searchTab == 0 ? AppTheme.oceanGradient : null,
-                                color: _searchTab == 0 ? null : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _searchTab == 0
-                                    ? [
-                                        BoxShadow(
-                                          color: AppTheme.oceanBlue.withValues(alpha: 0.25),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
+                                color: _searchTab == 0
+                                    ? AppTheme.primaryColor(context)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
                               child: Row(
@@ -709,14 +856,24 @@ class _FeedPageState extends State<FeedPage> {
                                   Icon(
                                     Icons.article_outlined,
                                     size: 16,
-                                    color: _searchTab == 0 ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.7),
+                                    color: _searchTab == 0
+                                        ? Colors.white
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.7,
+                                          ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Bài viết',
                                     style: TextStyle(
-                                      color: _searchTab == 0 ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.7),
-                                      fontWeight: _searchTab == 0 ? FontWeight.bold : FontWeight.w600,
+                                      color: _searchTab == 0
+                                          ? Colors.white
+                                          : colorScheme.onSurface.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                      fontWeight: _searchTab == 0
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -730,21 +887,13 @@ class _FeedPageState extends State<FeedPage> {
                           child: GestureDetector(
                             onTap: () => setState(() => _searchTab = 1),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
+                              duration: const Duration(milliseconds: 150),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
-                                gradient: _searchTab == 1 ? AppTheme.oceanGradient : null,
-                                color: _searchTab == 1 ? null : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _searchTab == 1
-                                    ? [
-                                        BoxShadow(
-                                          color: AppTheme.oceanBlue.withValues(alpha: 0.25),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
+                                color: _searchTab == 1
+                                    ? AppTheme.primaryColor(context)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
                               child: Row(
@@ -753,14 +902,24 @@ class _FeedPageState extends State<FeedPage> {
                                   Icon(
                                     Icons.people_alt_outlined,
                                     size: 16,
-                                    color: _searchTab == 1 ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.7),
+                                    color: _searchTab == 1
+                                        ? Colors.white
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.7,
+                                          ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Sinh viên PU',
                                     style: TextStyle(
-                                      color: _searchTab == 1 ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.7),
-                                      fontWeight: _searchTab == 1 ? FontWeight.bold : FontWeight.w600,
+                                      color: _searchTab == 1
+                                          ? Colors.white
+                                          : colorScheme.onSurface.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                      fontWeight: _searchTab == 1
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -775,121 +934,49 @@ class _FeedPageState extends State<FeedPage> {
                 ),
               ),
             if (!_isSearching) ...[
+              const SliverToBoxAdapter(child: NotesFeedSection()),
               SliverToBoxAdapter(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 10, bottom: 4),
-                  height: 94,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _highlights.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 14),
-                    itemBuilder: (context, index) {
-                      final item = _highlights[index];
-                      final color = _getHighlightColor(context, item['type'] as String);
-                      return GestureDetector(
-                        onTap: () {
-                          if (item['route'] == 'study_groups') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const StudyGroupsPage()),
-                            );
-                          } else if (item['route'] == 'clubs') {
-                            MainNavigationPage.of(context)?.navigateToTab(3);
-                          } else {
-                            _openEventsPage(category: item['category'] as String?);
-                          }
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(2.5),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: AppTheme.oceanToOrangeGradient,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colorScheme.surface,
-                                ),
-                                child: CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: color.withValues(alpha: 0.12),
-                                  child: Icon(item['icon'] as IconData, color: color, size: 24),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            SizedBox(
-                              width: 72,
-                              child: Text(
-                                item['title'] as String,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.85),
-                                ),
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
                   ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppTheme.isDark(context)
                           ? colorScheme.outlineVariant.withValues(alpha: 0.3)
                           : AppTheme.borderLight,
-                      width: 1,
+                      width: 0.8,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.isDark(context)
-                            ? Colors.black.withValues(alpha: 0.25)
-                            : const Color(0xFF0284C7).withValues(alpha: 0.035),
-                        blurRadius: 14,
-                        offset: const Offset(0, 3),
+                            ? Colors.black26
+                            : const Color(0x08123B63),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppTheme.oceanToOrangeGradient,
-                        ),
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppTheme.primaryColor(context),
-                          ),
-                          child: Center(
-                            child: Text(
-                              currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : 'P',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
+                      CircleAvatar(
+                        radius: 19,
+                        backgroundColor: AppTheme.primaryColor(context),
+                        child: Text(
+                          currentUserName.isNotEmpty
+                              ? currentUserName[0].toUpperCase()
+                              : 'P',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                       ),
@@ -898,26 +985,40 @@ class _FeedPageState extends State<FeedPage> {
                         child: GestureDetector(
                           onTap: _openCreatePost,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.isDark(context)
-                                  ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                                  ? colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.5)
                                   : AppTheme.borderSubtle,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white10
+                                    : AppTheme.borderLight,
+                                width: 0.8,
+                              ),
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.edit_note_rounded,
                                   size: 18,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.45),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.45,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     l10n.create_post_hint,
                                     style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.55,
+                                      ),
                                       fontSize: 13,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -929,11 +1030,14 @@ class _FeedPageState extends State<FeedPage> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      IconButton.filledTonal(
+                      IconButton(
                         style: IconButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                          backgroundColor: AppTheme.blueContainer(context),
                           foregroundColor: AppTheme.primaryColor(context),
                           minimumSize: const Size(38, 38),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           padding: const EdgeInsets.all(8),
                         ),
                         icon: const Icon(Icons.image_outlined, size: 20),
@@ -947,7 +1051,9 @@ class _FeedPageState extends State<FeedPage> {
               SliverToBoxAdapter(
                 child: BlocBuilder<FeedCubit, FeedState>(
                   builder: (context, state) {
-                    final selectedCategory = state is FeedLoaded ? state.selectedCategory : 'Tất cả';
+                    final selectedCategory = state is FeedLoaded
+                        ? state.selectedCategory
+                        : 'Tất cả';
 
                     final categoryMap = {
                       'Tất cả': l10n.all_filter,
@@ -959,7 +1065,7 @@ class _FeedPageState extends State<FeedPage> {
                     };
 
                     return SizedBox(
-                      height: 42,
+                      height: 40,
                       child: ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         scrollDirection: Axis.horizontal,
@@ -970,26 +1076,35 @@ class _FeedPageState extends State<FeedPage> {
                           final isSelected = cat == selectedCategory;
 
                           return GestureDetector(
-                            onTap: () => context.read<FeedCubit>().filterByCategory(cat),
+                            onTap: () =>
+                                context.read<FeedCubit>().filterByCategory(cat),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
-                                gradient: isSelected ? AppTheme.oceanGradient : null,
-                                color: isSelected ? null : colorScheme.surface,
-                                borderRadius: BorderRadius.circular(20),
+                                color: isSelected
+                                    ? AppTheme.primaryColor(context)
+                                    : colorScheme.surface,
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.transparent
-                                      : colorScheme.outlineVariant.withValues(alpha: 0.4),
-                                  width: 1,
+                                      ? AppTheme.primaryColor(context)
+                                      : colorScheme.outlineVariant.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                  width: 0.8,
                                 ),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: AppTheme.oceanBlue.withValues(alpha: 0.28),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
+                                          color: AppTheme.primaryColor(
+                                            context,
+                                          ).withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
                                         ),
                                       ]
                                     : null,
@@ -997,24 +1112,17 @@ class _FeedPageState extends State<FeedPage> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (isSelected) ...[
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppTheme.orangeAccent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                  ],
                                   Text(
                                     categoryMap[cat] ?? cat,
                                     style: TextStyle(
                                       color: isSelected
                                           ? Colors.white
-                                          : colorScheme.onSurface.withValues(alpha: 0.8),
-                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                          : colorScheme.onSurface.withValues(
+                                              alpha: 0.8,
+                                            ),
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
                                       fontSize: 12.5,
                                     ),
                                   ),
@@ -1031,69 +1139,40 @@ class _FeedPageState extends State<FeedPage> {
               const SliverToBoxAdapter(child: SizedBox(height: 6)),
             ],
             if (_isSearching && _searchTab == 1)
-              _buildStudentSearchResults(context, currentUserId, currentUserName)
+              _buildStudentSearchResults(
+                context,
+                currentUserId,
+                currentUserName,
+              )
             else
               BlocBuilder<FeedCubit, FeedState>(
-              builder: (context, state) {
-                if (state is FeedLoading) {
-                  return const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
+                builder: (context, state) {
+                  if (state is FeedLoading) {
+                    return const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                if (state is FeedError) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-                          const SizedBox(height: 12),
-                          Text('${l10n.error}: ${state.message}'),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () => context.read<FeedCubit>().loadFeed(),
-                            child: Text(l10n.retry),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                if (state is FeedLoaded) {
-                  final query = _searchController.text.trim().toLowerCase();
-                  final displayedPosts = state.posts.where((post) {
-                    if (query.isEmpty) return true;
-                    final matchesContent = post.content.toLowerCase().contains(query);
-                    final matchesSubject = post.subjectCode?.toLowerCase().contains(query) ?? false;
-                    final matchesAuthor = post.authorName.toLowerCase().contains(query);
-                    final matchesTag = post.tags.any((t) => t.toLowerCase().contains(query));
-                    return matchesContent || matchesSubject || matchesAuthor || matchesTag;
-                  }).toList();
-
-                  if (displayedPosts.isEmpty) {
+                  if (state is FeedError) {
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.feed_outlined, size: 60, color: Colors.grey.shade400),
-                            const SizedBox(height: 12),
-                            Text(
-                              query.isNotEmpty
-                                  ? '${l10n.no_posts_found} "$query"'
-                                  : l10n.no_posts_empty,
-                              style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Colors.redAccent,
                             ),
                             const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: _openCreatePost,
-                              icon: const Icon(Icons.add),
-                              label: Text(l10n.create_post_title),
+                            Text('${l10n.error}: ${state.message}'),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  context.read<FeedCubit>().loadFeed(),
+                              child: Text(l10n.retry),
                             ),
                           ],
                         ),
@@ -1101,33 +1180,171 @@ class _FeedPageState extends State<FeedPage> {
                     );
                   }
 
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
+                  if (state is FeedLoaded) {
+                    if (_isSearching &&
+                        (!_hasSubmittedSearch || _submittedQuery.isEmpty)) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.manage_search_rounded,
+                                  size: 64,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Tìm kiếm bài viết trên PU Connection',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Nhập từ khóa theo nội dung, mã môn, khoa, tác giả hoặc hashtag và bấm Tìm kiếm.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final query = _isSearching
+                        ? _submittedQuery.toLowerCase()
+                        : _searchController.text.trim().toLowerCase();
+                    final displayedPosts = state.posts.where((post) {
+                      if (query.isEmpty) return true;
+                      final matchesContent = post.content
+                          .toLowerCase()
+                          .contains(query);
+                      final matchesSubject =
+                          post.subjectCode?.toLowerCase().contains(query) ??
+                          false;
+                      final matchesAuthor = post.authorName
+                          .toLowerCase()
+                          .contains(query);
+                      final matchesTag = post.tags.any(
+                        (t) => t.toLowerCase().contains(query),
+                      );
+                      return matchesContent ||
+                          matchesSubject ||
+                          matchesAuthor ||
+                          matchesTag;
+                    }).toList();
+
+                    if (displayedPosts.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _isSearching
+                                    ? Icons.search_off_rounded
+                                    : Icons.feed_outlined,
+                                size: 60,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _isSearching
+                                    ? 'Không tìm thấy bài viết nào phù hợp với "$_submittedQuery"'
+                                    : (query.isNotEmpty
+                                        ? '${l10n.no_posts_found} "$query"'
+                                        : l10n.no_posts_empty),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              if (!_isSearching) ...[
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _openCreatePost,
+                                  icon: const Icon(Icons.add),
+                                  label: Text(l10n.create_post_title),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
                         final post = displayedPosts[index];
-                        final isOwner = (currentUserId.isNotEmpty && post.authorId == currentUserId) ||
-                            (currentUserStudentId.isNotEmpty && post.authorStudentId == currentUserStudentId);
+                        final isOwner =
+                            (currentUserId.isNotEmpty &&
+                                post.authorId == currentUserId) ||
+                            (currentUserStudentId.isNotEmpty &&
+                                post.authorStudentId == currentUserStudentId);
 
                         return PostCard(
                           post: post,
                           currentUserId: currentUserId,
                           onLikePressed: () {
-                            context.read<FeedCubit>().toggleLike(post, currentUserId);
+                            context.read<FeedCubit>().toggleLike(
+                              post,
+                              currentUserId,
+                            );
                           },
                           onCommentPressed: () => _openCommentsModal(post),
                           onSharePressed: () {
-                            Clipboard.setData(ClipboardData(text: '${post.authorName}: ${post.content}'));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Đã sao chép nội dung bài viết vào bộ nhớ tạm!'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
+                            final authUser = context.read<AuthCubit>().state is Authenticated
+                                ? (context.read<AuthCubit>().state as Authenticated).user
+                                : null;
+                            if (authUser != null) {
+                              SharePostBottomSheet.show(
+                                context,
+                                post: post,
+                                currentUser: authUser,
+                              );
+                            } else {
+                              Clipboard.setData(
+                                ClipboardData(
+                                  text: '${post.authorName}: ${post.content}',
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Đã sao chép nội dung bài viết vào bộ nhớ tạm!',
+                                  ),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
                           },
-                          onChatPressed: (!isOwner && post.authorId.isNotEmpty && currentUserId.isNotEmpty)
+                          onChatPressed:
+                              (!isOwner &&
+                                  post.authorId.isNotEmpty &&
+                                  currentUserId.isNotEmpty)
                               ? () async {
                                   try {
-                                    final convId = await context.read<ChatCubit>().startDirectChat(
+                                    final convId = await context
+                                        .read<ChatCubit>()
+                                        .startDirectChat(
                                           currentUserId: currentUserId,
                                           currentUserName: currentUserName,
                                           otherUserId: post.authorId,
@@ -1142,38 +1359,59 @@ class _FeedPageState extends State<FeedPage> {
                                             conversationId: convId,
                                             otherUserId: post.authorId,
                                             otherUserName: post.authorName,
-                                            otherUserFaculty: post.authorFaculty,
-                                            participantIds: [currentUserId, post.authorId]..sort(),
+                                            otherUserFaculty:
+                                                post.authorFaculty,
+                                            participantIds: [
+                                              currentUserId,
+                                              post.authorId,
+                                            ]..sort(),
                                           ),
                                         ),
                                       );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Không thể mở cuộc trò chuyện: $e')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Không thể mở cuộc trò chuyện: $e',
+                                          ),
+                                        ),
                                       );
                                     }
                                   }
                                 }
                               : null,
-                          onEditPressed: isOwner ? () => _openEditPost(post) : null,
+                          onEditPressed: isOwner
+                              ? () => _openEditPost(post)
+                              : null,
                           onDeletePressed: isOwner
                               ? () async {
                                   try {
-                                    await context.read<FeedCubit>().deletePost(post.postId);
+                                    await context.read<FeedCubit>().deletePost(
+                                      post.postId,
+                                    );
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
-                                          content: Text(l10n.delete_post_success),
-                                          backgroundColor: AppTheme.primaryColor(context),
+                                          content: Text(
+                                            l10n.delete_post_success,
+                                          ),
+                                          backgroundColor:
+                                              AppTheme.primaryColor(context),
                                           behavior: SnackBarBehavior.floating,
                                         ),
                                       );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text('${l10n.error}: $e'),
                                           backgroundColor: Colors.red.shade700,
@@ -1185,15 +1423,13 @@ class _FeedPageState extends State<FeedPage> {
                                 }
                               : null,
                         );
-                      },
-                      childCount: displayedPosts.length,
-                    ),
-                  );
-                }
+                      }, childCount: displayedPosts.length),
+                    );
+                  }
 
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              },
-            ),
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                },
+              ),
             BlocBuilder<FeedCubit, FeedState>(
               builder: (context, state) {
                 if (state is FeedLoaded) {
@@ -1219,13 +1455,18 @@ class _FeedPageState extends State<FeedPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.check_circle_outline_rounded,
-                                  size: 16, color: colorScheme.outline),
+                              Icon(
+                                Icons.check_circle_outline_rounded,
+                                size: 16,
+                                color: colorScheme.outline,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Bạn đã xem hết bài viết',
                                 style: TextStyle(
-                                    fontSize: 12.5, color: colorScheme.outline),
+                                  fontSize: 12.5,
+                                  color: colorScheme.outline,
+                                ),
                               ),
                             ],
                           ),
@@ -1244,4 +1485,3 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 }
-

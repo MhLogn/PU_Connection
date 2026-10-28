@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/repositories/saved_posts_repository.dart';
 import 'saved_posts_state.dart';
 
@@ -8,14 +9,13 @@ class SavedPostsCubit extends Cubit<SavedPostsState> {
   StreamSubscription<List<String>>? _subscription;
   String? _currentUserId;
 
-  SavedPostsCubit({
-    required SavedPostsRepository repository,
-  })  : _repository = repository,
-        super(const SavedPostsState());
+  SavedPostsCubit({required SavedPostsRepository repository})
+    : _repository = repository,
+      super(const SavedPostsState());
 
   String? get currentUserId => _currentUserId;
 
-  void init(String userId) {
+  Future<void> init(String userId) async {
     if (userId.isEmpty) return;
     if (_currentUserId == userId && _subscription != null) return;
 
@@ -24,20 +24,51 @@ class SavedPostsCubit extends Cubit<SavedPostsState> {
 
     emit(state.copyWith(status: SavedPostsStatus.loading));
 
-    _subscription = _repository.watchSavedPostIds(userId).listen(
-      (postIds) {
-        emit(state.copyWith(
-          status: SavedPostsStatus.loaded,
-          savedPostIds: postIds.toSet(),
-        ));
-      },
-      onError: (err) {
-        emit(state.copyWith(
-          status: SavedPostsStatus.error,
-          errorMessage: err.toString(),
-        ));
-      },
-    );
+    Set<String> viewedIds = {};
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final loaded = prefs.getStringList('viewed_saved_post_ids_$userId') ?? [];
+      viewedIds = loaded.toSet();
+    } catch (_) {}
+
+    emit(state.copyWith(viewedSavedPostIds: viewedIds));
+
+    _subscription = _repository
+        .watchSavedPostIds(userId)
+        .listen(
+          (postIds) {
+            emit(
+              state.copyWith(
+                status: SavedPostsStatus.loaded,
+                savedPostIds: postIds.toSet(),
+              ),
+            );
+          },
+          onError: (err) {
+            emit(
+              state.copyWith(
+                status: SavedPostsStatus.error,
+                errorMessage: err.toString(),
+              ),
+            );
+          },
+        );
+  }
+
+  Future<void> markAllAsViewed() async {
+    final userId = _currentUserId;
+    if (userId == null || userId.isEmpty) return;
+
+    final updatedViewed = Set<String>.from(state.savedPostIds);
+    emit(state.copyWith(viewedSavedPostIds: updatedViewed));
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        'viewed_saved_post_ids_$userId',
+        updatedViewed.toList(),
+      );
+    } catch (_) {}
   }
 
   Future<void> toggleSavePost(String postId) async {
@@ -50,35 +81,43 @@ class SavedPostsCubit extends Cubit<SavedPostsState> {
     // Optimistic update
     if (wasSaved) {
       updatedSet.remove(postId);
-      emit(state.copyWith(
-        savedPostIds: updatedSet,
-        successMessage: 'Đã bỏ lưu bài viết',
-      ));
+      emit(
+        state.copyWith(
+          savedPostIds: updatedSet,
+          successMessage: 'Đã bỏ lưu bài viết',
+        ),
+      );
       try {
         await _repository.unsavePost(userId, postId);
       } catch (e) {
         // Rollback nếu lỗi
         updatedSet.add(postId);
-        emit(state.copyWith(
-          savedPostIds: updatedSet,
-          errorMessage: 'Lỗi khi bỏ lưu bài viết: $e',
-        ));
+        emit(
+          state.copyWith(
+            savedPostIds: updatedSet,
+            errorMessage: 'Lỗi khi bỏ lưu bài viết: $e',
+          ),
+        );
       }
     } else {
       updatedSet.add(postId);
-      emit(state.copyWith(
-        savedPostIds: updatedSet,
-        successMessage: 'Đã lưu bài viết vào danh sách yêu thích',
-      ));
+      emit(
+        state.copyWith(
+          savedPostIds: updatedSet,
+          successMessage: 'Đã lưu bài viết vào danh sách yêu thích',
+        ),
+      );
       try {
         await _repository.savePost(userId, postId);
       } catch (e) {
         // Rollback nếu lỗi
         updatedSet.remove(postId);
-        emit(state.copyWith(
-          savedPostIds: updatedSet,
-          errorMessage: 'Lỗi khi lưu bài viết: $e',
-        ));
+        emit(
+          state.copyWith(
+            savedPostIds: updatedSet,
+            errorMessage: 'Lỗi khi lưu bài viết: $e',
+          ),
+        );
       }
     }
   }

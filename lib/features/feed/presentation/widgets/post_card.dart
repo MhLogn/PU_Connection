@@ -13,6 +13,8 @@ import '../../../documents/domain/entities/document_entity.dart';
 import '../../../documents/presentation/pages/pdf_viewer_page.dart';
 import '../../domain/entities/post_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../moderation/domain/entities/blocked_user_entity.dart';
 import '../../../moderation/domain/entities/report_target_type.dart';
 import '../../../moderation/presentation/cubit/moderation_cubit.dart';
@@ -63,13 +65,20 @@ class PostCard extends StatelessWidget {
       case 'Tìm nhóm':
         return AppTheme.orangeContainer(context);
       default:
-        return _getCategoryColor(context, category).withValues(
-          alpha: AppTheme.isDark(context) ? 0.2 : 0.1,
-        );
+        return _getCategoryColor(
+          context,
+          category,
+        ).withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.1);
     }
   }
 
-  void _openAuthorProfile(BuildContext context, String resolvedStudentId, String resolvedFaculty) {
+  void _openAuthorProfile(
+    BuildContext context,
+    String resolvedStudentId,
+    String resolvedFaculty, [
+    String? customAvatarUrl,
+    String? customAuthorName,
+  ]) {
     if (onAuthorTap != null) {
       onAuthorTap!();
       return;
@@ -79,10 +88,10 @@ class PostCard extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => UserProfilePage(
           userId: post.authorId,
-          userName: post.authorName,
+          userName: customAuthorName ?? post.authorName,
           studentId: resolvedStudentId,
           faculty: resolvedFaculty,
-          avatarUrl: post.authorAvatar,
+          avatarUrl: customAvatarUrl ?? post.authorAvatar,
         ),
       ),
     );
@@ -110,34 +119,54 @@ class PostCard extends StatelessWidget {
     final resolvedStudentId = post.authorStudentId.isNotEmpty
         ? post.authorStudentId
         : (PhenikaaStudentDirectory.defaultStudents
-            .where((s) => s.fullName.toLowerCase() == post.authorName.toLowerCase())
-            .firstOrNull
-            ?.studentId ?? '');
+                  .where(
+                    (s) =>
+                        s.fullName.toLowerCase() ==
+                        post.authorName.toLowerCase(),
+                  )
+                  .firstOrNull
+                  ?.studentId ??
+              '');
     final resolvedFaculty = post.authorFaculty.isNotEmpty
         ? post.authorFaculty
         : (PhenikaaStudentDirectory.defaultStudents
-            .where((s) => s.fullName.toLowerCase() == post.authorName.toLowerCase())
-            .firstOrNull
-            ?.faculty ?? '');
+                  .where(
+                    (s) =>
+                        s.fullName.toLowerCase() ==
+                        post.authorName.toLowerCase(),
+                  )
+                  .firstOrNull
+                  ?.faculty ??
+              '');
+
+    final authState = context.watch<AuthCubit>().state;
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final isCurrentUserAuthor = currentUser != null && currentUser.uid == post.authorId;
+    final effectiveAuthorAvatar = (isCurrentUserAuthor && currentUser.avatarUrl.isNotEmpty)
+        ? currentUser.avatarUrl
+        : post.authorAvatar;
+    final effectiveAuthorName = (isCurrentUserAuthor && currentUser.displayName.isNotEmpty)
+        ? currentUser.displayName
+        : post.authorName;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppTheme.isDark(context)
-              ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+              ? colorScheme.outlineVariant.withValues(alpha: 0.25)
               : AppTheme.borderLight,
-          width: 1,
+          width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
             color: AppTheme.isDark(context)
-                ? Colors.black.withValues(alpha: 0.3)
-                : const Color(0xFF0284C7).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+                ? Colors.black26
+                : const Color(0x06123B63),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -151,14 +180,30 @@ class PostCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: () => _openAuthorProfile(context, resolvedStudentId, resolvedFaculty),
-                  child: _buildAvatar(context, post.authorAvatar, post.authorName),
+                  onTap: () => _openAuthorProfile(
+                    context,
+                    resolvedStudentId,
+                    resolvedFaculty,
+                    effectiveAuthorAvatar,
+                    effectiveAuthorName,
+                  ),
+                  child: _buildAvatar(
+                    context,
+                    effectiveAuthorAvatar,
+                    effectiveAuthorName,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => _openAuthorProfile(context, resolvedStudentId, resolvedFaculty),
+                    onTap: () => _openAuthorProfile(
+                      context,
+                      resolvedStudentId,
+                      resolvedFaculty,
+                      effectiveAuthorAvatar,
+                      effectiveAuthorName,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -167,10 +212,13 @@ class PostCard extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                post.authorName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                effectiveAuthorName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 15,
+                                  color: AppTheme.isDark(context)
+                                      ? Colors.white
+                                      : AppTheme.deepBlue,
                                   letterSpacing: -0.2,
                                 ),
                                 maxLines: 1,
@@ -191,9 +239,13 @@ class PostCard extends StatelessWidget {
                           children: [
                             if (resolvedStudentId.isNotEmpty) ...[
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                                  color: colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.6),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -201,13 +253,17 @@ class PostCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.75,
+                                    ),
                                   ),
                                 ),
                               ),
                               if (resolvedFaculty.isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                  ),
                                   child: Text(
                                     '•',
                                     style: TextStyle(
@@ -239,14 +295,18 @@ class PostCard extends StatelessWidget {
                             Icon(
                               Icons.schedule_rounded,
                               size: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.45),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.45,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               formattedTime,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                           ],
@@ -258,7 +318,11 @@ class PostCard extends StatelessWidget {
                 // Nút tùy chọn (Menu 3 chấm nếu là chủ bài viết - có sửa/xóa, icon chat nếu là người khác)
                 if (onEditPressed != null || onDeletePressed != null) ...[
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_horiz_rounded, size: 22, color: colorScheme.outline),
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      size: 22,
+                      color: colorScheme.outline,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: l10n.open_post_options,
@@ -275,7 +339,11 @@ class PostCard extends StatelessWidget {
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit_outlined, size: 18, color: AppTheme.primaryColor(context)),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppTheme.primaryColor(context),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.edit_post,
@@ -293,7 +361,11 @@ class PostCard extends StatelessWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade700),
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: Colors.red.shade700,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.delete_post,
@@ -311,7 +383,11 @@ class PostCard extends StatelessWidget {
                 ] else ...[
                   if (onChatPressed != null) ...[
                     IconButton(
-                      icon: Icon(Icons.chat_bubble_outline_rounded, size: 19, color: AppTheme.primaryColor(context)),
+                      icon: Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 19,
+                        color: AppTheme.primaryColor(context),
+                      ),
                       tooltip: l10n.message_author,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -320,7 +396,11 @@ class PostCard extends StatelessWidget {
                     const SizedBox(width: 4),
                   ],
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_horiz_rounded, size: 22, color: colorScheme.outline),
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      size: 22,
+                      color: colorScheme.outline,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: 'Tùy chọn bài viết',
@@ -335,11 +415,15 @@ class PostCard extends StatelessWidget {
                         );
                       } else if (val == 'hide') {
                         try {
-                          context.read<ModerationCubit>().hidePostOptimistically(post.postId);
+                          context
+                              .read<ModerationCubit>()
+                              .hidePostOptimistically(post.postId);
                         } catch (_) {}
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Đã ẩn bài viết khỏi bảng tin của bạn.'),
+                            content: Text(
+                              'Đã ẩn bài viết khỏi bảng tin của bạn.',
+                            ),
                             duration: Duration(seconds: 2),
                           ),
                         );
@@ -357,20 +441,22 @@ class PostCard extends StatelessWidget {
                                 child: const Text('Hủy'),
                               ),
                               FilledButton(
-                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.red.shade700,
+                                ),
                                 onPressed: () {
                                   Navigator.pop(ctx);
                                   try {
                                     context.read<ModerationCubit>().blockUser(
-                                          currentUserId: currentUserId,
-                                          blockedUser: BlockedUserEntity(
-                                            userId: post.authorId,
-                                            userName: post.authorName,
-                                            userAvatar: post.authorAvatar,
-                                            userFaculty: post.authorFaculty,
-                                            blockedAt: DateTime.now(),
-                                          ),
-                                        );
+                                      currentUserId: currentUserId,
+                                      blockedUser: BlockedUserEntity(
+                                        userId: post.authorId,
+                                        userName: post.authorName,
+                                        userAvatar: post.authorAvatar,
+                                        userFaculty: post.authorFaculty,
+                                        blockedAt: DateTime.now(),
+                                      ),
+                                    );
                                   } catch (_) {}
                                 },
                                 child: const Text('Chặn'),
@@ -387,7 +473,10 @@ class PostCard extends StatelessWidget {
                           children: [
                             Icon(Icons.visibility_off_outlined, size: 18),
                             SizedBox(width: 8),
-                            Text('Ẩn bài viết này', style: TextStyle(fontSize: 13)),
+                            Text(
+                              'Ẩn bài viết này',
+                              style: TextStyle(fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -395,9 +484,16 @@ class PostCard extends StatelessWidget {
                         value: 'report',
                         child: Row(
                           children: [
-                            Icon(Icons.report_problem_outlined, size: 18, color: Colors.orange),
+                            Icon(
+                              Icons.report_problem_outlined,
+                              size: 18,
+                              color: Colors.orange,
+                            ),
                             SizedBox(width: 8),
-                            Text('Báo cáo bài viết', style: TextStyle(fontSize: 13)),
+                            Text(
+                              'Báo cáo bài viết',
+                              style: TextStyle(fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -405,9 +501,16 @@ class PostCard extends StatelessWidget {
                         value: 'block',
                         child: Row(
                           children: [
-                            Icon(Icons.block_rounded, size: 18, color: Colors.red),
+                            Icon(
+                              Icons.block_rounded,
+                              size: 18,
+                              color: Colors.red,
+                            ),
                             SizedBox(width: 8),
-                            Text('Chặn người dùng này', style: TextStyle(color: Colors.red, fontSize: 13)),
+                            Text(
+                              'Chặn người dùng này',
+                              style: TextStyle(color: Colors.red, fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -426,12 +529,18 @@ class PostCard extends StatelessWidget {
               children: [
                 // Tag Phân loại (Hỏi bài, Thảo luận, Tìm nhóm, Tài liệu)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3.5,
+                  ),
                   decoration: BoxDecoration(
                     color: _getCategoryBg(context, post.category),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _getCategoryColor(context, post.category).withValues(alpha: 0.25),
+                      color: _getCategoryColor(
+                        context,
+                        post.category,
+                      ).withValues(alpha: 0.25),
                       width: 0.8,
                     ),
                   ),
@@ -461,19 +570,28 @@ class PostCard extends StatelessWidget {
                 // Tag Mã môn học (nếu có)
                 if (post.subjectCode != null && post.subjectCode!.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.blueContainer(context),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.25),
                         width: 0.8,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.menu_book_rounded, size: 12, color: AppTheme.primaryColor(context)),
+                        Icon(
+                          Icons.menu_book_rounded,
+                          size: 12,
+                          color: AppTheme.primaryColor(context),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Môn: ${post.subjectCode}',
@@ -492,12 +610,17 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppTheme.primaryColor(context).withValues(alpha: 0.2),
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.2),
                     width: 0.8,
                   ),
                 ),
@@ -534,12 +657,17 @@ class PostCard extends StatelessWidget {
                         },
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: colorScheme.surface,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: AppTheme.primaryColor(context).withValues(alpha: 0.35),
+                              color: AppTheme.primaryColor(
+                                context,
+                              ).withValues(alpha: 0.35),
                               width: 0.7,
                             ),
                           ),
@@ -563,6 +691,61 @@ class PostCard extends StatelessWidget {
               post.content,
               style: const TextStyle(fontSize: 14, height: 1.4),
             ),
+            if (post.sharedPostId != null && post.sharedPostId!.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppTheme.isDark(context)
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+                        : const Color(0xFFE5E7EB),
+                  ),
+                  color: AppTheme.isDark(context)
+                      ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.25)
+                      : const Color(0xFFF9FAFB),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _buildAvatar(
+                          context,
+                          post.sharedPostAuthorAvatar ?? '',
+                          post.sharedPostAuthorName ?? 'Tác giả',
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            post.sharedPostAuthorName ?? 'Bài viết gốc',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (post.sharedPostContent != null &&
+                        post.sharedPostContent!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        post.sharedPostContent!,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.35,
+                          color: colorScheme.onSurface.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
             if (post.tags.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
@@ -573,7 +756,9 @@ class PostCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.primaryColor(context).withValues(alpha: 0.9),
+                      color: AppTheme.primaryColor(
+                        context,
+                      ).withValues(alpha: 0.9),
                     ),
                   );
                 }).toList(),
@@ -584,17 +769,26 @@ class PostCard extends StatelessWidget {
               _buildAttachments(context, post.attachments),
             ],
             const SizedBox(height: 12),
-            Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            Divider(
+              height: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
             const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
                   flex: 10,
                   child: _buildActionButton(
-                    icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    iconColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
+                    icon: isLiked
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    iconColor: isLiked
+                        ? AppTheme.accentColor(context)
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                     label: post.likeCount > 0 ? '${post.likeCount}' : l10n.like,
-                    textColor: isLiked ? AppTheme.accentColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
+                    textColor: isLiked
+                        ? AppTheme.accentColor(context)
+                        : colorScheme.onSurface.withValues(alpha: 0.7),
                     onTap: onLikePressed,
                   ),
                 ),
@@ -603,7 +797,9 @@ class PostCard extends StatelessWidget {
                   child: _buildActionButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                    label: post.commentCount > 0 ? '${post.commentCount}' : l10n.comment,
+                    label: post.commentCount > 0
+                        ? '${post.commentCount}'
+                        : l10n.comment,
                     textColor: colorScheme.onSurface.withValues(alpha: 0.7),
                     onTap: onCommentPressed ?? () {},
                   ),
@@ -613,7 +809,9 @@ class PostCard extends StatelessWidget {
                   child: _buildActionButton(
                     icon: Icons.share_outlined,
                     iconColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                    label: l10n.share,
+                    label: post.sharesCount > 0
+                        ? '${l10n.share} (${post.sharesCount})'
+                        : l10n.share,
                     textColor: colorScheme.onSurface.withValues(alpha: 0.7),
                     onTap: onSharePressed ?? () {},
                   ),
@@ -624,12 +822,20 @@ class PostCard extends StatelessWidget {
                     builder: (context, savedState) {
                       final isSaved = savedState.isSaved(post.postId);
                       return _buildActionButton(
-                        icon: isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                        iconColor: isSaved ? AppTheme.primaryColor(context) : colorScheme.onSurface.withValues(alpha: 0.6),
+                        icon: isSaved
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        iconColor: isSaved
+                            ? AppTheme.primaryColor(context)
+                            : colorScheme.onSurface.withValues(alpha: 0.6),
                         label: isSaved ? 'Đã lưu' : 'Lưu',
-                        textColor: isSaved ? AppTheme.primaryColor(context) : colorScheme.onSurface.withValues(alpha: 0.7),
+                        textColor: isSaved
+                            ? AppTheme.primaryColor(context)
+                            : colorScheme.onSurface.withValues(alpha: 0.7),
                         onTap: () {
-                          context.read<SavedPostsCubit>().toggleSavePost(post.postId);
+                          context.read<SavedPostsCubit>().toggleSavePost(
+                            post.postId,
+                          );
                         },
                       );
                     },
@@ -645,34 +851,33 @@ class PostCard extends StatelessWidget {
 
   Widget _buildAvatar(BuildContext context, String avatarUrl, String name) {
     return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: const BoxDecoration(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: AppTheme.oceanToOrangeGradient,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(1.5),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Theme.of(context).colorScheme.surface,
+        color: AppTheme.blueContainer(context),
+        border: Border.all(
+          color: AppTheme.primaryColor(context).withValues(alpha: 0.25),
+          width: 0.9,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Builder(
-            builder: (context) {
-              final imgProvider = AppTheme.imageProvider(avatarUrl);
-              if (imgProvider != null) {
-                return Image(
-                  image: imgProvider,
-                  width: 38,
-                  height: 38,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildInitialsAvatar(context, name),
-                );
-              }
-              return _buildInitialsAvatar(context, name);
-            },
-          ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Builder(
+          builder: (context) {
+            final imgProvider = AppTheme.imageProvider(avatarUrl);
+            if (imgProvider != null) {
+              return Image(
+                image: imgProvider,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    _buildInitialsAvatar(context, name),
+              );
+            }
+            return _buildInitialsAvatar(context, name);
+          },
         ),
       ),
     );
@@ -683,11 +888,11 @@ class PostCard extends StatelessWidget {
         ? name.trim().split(' ').last.substring(0, 1).toUpperCase()
         : 'P';
     return Container(
-      width: 38,
-      height: 38,
-      decoration: const BoxDecoration(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: AppTheme.oceanGradient,
+        color: AppTheme.primaryColor(context),
       ),
       child: Center(
         child: Text(
@@ -702,7 +907,10 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachments(BuildContext context, List<PostAttachment> attachments) {
+  Widget _buildAttachments(
+    BuildContext context,
+    List<PostAttachment> attachments,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final images = attachments.where((a) => a.type == 'image').toList();
     final docs = attachments.where((a) => a.type != 'image').toList();
@@ -738,7 +946,11 @@ class PostCard extends StatelessWidget {
                           radius: 18,
                           child: IconButton(
                             padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                             onPressed: () => Navigator.pop(ctx),
                           ),
                         ),
@@ -757,7 +969,9 @@ class PostCard extends StatelessWidget {
                 height: 210,
                 placeholder: (_, __) => Container(
                   height: 210,
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (_, __, ___) => const SizedBox.shrink(),
@@ -767,7 +981,9 @@ class PostCard extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         ...docs.map((doc) {
-          final ext = (doc.name.contains('.') ? doc.name.split('.').last : doc.type).toLowerCase();
+          final ext =
+              (doc.name.contains('.') ? doc.name.split('.').last : doc.type)
+                  .toLowerCase();
           final isPdf = ext == 'pdf';
           final isWord = ext == 'doc' || ext == 'docx';
           final isPpt = ext == 'ppt' || ext == 'pptx';
@@ -776,13 +992,41 @@ class PostCard extends StatelessWidget {
           final isTxt = ext == 'txt';
 
           final (docColor, docBg, docIcon) = switch (true) {
-            _ when isPdf => (const Color(0xFFEF4444), const Color(0xFFFEF2F2), Icons.picture_as_pdf_rounded),
-            _ when isWord => (const Color(0xFF2563EB), const Color(0xFFEFF6FF), Icons.description_rounded),
-            _ when isPpt => (const Color(0xFFEA580C), const Color(0xFFFFF7ED), Icons.slideshow_rounded),
-            _ when isExcel => (const Color(0xFF16A34A), const Color(0xFFF0FDF4), Icons.table_chart_rounded),
-            _ when isZip => (const Color(0xFF9333EA), const Color(0xFFFAF5FF), Icons.folder_zip_rounded),
-            _ when isTxt => (const Color(0xFF0D9488), const Color(0xFFF0FDFA), Icons.text_snippet_rounded),
-            _ => (AppTheme.primaryColor(context), AppTheme.blueContainer(context), Icons.insert_drive_file_rounded),
+            _ when isPdf => (
+              const Color(0xFFEF4444),
+              const Color(0xFFFEF2F2),
+              Icons.picture_as_pdf_rounded,
+            ),
+            _ when isWord => (
+              const Color(0xFF2563EB),
+              const Color(0xFFEFF6FF),
+              Icons.description_rounded,
+            ),
+            _ when isPpt => (
+              const Color(0xFFEA580C),
+              const Color(0xFFFFF7ED),
+              Icons.slideshow_rounded,
+            ),
+            _ when isExcel => (
+              const Color(0xFF16A34A),
+              const Color(0xFFF0FDF4),
+              Icons.table_chart_rounded,
+            ),
+            _ when isZip => (
+              const Color(0xFF9333EA),
+              const Color(0xFFFAF5FF),
+              Icons.folder_zip_rounded,
+            ),
+            _ when isTxt => (
+              const Color(0xFF0D9488),
+              const Color(0xFFF0FDFA),
+              Icons.text_snippet_rounded,
+            ),
+            _ => (
+              AppTheme.primaryColor(context),
+              AppTheme.blueContainer(context),
+              Icons.insert_drive_file_rounded,
+            ),
           };
 
           return InkWell(
@@ -797,7 +1041,9 @@ class PostCard extends StatelessWidget {
                     : docBg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: docColor.withValues(alpha: AppTheme.isDark(context) ? 0.35 : 0.25),
+                  color: docColor.withValues(
+                    alpha: AppTheme.isDark(context) ? 0.35 : 0.25,
+                  ),
                   width: 0.8,
                 ),
               ),
@@ -824,7 +1070,9 @@ class PostCard extends StatelessWidget {
                             '${(doc.sizeBytes / 1024).toStringAsFixed(1)} KB • ${ext.toUpperCase()}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: colorScheme.onSurface.withValues(alpha: 0.55),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.55,
+                              ),
                             ),
                           ),
                       ],
@@ -844,9 +1092,13 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Future<void> _handleOpenAttachment(BuildContext context, PostAttachment doc) async {
+  Future<void> _handleOpenAttachment(
+    BuildContext context,
+    PostAttachment doc,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    final ext = (doc.name.contains('.') ? doc.name.split('.').last : doc.type).toLowerCase();
+    final ext = (doc.name.contains('.') ? doc.name.split('.').last : doc.type)
+        .toLowerCase();
     final isPdf = ext == 'pdf';
 
     if (isPdf && doc.url.isNotEmpty) {
@@ -861,7 +1113,9 @@ class PostCard extends StatelessWidget {
               faculty: post.authorFaculty,
               fileUrl: doc.url,
               fileType: 'pdf',
-              fileSize: doc.sizeBytes > 0 ? '${(doc.sizeBytes / 1024).toStringAsFixed(1)} KB' : '',
+              fileSize: doc.sizeBytes > 0
+                  ? '${(doc.sizeBytes / 1024).toStringAsFixed(1)} KB'
+                  : '',
               authorId: post.authorId,
               authorName: post.authorName,
               authorStudentId: post.authorStudentId,
@@ -962,8 +1216,13 @@ class PostCard extends StatelessWidget {
               Navigator.pop(ctx);
               onDeletePressed?.call();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: Text(l10n.delete_post, style: const TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+            ),
+            child: Text(
+              l10n.delete_post,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

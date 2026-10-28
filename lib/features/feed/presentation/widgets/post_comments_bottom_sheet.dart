@@ -58,7 +58,8 @@ class PostCommentsBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<PostCommentsBottomSheet> createState() => _PostCommentsBottomSheetState();
+  State<PostCommentsBottomSheet> createState() =>
+      _PostCommentsBottomSheetState();
 }
 
 class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
@@ -106,9 +107,13 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     }
     final updated = comment.copyWith(
       likedUserIds: updatedLikedUserIds,
-      likeCount: isLiked ? (comment.likeCount > 0 ? comment.likeCount - 1 : 0) : comment.likeCount + 1,
+      likeCount: isLiked
+          ? (comment.likeCount > 0 ? comment.likeCount - 1 : 0)
+          : comment.likeCount + 1,
     );
-    final idx = _localComments.indexWhere((c) => c.commentId == comment.commentId);
+    final idx = _localComments.indexWhere(
+      (c) => c.commentId == comment.commentId,
+    );
     if (idx != -1) {
       setState(() {
         _localComments[idx] = updated;
@@ -117,11 +122,11 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
 
     try {
       await context.read<FeedCubit>().toggleLikeComment(
-            postId: widget.post.postId,
-            commentId: comment.commentId,
-            userId: widget.currentUserId,
-            isCurrentlyLiked: isLiked,
-          );
+        postId: widget.post.postId,
+        commentId: comment.commentId,
+        userId: widget.currentUserId,
+        isCurrentlyLiked: isLiked,
+      );
     } catch (_) {}
   }
 
@@ -130,7 +135,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Chỉnh sửa bình luận', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Chỉnh sửa bình luận',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: editController,
           autofocus: true,
@@ -162,7 +170,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     );
 
     if (result != null && result.isNotEmpty && mounted) {
-      final idx = _localComments.indexWhere((c) => c.commentId == comment.commentId);
+      final idx = _localComments.indexWhere(
+        (c) => c.commentId == comment.commentId,
+      );
       if (idx != -1) {
         setState(() {
           _localComments[idx] = _localComments[idx].copyWith(
@@ -173,10 +183,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
       }
       try {
         await context.read<FeedCubit>().editComment(
-              postId: widget.post.postId,
-              commentId: comment.commentId,
-              newContent: result,
-            );
+          postId: widget.post.postId,
+          commentId: comment.commentId,
+          newContent: result,
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -193,7 +203,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận xóa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Xác nhận xóa',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         content: const Text('Bạn có chắc chắn muốn xóa bình luận này không?'),
         actions: [
           TextButton(
@@ -215,9 +228,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
       });
       try {
         await context.read<FeedCubit>().deleteComment(
-              postId: widget.post.postId,
-              commentId: comment.commentId,
-            );
+          postId: widget.post.postId,
+          commentId: comment.commentId,
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -254,11 +267,15 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
 
     setState(() => _isSending = true);
 
+    final commentDocId =
+        'cmt_${DateTime.now().millisecondsSinceEpoch}_${widget.currentUserId.hashCode.abs()}';
     final replying = _replyingTo;
     final newComment = CommentEntity(
-      commentId: DateTime.now().millisecondsSinceEpoch.toString(),
+      commentId: commentDocId,
       authorId: widget.currentUserId,
-      authorName: widget.currentUserName.isNotEmpty ? widget.currentUserName : 'Sinh viên Phenikaa',
+      authorName: widget.currentUserName.isNotEmpty
+          ? widget.currentUserName
+          : 'Sinh viên Phenikaa',
       authorAvatar: widget.currentUserAvatar,
       authorStudentId: widget.currentUserStudentId,
       authorFaculty: widget.currentUserFaculty,
@@ -270,35 +287,57 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
 
     setState(() {
       _localComments.add(newComment);
-      _commentController.clear();
-      _replyingTo = null;
     });
 
     try {
       await context.read<FeedCubit>().addComment(
-            postId: widget.post.postId,
-            authorId: widget.currentUserId,
-            authorName: widget.currentUserName,
-            authorAvatar: widget.currentUserAvatar,
-            authorStudentId: widget.currentUserStudentId,
-            authorFaculty: widget.currentUserFaculty,
-            content: text,
-            replyToCommentId: replying?.commentId,
-            replyToAuthorName: replying?.authorName,
-          );
-    } catch (_) {}
+        postId: widget.post.postId,
+        commentId: commentDocId,
+        authorId: widget.currentUserId,
+        authorName: widget.currentUserName,
+        authorAvatar: widget.currentUserAvatar,
+        authorStudentId: widget.currentUserStudentId,
+        authorFaculty: widget.currentUserFaculty,
+        content: text,
+        replyToCommentId: replying?.commentId,
+        replyToAuthorName: replying?.authorName,
+        replyToAuthorId: replying?.authorId,
+      );
 
-    if (mounted) {
-      setState(() => _isSending = false);
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _commentController.clear();
+          _replyingTo = null;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Không thể gửi bình luận. Nội dung bình luận đã được lưu lại để bạn thử lại.',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+          _localComments.removeWhere((c) => c.commentId == commentDocId);
+        });
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
     }
   }
 
@@ -313,12 +352,12 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
       height: MediaQuery.of(context).size.height * 0.78,
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black54 : Colors.black12,
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: isDark ? Colors.black54 : const Color(0x10123B63),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -370,9 +409,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppTheme.blueContainer(context),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                width: 0.8,
               ),
             ),
             child: Row(
@@ -389,17 +429,21 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                   ),
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: AppTheme.primaryColor(context),
-                    child: Text(
-                      widget.post.authorName.isNotEmpty
-                          ? widget.post.authorName[0].toUpperCase()
-                          : 'P',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.black87 : Colors.white,
-                      ),
-                    ),
+                    backgroundColor: AppTheme.blueContainer(context),
+                    backgroundImage:
+                        AppTheme.imageProvider(widget.post.authorAvatar),
+                    child: AppTheme.imageProvider(widget.post.authorAvatar) == null
+                        ? Text(
+                            widget.post.authorName.isNotEmpty
+                                ? widget.post.authorName[0].toUpperCase()
+                                : 'P',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor(context),
+                            ),
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -430,17 +474,29 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Icon(Icons.verified_rounded, size: 13, color: AppTheme.primaryColor(context)),
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 13,
+                            color: AppTheme.primaryColor(context),
+                          ),
                           if (widget.post.authorStudentId.isNotEmpty) ...[
                             const SizedBox(width: 4),
                             Text(
                               '• ${widget.post.authorStudentId}',
-                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
                             ),
                           ],
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.orangeContainer(context),
                               borderRadius: BorderRadius.circular(6),
@@ -491,10 +547,14 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
               stream: context.read<FeedCubit>().getComments(widget.post.postId),
               builder: (context, snapshot) {
                 final firestoreComments = snapshot.data ?? [];
-                final Set<String> existingIds = firestoreComments.map((c) => c.commentId).toSet();
+                final Set<String> existingIds = firestoreComments
+                    .map((c) => c.commentId)
+                    .toSet();
                 final allComments = [
                   ...firestoreComments,
-                  ..._localComments.where((c) => !existingIds.contains(c.commentId)),
+                  ..._localComments.where(
+                    (c) => !existingIds.contains(c.commentId),
+                  ),
                 ];
 
                 if (allComments.isEmpty) {
@@ -516,7 +576,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -525,14 +587,49 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                   );
                 }
 
+                // Phân nhóm bình luận phân cấp Facebook: Root comments và Replies
+                final allCommentIds = allComments.map((c) => c.commentId).toSet();
+                final rootComments = allComments.where((c) {
+                  final replyId = c.replyToCommentId;
+                  return replyId == null || replyId.isEmpty || !allCommentIds.contains(replyId);
+                }).toList();
+
+                final Map<String, List<CommentEntity>> repliesMap = {};
+                for (final c in allComments) {
+                  final replyId = c.replyToCommentId;
+                  if (replyId != null && replyId.isNotEmpty && allCommentIds.contains(replyId)) {
+                    String effectiveRootId = replyId;
+                    final parent = allComments.firstWhere(
+                      (p) => p.commentId == replyId,
+                      orElse: () => c,
+                    );
+                    if (parent.replyToCommentId != null &&
+                        parent.replyToCommentId!.isNotEmpty &&
+                        allCommentIds.contains(parent.replyToCommentId!)) {
+                      effectiveRootId = parent.replyToCommentId!;
+                    }
+                    repliesMap.putIfAbsent(effectiveRootId, () => []).add(c);
+                  }
+                }
+
                 return ListView.separated(
                   controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: allComments.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: rootComments.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
-                    final comment = allComments[index];
-                    return _buildCommentItem(context, comment, isDark, colorScheme);
+                    final rootComment = rootComments[index];
+                    final replies = repliesMap[rootComment.commentId] ?? [];
+                    return _buildCommentThread(
+                      context,
+                      rootComment,
+                      replies,
+                      isDark,
+                      colorScheme,
+                    );
                   },
                 );
               },
@@ -543,7 +640,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
             decoration: BoxDecoration(
               color: colorScheme.surface,
               border: Border(
-                top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                top: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
               ),
             ),
             child: SafeArea(
@@ -554,14 +653,21 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                   if (_replyingTo != null)
                     Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.blueContainer(context),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.reply_rounded, size: 16, color: AppTheme.primaryColor(context)),
+                          Icon(
+                            Icons.reply_rounded,
+                            size: 16,
+                            color: AppTheme.primaryColor(context),
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text.rich(
@@ -569,7 +675,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                 text: 'Đang trả lời ',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                                 children: [
                                   TextSpan(
@@ -590,7 +698,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                             child: Icon(
                               Icons.close_rounded,
                               size: 16,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -601,16 +711,20 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                       CircleAvatar(
                         radius: 18,
                         backgroundColor: AppTheme.blueContainer(context),
-                        child: Text(
-                          widget.currentUserName.isNotEmpty
-                              ? widget.currentUserName[0].toUpperCase()
-                              : 'P',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor(context),
-                          ),
-                        ),
+                        backgroundImage:
+                            AppTheme.imageProvider(widget.currentUserAvatar),
+                        child: AppTheme.imageProvider(widget.currentUserAvatar) == null
+                            ? Text(
+                                widget.currentUserName.isNotEmpty
+                                    ? widget.currentUserName[0].toUpperCase()
+                                    : 'P',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor(context),
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -625,15 +739,42 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                 : '${l10n.comment}...',
                             hintStyle: TextStyle(
                               fontSize: 13,
-                              color: colorScheme.onSurface.withValues(alpha: 0.45),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.45,
+                              ),
                             ),
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             filled: true,
-                            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                            fillColor: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.35),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(22),
-                              borderSide: BorderSide.none,
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? Colors.white12
+                                    : AppTheme.borderLight,
+                                width: 0.8,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? Colors.white12
+                                    : AppTheme.borderLight,
+                                width: 0.8,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppTheme.primaryColor(context),
+                                width: 1.2,
+                              ),
                             ),
                           ),
                         ),
@@ -645,20 +786,15 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.accentColor(context),
-                                const Color(0xFFFF9E45),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: AppTheme.accentColor(context),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.accentColor(context).withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                color: AppTheme.accentColor(
+                                  context,
+                                ).withValues(alpha: 0.25),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
                               ),
                             ],
                           ),
@@ -667,7 +803,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : const Icon(
                                     Icons.send_rounded,
@@ -711,19 +850,84 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
     );
   }
 
+  Widget _buildCommentThread(
+    BuildContext context,
+    CommentEntity rootComment,
+    List<CommentEntity> replies,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCommentItem(
+          context,
+          rootComment,
+          isDark,
+          colorScheme,
+          isReply: false,
+        ),
+        if (replies.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 24, top: 6),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: isDark
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+                        : const Color(0xFFE5E7EB),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: replies.map((reply) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildCommentItem(
+                      context,
+                      reply,
+                      isDark,
+                      colorScheme,
+                      isReply: true,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildCommentItem(
     BuildContext context,
     CommentEntity comment,
     bool isDark,
-    ColorScheme colorScheme,
-  ) {
-    final initials = comment.authorName.isNotEmpty
-        ? comment.authorName.trim().split(' ').last[0].toUpperCase()
+    ColorScheme colorScheme, {
+    bool isReply = false,
+  }) {
+    final effectiveAvatar = (comment.authorId == widget.currentUserId &&
+            widget.currentUserAvatar.isNotEmpty)
+        ? widget.currentUserAvatar
+        : comment.authorAvatar;
+    final effectiveName = (comment.authorId == widget.currentUserId &&
+            widget.currentUserName.isNotEmpty)
+        ? widget.currentUserName
+        : comment.authorName;
+
+    final initials = effectiveName.isNotEmpty
+        ? effectiveName.trim().split(' ').last[0].toUpperCase()
         : 'P';
     final localeCode = Localizations.localeOf(context).languageCode;
     final timeStr = timeago.format(comment.createdAt, locale: localeCode);
     final isLiked = comment.isLikedBy(widget.currentUserId);
     final isAuthor = comment.authorId == widget.currentUserId;
+    final avatarImg = AppTheme.imageProvider(effectiveAvatar);
+    final avatarRadius = isReply ? 13.0 : 17.0;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,34 +936,42 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
           onTap: () => _openAuthorProfile(
             context,
             authorId: comment.authorId,
-            authorName: comment.authorName,
+            authorName: effectiveName,
             authorStudentId: comment.authorStudentId,
             authorFaculty: comment.authorFaculty,
-            authorAvatar: comment.authorAvatar,
+            authorAvatar: effectiveAvatar,
           ),
           child: CircleAvatar(
-            radius: 17,
+            radius: avatarRadius,
             backgroundColor: AppTheme.blueContainer(context),
-            child: Text(
-              initials,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor(context),
-              ),
-            ),
+            backgroundImage: avatarImg,
+            child: avatarImg == null
+                ? Text(
+                    initials,
+                    style: TextStyle(
+                      fontSize: isReply ? 10 : 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor(context),
+                    ),
+                  )
+                : null,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isReply ? 10 : 12,
+                  vertical: isReply ? 8 : 10,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
+                      ? colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.35,
+                        )
                       : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -777,15 +989,15 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                   onTap: () => _openAuthorProfile(
                                     context,
                                     authorId: comment.authorId,
-                                    authorName: comment.authorName,
+                                    authorName: effectiveName,
                                     authorStudentId: comment.authorStudentId,
                                     authorFaculty: comment.authorFaculty,
-                                    authorAvatar: comment.authorAvatar,
+                                    authorAvatar: effectiveAvatar,
                                   ),
                                   child: Text(
-                                    comment.authorName,
-                                    style: const TextStyle(
-                                      fontSize: 13,
+                                    effectiveName,
+                                    style: TextStyle(
+                                      fontSize: isReply ? 12 : 13,
                                       fontWeight: FontWeight.bold,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -816,7 +1028,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                               timeStr,
                               style: TextStyle(
                                 fontSize: 10,
-                                color: colorScheme.onSurface.withValues(alpha: 0.45),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.45,
+                                ),
                               ),
                             ),
                             if (comment.isEdited) ...[
@@ -826,7 +1040,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                 style: TextStyle(
                                   fontSize: 9.5,
                                   fontStyle: FontStyle.italic,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.45),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.45,
+                                  ),
                                 ),
                               ),
                             ],
@@ -839,7 +1055,7 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                     targetId: comment.commentId,
                                     targetType: ReportTargetType.comment,
                                     targetAuthorId: comment.authorId,
-                                    targetAuthorName: comment.authorName,
+                                    targetAuthorName: effectiveName,
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),
@@ -848,7 +1064,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                                   child: Icon(
                                     Icons.flag_outlined,
                                     size: 13,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.45),
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.45,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -857,18 +1075,28 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                         ),
                       ],
                     ),
-                    if (comment.replyToAuthorName != null && comment.replyToAuthorName!.isNotEmpty) ...[
+                    if (comment.replyToAuthorName != null &&
+                        comment.replyToAuthorName!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                          color: AppTheme.primaryColor(
+                            context,
+                          ).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.reply_rounded, size: 12, color: AppTheme.primaryColor(context)),
+                            Icon(
+                              Icons.reply_rounded,
+                              size: 12,
+                              color: AppTheme.primaryColor(context),
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               'Trả lời @${comment.replyToAuthorName}',
@@ -898,22 +1126,39 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                       onTap: () => _toggleLikeComment(comment),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              isLiked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
                               size: 14,
-                              color: isLiked ? Colors.red : colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: isLiked
+                                  ? Colors.red
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              comment.likeCount > 0 ? '${comment.likeCount}' : 'Thích',
+                              comment.likeCount > 0
+                                  ? '${comment.likeCount}'
+                                  : 'Thích',
                               style: TextStyle(
                                 fontSize: 11.5,
-                                fontWeight: isLiked ? FontWeight.bold : FontWeight.w500,
-                                color: isLiked ? Colors.red : colorScheme.onSurface.withValues(alpha: 0.65),
+                                fontWeight: isLiked
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isLiked
+                                    ? Colors.red
+                                    : colorScheme.onSurface.withValues(
+                                        alpha: 0.65,
+                                      ),
                               ),
                             ),
                           ],
@@ -925,14 +1170,19 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                       onTap: () => _startReply(comment),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.reply_rounded,
                               size: 14,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -940,7 +1190,9 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w500,
-                                color: colorScheme.onSurface.withValues(alpha: 0.65),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.65,
+                                ),
                               ),
                             ),
                           ],
@@ -953,13 +1205,18 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                         onTap: () => _editComment(comment),
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           child: Text(
                             'Sửa',
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
-                              color: colorScheme.onSurface.withValues(alpha: 0.65),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.65,
+                              ),
                             ),
                           ),
                         ),
@@ -969,7 +1226,10 @@ class _PostCommentsBottomSheetState extends State<PostCommentsBottomSheet> {
                         onTap: () => _deleteComment(comment),
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           child: Text(
                             'Xóa',
                             style: TextStyle(

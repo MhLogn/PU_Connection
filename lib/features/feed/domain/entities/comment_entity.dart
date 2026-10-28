@@ -66,20 +66,20 @@ class CommentEntity extends Equatable {
   }
 
   Map<String, dynamic> toMap() => {
-        'commentId': commentId,
-        'authorId': authorId,
-        'authorName': authorName,
-        'authorAvatar': authorAvatar,
-        'authorStudentId': authorStudentId,
-        'authorFaculty': authorFaculty,
-        'content': content,
-        'createdAt': createdAt.toIso8601String(),
-        'likedUserIds': likedUserIds,
-        'likeCount': likeCount,
-        'replyToCommentId': replyToCommentId,
-        'replyToAuthorName': replyToAuthorName,
-        'isEdited': isEdited,
-      };
+    'commentId': commentId,
+    'authorId': authorId,
+    'authorName': authorName,
+    'authorAvatar': authorAvatar,
+    'authorStudentId': authorStudentId,
+    'authorFaculty': authorFaculty,
+    'content': content,
+    'createdAt': createdAt.toIso8601String(),
+    'likedUserIds': likedUserIds,
+    'likeCount': likeCount,
+    'replyToCommentId': replyToCommentId,
+    'replyToAuthorName': replyToAuthorName,
+    'isEdited': isEdited,
+  };
 
   factory CommentEntity.fromMap(Map<String, dynamic> map, {String? id}) {
     final rawLikes = map['likedUserIds'];
@@ -98,8 +98,9 @@ class CommentEntity extends Equatable {
       content: map['content'] as String? ?? '',
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] is String
-              ? DateTime.tryParse(map['createdAt'] as String) ?? DateTime.now()
-              : DateTime.now())
+                ? DateTime.tryParse(map['createdAt'] as String) ??
+                      DateTime.now()
+                : DateTime.now())
           : DateTime.now(),
       likedUserIds: likes,
       likeCount: (map['likeCount'] as num?)?.toInt() ?? likes.length,
@@ -111,18 +112,18 @@ class CommentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        commentId,
-        authorId,
-        authorName,
-        authorAvatar,
-        authorStudentId,
-        authorFaculty,
-        content,
-        createdAt,
-        likedUserIds,
-        likeCount,
-        replyToCommentId,
-        replyToAuthorName,
-        isEdited,
-      ];
+    commentId,
+    authorId,
+    authorName,
+    authorAvatar,
+    authorStudentId,
+    authorFaculty,
+    content,
+    createdAt,
+    likedUserIds,
+    likeCount,
+    replyToCommentId,
+    replyToAuthorName,
+    isEdited,
+  ];
 }

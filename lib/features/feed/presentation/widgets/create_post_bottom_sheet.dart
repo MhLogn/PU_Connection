@@ -16,10 +16,7 @@ import 'tag_students_bottom_sheet.dart';
 class CreatePostBottomSheet extends StatefulWidget {
   final PostEntity? postToEdit;
 
-  const CreatePostBottomSheet({
-    super.key,
-    this.postToEdit,
-  });
+  const CreatePostBottomSheet({super.key, this.postToEdit});
 
   @override
   State<CreatePostBottomSheet> createState() => _CreatePostBottomSheetState();
@@ -52,14 +49,13 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       final post = widget.postToEdit!;
       _contentController.text = post.content;
       _subjectCodeController.text = post.subjectCode ?? '';
-      _selectedCategory = _categories.contains(post.category) ? post.category : 'Thảo luận';
+      _selectedCategory = _categories.contains(post.category)
+          ? post.category
+          : 'Thảo luận';
       _existingAttachments.addAll(post.attachments);
       if (post.taggedUserNames.isNotEmpty) {
         for (final entry in post.taggedUserNames.entries) {
-          _taggedStudents.add({
-            'id': entry.key,
-            'name': entry.value,
-          });
+          _taggedStudents.add({'id': entry.key, 'name': entry.value});
         }
       }
     }
@@ -87,7 +83,10 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
       setState(() {
         _selectedImages.add(File(pickedFile.path));
@@ -203,12 +202,16 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
     if (authState is Authenticated) {
       uid = authState.user.uid;
-      name = authState.user.displayName.isNotEmpty ? authState.user.displayName : name;
+      name = authState.user.displayName.isNotEmpty
+          ? authState.user.displayName
+          : name;
       studentId = authState.user.studentId;
       if (studentId.isEmpty && authState.user.email.contains('@')) {
         studentId = authState.user.email.split('@').first;
       }
-      faculty = authState.user.faculty.isNotEmpty ? authState.user.faculty : faculty;
+      faculty = authState.user.faculty.isNotEmpty
+          ? authState.user.faculty
+          : faculty;
       avatar = authState.user.avatarUrl;
     }
 
@@ -220,22 +223,22 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         .toList();
     final taggedUserNames = {
       for (final s in _taggedStudents)
-        if ((s['id'] ?? '').isNotEmpty) s['id']!: s['name'] ?? 'Sinh viên'
+        if ((s['id'] ?? '').isNotEmpty) s['id']!: s['name'] ?? 'Sinh viên',
     };
 
     try {
       if (isEditing) {
         await context.read<FeedCubit>().updatePost(
-              postId: widget.postToEdit!.postId,
-              content: content,
-              category: _selectedCategory,
-              subjectCode: _subjectCodeController.text.trim(),
-              taggedUserIds: taggedUserIds,
-              taggedUserNames: taggedUserNames,
-              existingAttachments: _existingAttachments,
-              newImageFiles: _selectedImages,
-              newDocFiles: _selectedDocs,
-            );
+          postId: widget.postToEdit!.postId,
+          content: content,
+          category: _selectedCategory,
+          subjectCode: _subjectCodeController.text.trim(),
+          taggedUserIds: taggedUserIds,
+          taggedUserNames: taggedUserNames,
+          existingAttachments: _existingAttachments,
+          newImageFiles: _selectedImages,
+          newDocFiles: _selectedDocs,
+        );
 
         if (mounted) {
           Navigator.pop(context);
@@ -249,19 +252,19 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         }
       } else {
         await context.read<FeedCubit>().createPost(
-              authorId: uid,
-              authorName: name,
-              authorAvatar: avatar,
-              authorStudentId: studentId,
-              authorFaculty: faculty,
-              content: content,
-              category: _selectedCategory,
-              subjectCode: _subjectCodeController.text.trim(),
-              taggedUserIds: taggedUserIds,
-              taggedUserNames: taggedUserNames,
-              imageFiles: _selectedImages,
-              docFiles: _selectedDocs,
-            );
+          authorId: uid,
+          authorName: name,
+          authorAvatar: avatar,
+          authorStudentId: studentId,
+          authorFaculty: faculty,
+          content: content,
+          category: _selectedCategory,
+          subjectCode: _subjectCodeController.text.trim(),
+          taggedUserIds: taggedUserIds,
+          taggedUserNames: taggedUserNames,
+          imageFiles: _selectedImages,
+          docFiles: _selectedDocs,
+        );
 
         if (mounted) {
           Navigator.pop(context);
@@ -288,7 +291,10 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     }
   }
 
-  void _showBadWordsWarningDialog(BuildContext context, BadWordsCheckResult result) {
+  void _showBadWordsWarningDialog(
+    BuildContext context,
+    BadWordsCheckResult result,
+  ) {
     final isDark = AppTheme.isDark(context);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -322,7 +328,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               'Hệ thống tự động phát hiện một số từ ngữ không phù hợp với chuẩn mực môi trường văn hóa đại học Phenikaa:',
               style: TextStyle(
                 fontSize: 13.5,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
                 height: 1.4,
               ),
             ),
@@ -331,7 +339,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: const Color(0xFFEF4444).withValues(alpha: 0.3),
@@ -350,7 +360,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                         color: Color(0xFFEF4444),
                       ),
                     ),
-                    backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                    backgroundColor: const Color(
+                      0xFFEF4444,
+                    ).withValues(alpha: 0.1),
                     padding: EdgeInsets.zero,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   );
@@ -363,7 +375,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF334155),
               ),
             ),
           ],
@@ -375,7 +389,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor(context),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () => Navigator.pop(ctx),
@@ -417,12 +433,12 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -4),
+            blurRadius: 14,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
@@ -449,14 +465,19 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 Row(
                   children: [
                     Icon(
-                      isEditing ? Icons.edit_note_rounded : Icons.post_add_rounded,
+                      isEditing
+                          ? Icons.edit_note_rounded
+                          : Icons.post_add_rounded,
                       color: AppTheme.accentColor(context),
                       size: 22,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       isEditing ? l10n.edit_post : l10n.create_post_title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -479,10 +500,12 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   showCheckmark: false,
                   selectedColor: AppTheme.primaryColor(context),
                   backgroundColor: isDark
-                      ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                      ? colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        )
                       : colorScheme.surface,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     side: BorderSide(
                       color: isSelected
                           ? Colors.transparent
@@ -490,8 +513,12 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                     ),
                   ),
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : colorScheme.onSurface.withValues(alpha: 0.85),
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.white
+                        : colorScheme.onSurface.withValues(alpha: 0.85),
+                    fontWeight: isSelected
+                        ? FontWeight.w700
+                        : FontWeight.normal,
                     fontSize: 12,
                   ),
                   onSelected: (selected) {
@@ -506,24 +533,45 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               style: TextStyle(fontSize: 13.5, color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Mã môn học (CNTT-225, CSDL-101)...',
-                hintStyle: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.45)),
-                prefixIcon: Icon(Icons.menu_book_rounded, size: 19, color: AppTheme.primaryColor(context)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurface.withValues(alpha: 0.45),
+                ),
+                prefixIcon: Icon(
+                  Icons.menu_book_rounded,
+                  size: 19,
+                  color: AppTheme.primaryColor(context),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 filled: true,
                 fillColor: isDark
-                    ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                    ? colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      )
+                    : colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.2,
+                      ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.35)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.35)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppTheme.primaryColor(context), width: 1.5),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppTheme.primaryColor(context),
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -554,11 +602,15 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 alignLabelWithHint: true,
                 filled: true,
                 fillColor: isDark
-                    ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                    ? colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      )
+                    : colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.2,
+                      ),
                 contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(
                     color: isDark
                         ? colorScheme.outlineVariant.withValues(alpha: 0.35)
@@ -566,7 +618,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(
                     color: isDark
                         ? colorScheme.outlineVariant.withValues(alpha: 0.35)
@@ -574,7 +626,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(
                     color: AppTheme.primaryColor(context),
                     width: 1.5,
@@ -600,14 +652,21 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   final ext = att.type.toLowerCase();
                   final isImg = ext == 'image';
                   final icon = isImg ? Icons.image_rounded : _getFileIcon(ext);
-                  final iconColor = isImg ? AppTheme.primaryColor(context) : _getFileColor(context, ext);
+                  final iconColor = isImg
+                      ? AppTheme.primaryColor(context)
+                      : _getFileColor(context, ext);
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                          ? colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.4,
+                            )
                           : AppTheme.blueContainer(context),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
@@ -621,13 +680,21 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                         Expanded(
                           child: Text(
                             att.name,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _existingAttachments.remove(att)),
-                          child: const Icon(Icons.close_rounded, size: 18, color: Colors.grey),
+                          onTap: () =>
+                              setState(() => _existingAttachments.remove(att)),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -661,11 +728,16 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                           top: 4,
                           right: 4,
                           child: GestureDetector(
-                            onTap: () => setState(() => _selectedImages.removeAt(index)),
+                            onTap: () =>
+                                setState(() => _selectedImages.removeAt(index)),
                             child: const CircleAvatar(
                               radius: 11,
                               backgroundColor: Colors.black54,
-                              child: Icon(Icons.close, size: 14, color: Colors.white),
+                              child: Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -687,10 +759,15 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                          ? colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.4,
+                            )
                           : AppTheme.blueContainer(context),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: color.withValues(alpha: 0.25)),
@@ -702,13 +779,21 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                         Expanded(
                           child: Text(
                             doc.path.split(Platform.pathSeparator).last,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _selectedDocs.remove(doc)),
-                          child: const Icon(Icons.close, size: 18, color: Colors.grey),
+                          onTap: () =>
+                              setState(() => _selectedDocs.remove(doc)),
+                          child: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -721,22 +806,37 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.primaryColor(context).withValues(alpha: 0.25)),
+                  border: Border.all(
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.25),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.people_alt_rounded, size: 14, color: AppTheme.primaryColor(context)),
+                        Icon(
+                          Icons.people_alt_rounded,
+                          size: 14,
+                          color: AppTheme.primaryColor(context),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Gắn thẻ cùng với (${_taggedStudents.length}):',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor(context)),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor(context),
+                          ),
                         ),
                       ],
                     ),
@@ -752,19 +852,34 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                             backgroundColor: AppTheme.primaryColor(context),
                             child: Text(
                               (s['name'] ?? 'P')[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           label: Text(
                             s['name'] ?? '',
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           deleteIcon: const Icon(Icons.close, size: 14),
-                          onDeleted: () => setState(() => _taggedStudents.remove(s)),
+                          onDeleted: () =>
+                              setState(() => _taggedStudents.remove(s)),
                           visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -779,7 +894,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               children: [
                 IconButton.filledTonal(
                   style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                    backgroundColor: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.08),
                     foregroundColor: AppTheme.primaryColor(context),
                     padding: const EdgeInsets.all(10),
                   ),
@@ -790,7 +907,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
                   style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.accentColor(context).withValues(alpha: 0.08),
+                    backgroundColor: AppTheme.accentColor(
+                      context,
+                    ).withValues(alpha: 0.08),
                     foregroundColor: AppTheme.accentColor(context),
                     padding: const EdgeInsets.all(10),
                   ),
@@ -801,7 +920,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
                   style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                    backgroundColor: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.12),
                     foregroundColor: AppTheme.primaryColor(context),
                     padding: const EdgeInsets.all(10),
                   ),
@@ -815,19 +936,30 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentColor(context),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 1,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
                   ),
                   child: _isUploading
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : Text(
                           isEditing ? l10n.save_changes : l10n.post_btn,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ],

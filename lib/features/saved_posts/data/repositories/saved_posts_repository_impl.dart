@@ -11,7 +11,7 @@ class SavedPostsRepositoryImpl implements SavedPostsRepository {
   final Map<String, StreamController<List<String>>> _controllers = {};
 
   SavedPostsRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore;
+    : _firestore = firestore;
 
   FirebaseFirestore? get _db {
     if (_firestore != null) return _firestore;
@@ -52,12 +52,13 @@ class SavedPostsRepositoryImpl implements SavedPostsRepository {
           .orderBy('savedAt', descending: true)
           .snapshots()
           .map((snapshot) {
-        final ids = snapshot.docs.map((doc) => doc.id).toList();
-        _inMemorySavedPosts[userId] = ids.toSet();
-        return ids;
-      }).handleError((_) {
-        return _inMemorySavedPosts[userId]?.toList() ?? [];
-      });
+            final ids = snapshot.docs.map((doc) => doc.id).toList();
+            _inMemorySavedPosts[userId] = ids.toSet();
+            return ids;
+          })
+          .handleError((_) {
+            return _inMemorySavedPosts[userId]?.toList() ?? [];
+          });
     } catch (_) {
       Timer.run(() => _notify(userId));
       return _getController(userId).stream;
@@ -105,10 +106,7 @@ class SavedPostsRepositoryImpl implements SavedPostsRepository {
             .doc(userId)
             .collection('saved_posts')
             .doc(postId)
-            .set({
-          'postId': postId,
-          'savedAt': FieldValue.serverTimestamp(),
-        });
+            .set({'postId': postId, 'savedAt': FieldValue.serverTimestamp()});
       } catch (_) {}
     }
   }

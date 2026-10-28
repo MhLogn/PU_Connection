@@ -11,8 +11,23 @@ import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/saved_posts_cubit.dart';
 import '../cubit/saved_posts_state.dart';
 
-class SavedPostsPage extends StatelessWidget {
+class SavedPostsPage extends StatefulWidget {
   const SavedPostsPage({super.key});
+
+  @override
+  State<SavedPostsPage> createState() => _SavedPostsPageState();
+}
+
+class _SavedPostsPageState extends State<SavedPostsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<SavedPostsCubit>().markAllAsViewed();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +50,7 @@ class SavedPostsPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
         title: const Text(
           'Bài viết đã lưu',
@@ -55,9 +70,9 @@ class SavedPostsPage extends StatelessWidget {
             );
             context.read<SavedPostsCubit>().clearMessage();
           } else if (state.successMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.successMessage!)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.successMessage!)));
             context.read<SavedPostsCubit>().clearMessage();
           }
         },
@@ -87,13 +102,16 @@ class SavedPostsPage extends StatelessWidget {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              color: colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.bookmark_border_rounded,
                               size: 42,
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -131,7 +149,10 @@ class SavedPostsPage extends StatelessWidget {
                     return PostCard(
                       post: post,
                       currentUserId: currentUserId,
-                      onLikePressed: () => context.read<FeedCubit>().toggleLike(post, currentUserId),
+                      onLikePressed: () => context.read<FeedCubit>().toggleLike(
+                        post,
+                        currentUserId,
+                      ),
                       onCommentPressed: () {
                         PostCommentsBottomSheet.show(
                           context,
@@ -151,7 +172,9 @@ class SavedPostsPage extends StatelessWidget {
                                 backgroundColor: Colors.transparent,
                                 builder: (_) => BlocProvider.value(
                                   value: context.read<FeedCubit>(),
-                                  child: CreatePostBottomSheet(postToEdit: post),
+                                  child: CreatePostBottomSheet(
+                                    postToEdit: post,
+                                  ),
                                 ),
                               );
                             }

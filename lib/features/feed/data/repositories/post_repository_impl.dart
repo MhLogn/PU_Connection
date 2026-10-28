@@ -10,10 +10,50 @@ class PostRepositoryImpl implements PostRepository {
   final FirebaseFirestore _firestore;
 
   PostRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference get _postsRef =>
       _firestore.collection(FirebaseConstants.postsCollection);
+
+  /// Nhận diện các bài viết mẫu / tự tạo trước đây trên Bảng tin
+  bool _isSeedOrDummyPost(PostEntity post) {
+    final contentLower = post.content.toLowerCase().trim();
+
+    // 1. Nhận diện theo ID hoặc tài khoản tác giả mẫu
+    if (post.authorId == 'phenikaa_admin' ||
+        post.authorId == 'student_2' ||
+        post.authorId == 'phenikaa_union' ||
+        post.authorId == 'pu_admin' ||
+        post.authorId == 'pu_anonymous' ||
+        post.authorStudentId == 'DOAN-PU' ||
+        post.authorStudentId == '23020015' ||
+        post.authorStudentId == 'CNTT-PU' ||
+        post.authorStudentId == 'ENG-PU') {
+      return true;
+    }
+
+    // 2. Nhận diện theo nội dung bài viết mẫu đã tự tạo trước đây
+    if (contentLower.contains('chào các bạn sinh viên phenikaa!') &&
+        contentLower.contains('cấu trúc dữ liệu & giải thuật')) {
+      return true;
+    }
+    if (contentLower.contains('khoa ô tô') &&
+        contentLower.contains('matlab & simulink')) {
+      return true;
+    }
+    if (contentLower.contains('phenikaa innovation 2026') ||
+        contentLower.contains('sáng tạo khởi nghiệp phenikaa')) {
+      return true;
+    }
+    if (contentLower.startsWith('bài viết mẫu') ||
+        contentLower.startsWith('test post') ||
+        contentLower.startsWith('sample post') ||
+        contentLower.startsWith('dummy post')) {
+      return true;
+    }
+
+    return false;
+  }
 
   @override
   Future<PaginatedResult<PostEntity>> getFeedPostsPaged({
@@ -25,9 +65,11 @@ class PostRepositoryImpl implements PostRepository {
   }) async {
     Query query = _postsRef.orderBy('createdAt', descending: true);
 
-    final hasCategory = category != null && category.isNotEmpty && category != 'Tất cả';
+    final hasCategory =
+        category != null && category.isNotEmpty && category != 'Tất cả';
     final hasSubject = subjectCode != null && subjectCode.isNotEmpty;
-    final hasFaculty = faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
+    final hasFaculty =
+        faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
 
     if (hasCategory) {
       query = query.where('category', isEqualTo: category);
@@ -47,7 +89,13 @@ class PostRepositoryImpl implements PostRepository {
 
     try {
       final snapshot = await query.get();
-      final posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+      var posts = snapshot.docs
+          .map((doc) => PostModel.fromFirestore(doc))
+          .toList();
+
+      // Lọc các bài viết mẫu nếu có
+      posts = posts.where((p) => !_isSeedOrDummyPost(p)).toList();
+
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
       final hasMore = snapshot.docs.length >= limit;
 
@@ -64,19 +112,31 @@ class PostRepositoryImpl implements PostRepository {
       fallbackQuery = fallbackQuery.limit(limit * 2);
 
       final snapshot = await fallbackQuery.get();
-      var posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+      var posts = snapshot.docs
+          .map((doc) => PostModel.fromFirestore(doc))
+          .toList();
+
+      // Lọc các bài viết mẫu nếu có
+      posts = posts.where((p) => !_isSeedOrDummyPost(p)).toList();
 
       if (hasCategory) {
         posts = posts.where((p) => p.category == category).toList();
       }
       if (hasSubject) {
-        posts = posts.where((p) =>
-            p.subjectCode != null &&
-            p.subjectCode!.toLowerCase() == subjectCode.toLowerCase()).toList();
+        posts = posts
+            .where(
+              (p) =>
+                  p.subjectCode != null &&
+                  p.subjectCode!.toLowerCase() == subjectCode.toLowerCase(),
+            )
+            .toList();
       }
       if (hasFaculty) {
-        posts = posts.where((p) =>
-            p.authorFaculty.toLowerCase() == faculty.toLowerCase()).toList();
+        posts = posts
+            .where(
+              (p) => p.authorFaculty.toLowerCase() == faculty.toLowerCase(),
+            )
+            .toList();
       }
 
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
@@ -101,28 +161,37 @@ class PostRepositoryImpl implements PostRepository {
         .limit(100)
         .snapshots()
         .map((snapshot) {
-      var posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+          var posts = snapshot.docs
+              .map((doc) => PostModel.fromFirestore(doc))
+              .toList();
 
-      if (category != null && category.isNotEmpty && category != 'Tất cả') {
-        posts = posts.where((p) => p.category == category).toList();
-      }
+          // Lọc bỏ các bài viết mẫu hoặc không hợp lệ mà không thực hiện side-effect xóa mạng trong Stream
+          posts = posts.where((p) => !_isSeedOrDummyPost(p)).toList();
 
-      if (subjectCode != null && subjectCode.isNotEmpty) {
-        posts = posts
-            .where((p) =>
-                p.subjectCode != null &&
-                p.subjectCode!.toLowerCase() == subjectCode.toLowerCase())
-            .toList();
-      }
+          if (category != null && category.isNotEmpty && category != 'Tất cả') {
+            posts = posts.where((p) => p.category == category).toList();
+          }
 
-      if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
-        posts = posts
-            .where((p) => p.authorFaculty.toLowerCase() == faculty.toLowerCase())
-            .toList();
-      }
+          if (subjectCode != null && subjectCode.isNotEmpty) {
+            posts = posts
+                .where(
+                  (p) =>
+                      p.subjectCode != null &&
+                      p.subjectCode!.toLowerCase() == subjectCode.toLowerCase(),
+                )
+                .toList();
+          }
 
-      return posts;
-    });
+          if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
+            posts = posts
+                .where(
+                  (p) => p.authorFaculty.toLowerCase() == faculty.toLowerCase(),
+                )
+                .toList();
+          }
+
+          return posts;
+        });
   }
 
   @override
@@ -151,16 +220,20 @@ class PostRepositoryImpl implements PostRepository {
     final docRef = await _postsRef.add(model.toMap());
 
     // Tự động đồng bộ các tệp tài liệu đính kèm (pdf, doc, ppt, xls, zip...) sang Kho tài liệu
-    final docAttachments = post.attachments.where((a) => a.type.toLowerCase() != 'image').toList();
+    final docAttachments = post.attachments
+        .where((a) => a.type.toLowerCase() != 'image')
+        .toList();
     if (docAttachments.isNotEmpty) {
-      final docsRef = _firestore.collection(FirebaseConstants.studyDocumentsCollection);
+      final docsRef = _firestore.collection(
+        FirebaseConstants.studyDocumentsCollection,
+      );
       for (final att in docAttachments) {
         try {
           final cleanTitle = att.name.isNotEmpty
               ? att.name.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '')
               : (post.content.trim().isNotEmpty
-                  ? (post.content.trim().split('\n').first)
-                  : 'Tài liệu chia sẻ');
+                    ? (post.content.trim().split('\n').first)
+                    : 'Tài liệu chia sẻ');
 
           final subjectCode = post.subjectCode?.trim().isNotEmpty == true
               ? post.subjectCode!.trim().toUpperCase()
@@ -171,7 +244,9 @@ class PostRepositoryImpl implements PostRepository {
               : 'Công nghệ thông tin';
 
           await docsRef.add({
-            'title': cleanTitle.length > 80 ? '${cleanTitle.substring(0, 80)}...' : cleanTitle,
+            'title': cleanTitle.length > 80
+                ? '${cleanTitle.substring(0, 80)}...'
+                : cleanTitle,
             'code': subjectCode,
             'faculty': faculty,
             'fileUrl': att.url,
@@ -182,7 +257,8 @@ class PostRepositoryImpl implements PostRepository {
             'authorStudentId': post.authorStudentId,
             'downloads': 0,
             'rating': 5.0,
-            'description': 'Đồng bộ từ bài viết Bảng tin: "${post.content.length > 120 ? '${post.content.substring(0, 120)}...' : post.content}"',
+            'description':
+                'Đồng bộ từ bài viết Bảng tin: "${post.content.length > 120 ? '${post.content.substring(0, 120)}...' : post.content}"',
             'originPostId': docRef.id,
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
@@ -260,21 +336,27 @@ class PostRepositoryImpl implements PostRepository {
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return CommentEntity.fromMap(data, id: doc.id);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return CommentEntity.fromMap(data, id: doc.id);
+          }).toList();
+        });
   }
 
   @override
   Future<void> addComment(String postId, CommentEntity comment) async {
     final docRef = _postsRef.doc(postId);
-    await docRef.collection(FirebaseConstants.commentsSubcollection).add(comment.toMap());
+    final commentsCol = docRef.collection(FirebaseConstants.commentsSubcollection);
+    final commentDocRef = comment.commentId.isNotEmpty
+        ? commentsCol.doc(comment.commentId)
+        : commentsCol.doc();
+    final toSave = comment.commentId.isEmpty
+        ? comment.copyWith(commentId: commentDocRef.id)
+        : comment;
+
+    await commentDocRef.set(toSave.toMap());
     try {
-      await docRef.update({
-        'commentCount': FieldValue.increment(1),
-      });
+      await docRef.update({'commentCount': FieldValue.increment(1)});
     } catch (_) {}
   }
 
@@ -315,9 +397,7 @@ class PostRepositoryImpl implements PostRepository {
         .delete();
 
     try {
-      await postRef.update({
-        'commentCount': FieldValue.increment(-1),
-      });
+      await postRef.update({'commentCount': FieldValue.increment(-1)});
     } catch (_) {}
   }
 

@@ -44,19 +44,21 @@ class FeedLoaded extends FeedState {
       selectedSubject: selectedSubject ?? this.selectedSubject,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      lastDocument: clearLastDocument ? null : (lastDocument ?? this.lastDocument),
+      lastDocument: clearLastDocument
+          ? null
+          : (lastDocument ?? this.lastDocument),
     );
   }
 
   @override
   List<Object?> get props => [
-        posts,
-        selectedCategory,
-        selectedSubject,
-        hasMore,
-        isLoadingMore,
-        lastDocument,
-      ];
+    posts,
+    selectedCategory,
+    selectedSubject,
+    hasMore,
+    isLoadingMore,
+    lastDocument,
+  ];
 }
 
 class FeedError extends FeedState {
