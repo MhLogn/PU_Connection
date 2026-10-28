@@ -57,7 +57,8 @@ class _DocsHubPageState extends State<DocsHubPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return BlocConsumer<DocumentCubit, DocumentState>(
@@ -71,7 +72,8 @@ class _DocsHubPageState extends State<DocsHubPage> {
             ),
           );
           context.read<DocumentCubit>().clearMessages();
-        } else if (state.successMessage != null && state.successMessage!.isNotEmpty) {
+        } else if (state.successMessage != null &&
+            state.successMessage!.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage!),
@@ -88,57 +90,122 @@ class _DocsHubPageState extends State<DocsHubPage> {
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainerLowest,
           appBar: AppBar(
-            title: Text(l10n.docs_title),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: AppTheme.blueContainer(context),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.folder_copy_rounded,
+                    color: AppTheme.primaryColor(context),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.docs_title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+            elevation: 0,
+            scrolledUnderElevation: 1,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.file_upload_outlined),
+              IconButton.filledTonal(
+                style: IconButton.styleFrom(
+                  backgroundColor: AppTheme.blueContainer(context),
+                  foregroundColor: AppTheme.primaryColor(context),
+                  minimumSize: const Size(38, 38),
+                  padding: EdgeInsets.zero,
+                ),
+                icon: const Icon(Icons.cloud_upload_rounded, size: 20),
                 tooltip: l10n.contribute_doc_btn,
                 onPressed: () => UploadDocumentBottomSheet.show(context),
               ),
+              const SizedBox(width: 12),
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => UploadDocumentBottomSheet.show(context),
-            backgroundColor: AppTheme.accentColor(context),
+            backgroundColor: AppTheme.primaryColor(context),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             icon: const Icon(Icons.add_rounded),
             label: Text(
               l10n.contribute_doc_btn,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
             ),
           ),
           body: RefreshIndicator(
+            color: AppTheme.primaryColor(context),
             onRefresh: () async {
               await cubit.loadDocuments(refresh: true);
             },
             child: Column(
               children: [
+                // Thanh tìm kiếm tài liệu tích hợp chuẩn AppTheme
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                   child: Container(
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppTheme.isDark(context)
+                            ? Colors.white12
+                            : AppTheme.borderLight,
+                        width: 0.8,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.02),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withValues(
+                            alpha: AppTheme.isDark(context) ? 0.2 : 0.02,
+                          ),
+                          blurRadius: 6,
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (val) => cubit.search(val),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurface,
+                      ),
                       decoration: InputDecoration(
                         hintText: l10n.search_docs_hint,
-                        hintStyle: TextStyle(fontSize: 13.5, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                        prefixIcon: Icon(Icons.search_rounded, color: AppTheme.primaryColor(context), size: 22),
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: AppTheme.primaryColor(context),
+                          size: 22,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                icon: Icon(
+                                  Icons.clear_rounded,
+                                  size: 18,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
                                 onPressed: () {
                                   _searchController.clear();
                                   cubit.search('');
@@ -146,7 +213,10 @@ class _DocsHubPageState extends State<DocsHubPage> {
                               )
                             : null,
                         filled: false,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -155,8 +225,9 @@ class _DocsHubPageState extends State<DocsHubPage> {
                   ),
                 ),
 
+                // Danh sách bộ lọc theo Khoa/Viện chuẩn nhận diện Phenikaa
                 SizedBox(
-                  height: 42,
+                  height: 40,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     scrollDirection: Axis.horizontal,
@@ -168,24 +239,34 @@ class _DocsHubPageState extends State<DocsHubPage> {
                       return GestureDetector(
                         onTap: () => cubit.filterByFaculty(faculty),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
-                            gradient: isSelected ? AppTheme.oceanGradient : null,
-                            color: isSelected ? null : colorScheme.surface,
-                            borderRadius: BorderRadius.circular(20),
+                            color: isSelected
+                                ? AppTheme.primaryColor(context)
+                                : colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.transparent
-                                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
-                              width: 1,
+                                  ? AppTheme.primaryColor(context)
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: AppTheme.isDark(context)
+                                          ? 0.35
+                                          : 0.5,
+                                    ),
+                              width: 0.8,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.oceanBlue.withValues(alpha: 0.28),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                                      color: AppTheme.primaryColor(
+                                        context,
+                                      ).withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
                                     ),
                                   ]
                                 : null,
@@ -193,24 +274,19 @@ class _DocsHubPageState extends State<DocsHubPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isSelected) ...[
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: AppTheme.orangeAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
                               Text(
-                                faculty == 'Tất cả' ? l10n.all_courses : faculty,
+                                faculty == 'Tất cả'
+                                    ? l10n.all_courses
+                                    : faculty,
                                 style: TextStyle(
                                   color: isSelected
                                       ? Colors.white
-                                      : colorScheme.onSurface.withValues(alpha: 0.8),
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      : colorScheme.onSurface.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
                                   fontSize: 12.5,
                                 ),
                               ),
@@ -223,8 +299,15 @@ class _DocsHubPageState extends State<DocsHubPage> {
                 ),
                 const SizedBox(height: 8),
 
+                // Danh sách tài liệu môn học
                 Expanded(
-                  child: _buildDocumentsList(context, state, cubit, colorScheme, l10n),
+                  child: _buildDocumentsList(
+                    context,
+                    state,
+                    cubit,
+                    colorScheme,
+                    l10n,
+                  ),
                 ),
               ],
             ),
@@ -251,23 +334,71 @@ class _DocsHubPageState extends State<DocsHubPage> {
       return Center(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.folder_open_rounded, size: 64, color: colorScheme.outline),
-              const SizedBox(height: 12),
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryColor(context).withValues(alpha: 0.15),
+                      AppTheme.accentColor(context).withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.auto_stories_rounded,
+                    size: 46,
+                    color: AppTheme.primaryColor(context),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
               Text(
                 l10n.no_docs_found,
-                style: TextStyle(color: colorScheme.outline, fontSize: 15),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
+              const SizedBox(height: 8),
+              Text(
+                'Chưa có tài liệu nào trong danh mục này.\nHãy là người đầu tiên đóng góp giáo trình hoặc đề thi nhé!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
                 onPressed: () => UploadDocumentBottomSheet.show(context),
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.contribute_doc_btn),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.primaryColor(context),
-                  side: BorderSide(color: AppTheme.primaryColor(context)),
+                icon: const Icon(Icons.cloud_upload_rounded, size: 20),
+                label: Text(
+                  l10n.contribute_doc_btn,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor(context),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 2,
                 ),
               ),
             ],
@@ -278,7 +409,9 @@ class _DocsHubPageState extends State<DocsHubPage> {
 
     final authState = context.watch<AuthCubit>().state;
     final currentUserId = authState is Authenticated ? authState.user.uid : '';
-    final currentUserStudentId = authState is Authenticated ? authState.user.studentId : '';
+    final currentUserStudentId = authState is Authenticated
+        ? authState.user.studentId
+        : '';
 
     final showLoadingMore = state.isLoadingMore;
     final showEndReached = !state.hasMore && state.documents.length >= 10;
@@ -286,19 +419,25 @@ class _DocsHubPageState extends State<DocsHubPage> {
 
     return ListView.separated(
       controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 88),
       itemCount: state.documents.length + extraCount,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         if (index >= state.documents.length) {
           if (showLoadingMore) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppTheme.primaryColor(context),
+                  ),
                 ),
               ),
             );
@@ -310,13 +449,19 @@ class _DocsHubPageState extends State<DocsHubPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_circle_outline_rounded,
-                        size: 16, color: colorScheme.outline),
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 16,
+                      color: AppTheme.mintColor(context),
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Đã hiển thị tất cả tài liệu',
                       style: TextStyle(
-                          fontSize: 12.5, color: colorScheme.outline),
+                        fontSize: 12.5,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -328,8 +473,10 @@ class _DocsHubPageState extends State<DocsHubPage> {
 
         final doc = state.documents[index];
         final isDownloading = state.downloadingDocId == doc.id;
-        final isOwner = (currentUserId.isNotEmpty && doc.authorId == currentUserId) ||
-            (currentUserStudentId.isNotEmpty && doc.authorStudentId == currentUserStudentId);
+        final isOwner =
+            (currentUserId.isNotEmpty && doc.authorId == currentUserId) ||
+            (currentUserStudentId.isNotEmpty &&
+                doc.authorStudentId == currentUserStudentId);
 
         return DocumentCard(
           document: doc,

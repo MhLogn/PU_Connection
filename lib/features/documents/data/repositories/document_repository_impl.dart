@@ -20,12 +20,49 @@ class DocumentRepositoryImpl implements DocumentRepository {
     FirebaseFirestore? firestore,
     CloudinaryService? cloudinaryService,
     Dio? dio,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _cloudinaryService = cloudinaryService ?? CloudinaryService(),
-        _dio = dio ?? Dio();
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _cloudinaryService = cloudinaryService ?? CloudinaryService(),
+       _dio = dio ?? Dio();
 
   CollectionReference get _docsRef =>
       _firestore.collection(FirebaseConstants.studyDocumentsCollection);
+
+  /// Nhận diện và loại bỏ các tệp PDF mẫu / có sẵn được tạo trước đây
+  bool _isSeedOrDummyDocument(DocumentEntity doc) {
+    final url = doc.fileUrl.toLowerCase().trim();
+    if (url.contains('dummy.pdf') ||
+        url.contains('sample.pdf') ||
+        url.contains('example.com') ||
+        url.isEmpty) {
+      return true;
+    }
+    if (doc.authorId == 'pu_admin' ||
+        doc.authorId == 'admin_phenikaa_01' ||
+        doc.authorId == 'student_3' ||
+        doc.authorId == 'student_4' ||
+        doc.authorStudentId == 'CNTT-PU' ||
+        doc.authorStudentId == 'ENG-PU' ||
+        doc.authorStudentId == 'GV-012' ||
+        doc.authorStudentId == 'KHCB-01' ||
+        doc.id.startsWith('doc_admin_')) {
+      return true;
+    }
+    const dummyTitleKeywords = [
+      'đề cương & ngân hàng trắc nghiệm lập trình mạng',
+      'slide bài giảng cơ sở dữ liệu & sql nâng cao',
+      'bộ đề thi thử xác suất thống kê có lời giải chi tiết',
+      'dược lý học đại cương & tổng hợp tương tác thuốc',
+      'tổng hợp từ vựng & đề thi tiếng anh b1 vstep phenikaa',
+      'giáo trình giải tích 1 & 2 chuẩn phenikaa',
+      'slide bài giảng lập trình hướng đối tượng oop (c++)',
+      'tài liệu không rõ nguồn gốc vi phạm bản quyền',
+    ];
+    final titleLower = doc.title.toLowerCase().trim();
+    for (final dummy in dummyTitleKeywords) {
+      if (titleLower.contains(dummy)) return true;
+    }
+    return false;
+  }
 
   @override
   Future<PaginatedResult<DocumentEntity>> getDocumentsPaged({
@@ -36,7 +73,8 @@ class DocumentRepositoryImpl implements DocumentRepository {
   }) async {
     Query query = _docsRef.orderBy('createdAt', descending: true);
 
-    final hasFaculty = faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
+    final hasFaculty =
+        faculty != null && faculty.isNotEmpty && faculty != 'Tất cả';
 
     if (hasFaculty) {
       query = query.where('faculty', isEqualTo: faculty);
@@ -50,7 +88,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
     try {
       final snapshot = await query.get();
-      var docs = snapshot.docs.map((doc) => DocumentModel.fromFirestore(doc)).toList();
+      var docs = snapshot.docs
+          .map((doc) => DocumentModel.fromFirestore(doc))
+          .toList();
+
+      // Lọc các tài liệu mẫu nếu có
+      docs = docs.where((doc) => !_isSeedOrDummyDocument(doc)).toList();
 
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
         final q = searchQuery.trim().toLowerCase();
@@ -78,10 +121,17 @@ class DocumentRepositoryImpl implements DocumentRepository {
       fallbackQuery = fallbackQuery.limit(limit * 2);
 
       final snapshot = await fallbackQuery.get();
-      var docs = snapshot.docs.map((doc) => DocumentModel.fromFirestore(doc)).toList();
+      var docs = snapshot.docs
+          .map((doc) => DocumentModel.fromFirestore(doc))
+          .toList();
+
+      // Lọc các tài liệu mẫu nếu có
+      docs = docs.where((doc) => !_isSeedOrDummyDocument(doc)).toList();
 
       if (hasFaculty) {
-        docs = docs.where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase()).toList();
+        docs = docs
+            .where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase())
+            .toList();
       }
 
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
@@ -110,13 +160,28 @@ class DocumentRepositoryImpl implements DocumentRepository {
     String? faculty,
     String? searchQuery,
   }) {
-    return _docsRef.orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    return _docsRef.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       var list = snapshot.docs
           .map((doc) => DocumentModel.fromFirestore(doc))
           .toList();
 
+      // Bỏ các file pdf có sẵn đã tạo và dọn sạch trên Firestore
+      list = list.where((doc) {
+        if (_isSeedOrDummyDocument(doc)) {
+          if (doc.id.isNotEmpty) {
+            _docsRef.doc(doc.id).delete().catchError((_) {});
+          }
+          return false;
+        }
+        return true;
+      }).toList();
+
       if (faculty != null && faculty.isNotEmpty && faculty != 'Tất cả') {
-        list = list.where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase()).toList();
+        list = list
+            .where((doc) => doc.faculty.toLowerCase() == faculty.toLowerCase())
+            .toList();
       }
 
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
@@ -158,7 +223,8 @@ class DocumentRepositoryImpl implements DocumentRepository {
     }
 
     final ext = file.path.split('.').last.toLowerCase();
-    final docType = ['pdf', 'docx', 'doc', 'zip', 'rar', 'xlsx', 'pptx'].contains(ext)
+    final docType =
+        ['pdf', 'docx', 'doc', 'zip', 'rar', 'xlsx', 'pptx'].contains(ext)
         ? ext
         : document.fileType;
 
@@ -252,12 +318,11 @@ class DocumentRepositoryImpl implements DocumentRepository {
       if (allReviews.docs.isNotEmpty) {
         final total = allReviews.docs.fold<double>(
           0.0,
-          (acc, doc) => acc + ((doc.data()['rating'] as num?)?.toDouble() ?? 5.0),
+          (acc, doc) =>
+              acc + ((doc.data()['rating'] as num?)?.toDouble() ?? 5.0),
         );
         final avg = total / allReviews.docs.length;
-        await docRef.update({
-          'rating': double.parse(avg.toStringAsFixed(1)),
-        });
+        await docRef.update({'rating': double.parse(avg.toStringAsFixed(1))});
       }
     } catch (_) {}
   }
@@ -273,21 +338,24 @@ class DocumentRepositoryImpl implements DocumentRepository {
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) {
-        final reviews = snapshot.docs
-            .map((doc) => DocumentReviewModel.fromFirestore(doc))
-            .toList();
-        _inMemoryReviews[documentId] = reviews;
-        return reviews;
-      }).handleError((_) {
-        return _inMemoryReviews[documentId] ?? [];
-      });
+            final reviews = snapshot.docs
+                .map((doc) => DocumentReviewModel.fromFirestore(doc))
+                .toList();
+            _inMemoryReviews[documentId] = reviews;
+            return reviews;
+          })
+          .handleError((_) {
+            return _inMemoryReviews[documentId] ?? [];
+          });
     } catch (_) {
       return Stream.value(_inMemoryReviews[documentId] ?? []);
     }
   }
 
   @override
-  Future<List<DocumentReviewEntity>> getDocumentReviews(String documentId) async {
+  Future<List<DocumentReviewEntity>> getDocumentReviews(
+    String documentId,
+  ) async {
     if (documentId.isEmpty) return [];
 
     try {

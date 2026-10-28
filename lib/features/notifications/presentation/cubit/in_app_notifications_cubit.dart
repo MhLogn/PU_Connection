@@ -10,10 +10,9 @@ class InAppNotificationsCubit extends Cubit<InAppNotificationsState> {
   StreamSubscription<List<NotificationEntity>>? _subscription;
   String? _currentUserId;
 
-  InAppNotificationsCubit({
-    required InAppNotificationRepository repository,
-  })  : _repository = repository,
-        super(const InAppNotificationsState());
+  InAppNotificationsCubit({required InAppNotificationRepository repository})
+    : _repository = repository,
+      super(const InAppNotificationsState());
 
   String? get currentUserId => _currentUserId;
 
@@ -26,20 +25,26 @@ class InAppNotificationsCubit extends Cubit<InAppNotificationsState> {
 
     emit(state.copyWith(status: NotificationsStatus.loading));
 
-    _subscription = _repository.watchNotifications(userId).listen(
-      (notifications) {
-        emit(state.copyWith(
-          status: NotificationsStatus.loaded,
-          notifications: notifications,
-        ));
-      },
-      onError: (err) {
-        emit(state.copyWith(
-          status: NotificationsStatus.error,
-          errorMessage: err.toString(),
-        ));
-      },
-    );
+    _subscription = _repository
+        .watchNotifications(userId)
+        .listen(
+          (notifications) {
+            emit(
+              state.copyWith(
+                status: NotificationsStatus.loaded,
+                notifications: notifications,
+              ),
+            );
+          },
+          onError: (err) {
+            emit(
+              state.copyWith(
+                status: NotificationsStatus.error,
+                errorMessage: err.toString(),
+              ),
+            );
+          },
+        );
   }
 
   void setFilter(NotificationType? filter) {

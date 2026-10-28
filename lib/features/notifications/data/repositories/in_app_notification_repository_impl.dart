@@ -11,10 +11,11 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
 
   // In-memory cache & fallback phục vụ test / offline
   final Map<String, List<NotificationEntity>> _inMemoryStore = {};
-  final Map<String, StreamController<List<NotificationEntity>>> _controllers = {};
+  final Map<String, StreamController<List<NotificationEntity>>> _controllers =
+      {};
 
   InAppNotificationRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore;
+    : _firestore = firestore;
 
   FirebaseFirestore? get _db {
     if (_firestore != null) return _firestore;
@@ -27,7 +28,8 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
 
   StreamController<List<NotificationEntity>> _getController(String userId) {
     if (!_controllers.containsKey(userId) || _controllers[userId]!.isClosed) {
-      _controllers[userId] = StreamController<List<NotificationEntity>>.broadcast();
+      _controllers[userId] =
+          StreamController<List<NotificationEntity>>.broadcast();
     }
     return _controllers[userId]!;
   }
@@ -43,7 +45,8 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
         userId: userId,
         senderName: 'Phòng Đào tạo Phenikaa',
         title: 'Đăng ký học phần HK2 (2025-2026)',
-        content: 'Hệ thống mở cổng đăng ký tín chỉ đợt 1 cho sinh viên K16, K17. Sinh viên lưu ý kiểm tra điều kiện tiên quyết và thời gian đóng học phí.',
+        content:
+            'Hệ thống mở cổng đăng ký tín chỉ đợt 1 cho sinh viên K16, K17. Sinh viên lưu ý kiểm tra điều kiện tiên quyết và thời gian đóng học phí.',
         type: NotificationType.academic,
         createdAt: now.subtract(const Duration(hours: 2)),
         isRead: false,
@@ -54,7 +57,8 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
         userId: userId,
         senderName: 'Phòng Công tác Sinh viên',
         title: 'Xét Học bổng Khuyến khích Học tập Kỳ 1',
-        content: 'Công bố danh sách dự kiến sinh viên đạt học bổng Xuất sắc và Giỏi. Thời gian tiếp nhận phản hồi đến hết ngày 18/10.',
+        content:
+            'Công bố danh sách dự kiến sinh viên đạt học bổng Xuất sắc và Giỏi. Thời gian tiếp nhận phản hồi đến hết ngày 18/10.',
         type: NotificationType.academic,
         createdAt: now.subtract(const Duration(days: 1)),
         isRead: false,
@@ -64,7 +68,8 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
         userId: userId,
         senderName: 'Đoàn Thanh Niên & CLB Thể Thao',
         title: 'Khai mạc Hội thao Phenikaa Youth Games 2026',
-        content: 'Hội thao toàn trường với 6 môn thi đấu chính thức (Bóng đá, Cầu lông, Bóng bàn, Cờ vua...). Đăng ký ngay tại Nhà thi đấu Đa năng.',
+        content:
+            'Hội thao toàn trường với 6 môn thi đấu chính thức (Bóng đá, Cầu lông, Bóng bàn, Cờ vua...). Đăng ký ngay tại Nhà thi đấu Đa năng.',
         type: NotificationType.event,
         createdAt: now.subtract(const Duration(days: 2)),
         isRead: true,
@@ -75,7 +80,8 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
         userId: userId,
         senderName: 'PU Connection Security',
         title: 'Bảo vệ an toàn tài khoản sinh viên',
-        content: 'Khuyến nghị cập nhật mật khẩu định kỳ và không chia sẻ mã sinh viên, mật khẩu cổng đào tạo với bất kỳ ai.',
+        content:
+            'Khuyến nghị cập nhật mật khẩu định kỳ và không chia sẻ mã sinh viên, mật khẩu cổng đào tạo với bất kỳ ai.',
         type: NotificationType.system,
         createdAt: now.subtract(const Duration(days: 4)),
         isRead: true,
@@ -116,23 +122,24 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) {
-        if (snapshot.docs.isEmpty) {
-          // Nếu Firestore chưa có doc nào, hiển thị danh sách seed
-          final initial = _inMemoryStore[userId] ?? _getInitialSeed(userId);
-          _inMemoryStore[userId] = initial;
-          return initial;
-        }
+            if (snapshot.docs.isEmpty) {
+              // Nếu Firestore chưa có doc nào, hiển thị danh sách seed
+              final initial = _inMemoryStore[userId] ?? _getInitialSeed(userId);
+              _inMemoryStore[userId] = initial;
+              return initial;
+            }
 
-        final firestoreList = snapshot.docs
-            .map((doc) => NotificationModel.fromSnapshot(doc))
-            .toList();
+            final firestoreList = snapshot.docs
+                .map((doc) => NotificationModel.fromSnapshot(doc))
+                .toList();
 
-        _inMemoryStore[userId] = firestoreList;
-        return firestoreList;
-      }).handleError((_) {
-        // Fallback gracefully khi offline hoặc permissions
-        return _inMemoryStore[userId] ?? _getInitialSeed(userId);
-      });
+            _inMemoryStore[userId] = firestoreList;
+            return firestoreList;
+          })
+          .handleError((_) {
+            // Fallback gracefully khi offline hoặc permissions
+            return _inMemoryStore[userId] ?? _getInitialSeed(userId);
+          });
     } catch (_) {
       Timer.run(() => _notify(userId));
       return _getController(userId).stream;
@@ -252,7 +259,10 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
     if (userId.isEmpty) return;
 
     // 1. Lưu In-memory
-    final list = _inMemoryStore.putIfAbsent(userId, () => _getInitialSeed(userId));
+    final list = _inMemoryStore.putIfAbsent(
+      userId,
+      () => _getInitialSeed(userId),
+    );
     list.removeWhere((n) => n.id == notification.id);
     list.insert(0, notification);
     _notify(userId);

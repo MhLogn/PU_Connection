@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/domain/entities/phenikaa_student_entity.dart';
 import '../../domain/repositories/admin_repository.dart';
 import 'admin_state.dart';
 
@@ -6,33 +7,45 @@ class AdminCubit extends Cubit<AdminState> {
   final AdminRepository _adminRepository;
 
   AdminCubit({required AdminRepository adminRepository})
-      : _adminRepository = adminRepository,
-        super(const AdminState());
+    : _adminRepository = adminRepository,
+      super(const AdminState());
 
   /// Tải dữ liệu toàn diện cho Bảng điều khiển Quản trị viên
   Future<void> init() async {
     emit(state.copyWith(status: AdminStatus.loading));
     try {
       final stats = await _adminRepository.getDashboardStats();
-      final reports = await _adminRepository.getReports(status: state.selectedReportStatus);
+      final reports = await _adminRepository.getReports(
+        status: state.selectedReportStatus,
+      );
       final users = await _adminRepository.getAllUsers(
         query: state.searchUserQuery,
         faculty: state.selectedFaculty,
       );
       final docs = await _adminRepository.getAllDocuments();
+      final logs = await _adminRepository.getAuditLogs();
+      final pStudents = await _adminRepository.getPhenikaaStudents(
+        query: state.searchPhenikaaStudentQuery,
+      );
 
-      emit(state.copyWith(
-        status: AdminStatus.loaded,
-        stats: stats,
-        reports: reports,
-        users: users,
-        documents: docs,
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.loaded,
+          stats: stats,
+          reports: reports,
+          users: users,
+          documents: docs,
+          auditLogs: logs,
+          phenikaaStudents: pStudents,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: AdminStatus.error,
-        errorMessage: 'Lỗi tải dữ liệu quản trị: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.error,
+          errorMessage: 'Lỗi tải dữ liệu quản trị: $e',
+        ),
+      );
     }
   }
 
@@ -48,11 +61,21 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   /// Xử lý báo cáo vi phạm
-  Future<void> resolveReport(String reportId, {required String action, String? note}) async {
+  Future<void> resolveReport(
+    String reportId, {
+    required String action,
+    String? note,
+  }) async {
     try {
-      await _adminRepository.resolveReport(reportId, action: action, note: note);
+      await _adminRepository.resolveReport(
+        reportId,
+        action: action,
+        note: note,
+      );
 
-      final updatedReports = await _adminRepository.getReports(status: state.selectedReportStatus);
+      final updatedReports = await _adminRepository.getReports(
+        status: state.selectedReportStatus,
+      );
       final updatedStats = await _adminRepository.getDashboardStats();
 
       String message = 'Đã xử lý báo cáo thành công!';
@@ -64,12 +87,14 @@ class AdminCubit extends Cubit<AdminState> {
         message = 'Đã bỏ qua báo cáo không hợp lệ.';
       }
 
-      emit(state.copyWith(
-        status: AdminStatus.actionSuccess,
-        reports: updatedReports,
-        stats: updatedStats,
-        successMessage: message,
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          reports: updatedReports,
+          stats: updatedStats,
+          successMessage: message,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Không thể xử lý báo cáo: $e'));
     }
@@ -104,9 +129,17 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   /// Khóa hoặc mở khóa tài khoản sinh viên
-  Future<void> toggleBanUser(String userId, {required bool isBanned, String? banReason}) async {
+  Future<void> toggleBanUser(
+    String userId, {
+    required bool isBanned,
+    String? banReason,
+  }) async {
     try {
-      await _adminRepository.updateUserStatus(userId, isBanned: isBanned, banReason: banReason);
+      await _adminRepository.updateUserStatus(
+        userId,
+        isBanned: isBanned,
+        banReason: banReason,
+      );
 
       final updatedUsers = await _adminRepository.getAllUsers(
         query: state.searchUserQuery,
@@ -114,16 +147,20 @@ class AdminCubit extends Cubit<AdminState> {
       );
       final updatedStats = await _adminRepository.getDashboardStats();
 
-      emit(state.copyWith(
-        status: AdminStatus.actionSuccess,
-        users: updatedUsers,
-        stats: updatedStats,
-        successMessage: isBanned
-            ? 'Đã đình chỉ tài khoản sinh viên thành công!'
-            : 'Đã mở khóa và khôi phục quyền truy cập cho sinh viên!',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          users: updatedUsers,
+          stats: updatedStats,
+          successMessage: isBanned
+              ? 'Đã đình chỉ tài khoản sinh viên thành công!'
+              : 'Đã mở khóa và khôi phục quyền truy cập cho sinh viên!',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(errorMessage: 'Lỗi cập nhật trạng thái tài khoản: $e'));
+      emit(
+        state.copyWith(errorMessage: 'Lỗi cập nhật trạng thái tài khoản: $e'),
+      );
     }
   }
 
@@ -137,11 +174,13 @@ class AdminCubit extends Cubit<AdminState> {
         faculty: state.selectedFaculty,
       );
 
-      emit(state.copyWith(
-        status: AdminStatus.actionSuccess,
-        users: updatedUsers,
-        successMessage: 'Đã cập nhật vai trò người dùng thành "$newRole"!',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          users: updatedUsers,
+          successMessage: 'Đã cập nhật vai trò người dùng thành "$newRole"!',
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi cập nhật vai trò: $e'));
     }
@@ -155,12 +194,14 @@ class AdminCubit extends Cubit<AdminState> {
       final updatedDocs = await _adminRepository.getAllDocuments();
       final updatedStats = await _adminRepository.getDashboardStats();
 
-      emit(state.copyWith(
-        status: AdminStatus.actionSuccess,
-        documents: updatedDocs,
-        stats: updatedStats,
-        successMessage: 'Đã xóa tài liệu khỏi DocsHub trường!',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          documents: updatedDocs,
+          stats: updatedStats,
+          successMessage: 'Đã xóa tài liệu khỏi DocsHub trường!',
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi xóa tài liệu: $e'));
     }
@@ -179,12 +220,98 @@ class AdminCubit extends Cubit<AdminState> {
         targetFaculty: targetFaculty,
       );
 
-      emit(state.copyWith(
-        status: AdminStatus.actionSuccess,
-        successMessage: 'Đã phát thông báo khẩn đến toàn bộ sinh viên Phenikaa!',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          successMessage:
+              'Đã phát thông báo khẩn đến toàn bộ sinh viên Phenikaa!',
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Lỗi phát thông báo: $e'));
+    }
+  }
+
+  /// Tải lại danh sách nhật ký quản trị
+  Future<void> loadAuditLogs() async {
+    try {
+      final logs = await _adminRepository.getAuditLogs();
+      emit(state.copyWith(auditLogs: logs));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Lỗi tải nhật ký: $e'));
+    }
+  }
+
+  /// Xóa bài viết vi phạm
+  Future<void> deletePost(String postId) async {
+    try {
+      await _adminRepository.deletePost(postId);
+      final stats = await _adminRepository.getDashboardStats();
+      final logs = await _adminRepository.getAuditLogs();
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          stats: stats,
+          auditLogs: logs,
+          successMessage: 'Đã gỡ bài viết vi phạm tiêu chuẩn!',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Lỗi gỡ bài viết: $e'));
+    }
+  }
+
+  /// Tìm kiếm sinh viên trong danh bạ Phenikaa
+  Future<void> searchPhenikaaStudents(String query) async {
+    emit(state.copyWith(searchPhenikaaStudentQuery: query));
+    try {
+      final list = await _adminRepository.getPhenikaaStudents(query: query);
+      emit(state.copyWith(phenikaaStudents: list));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Lỗi tìm kiếm danh bạ: $e'));
+    }
+  }
+
+  /// Thêm sinh viên mới vào danh bạ Phenikaa để tiền thẩm định kích hoạt
+  Future<void> addPhenikaaStudent(PhenikaaStudentEntity student) async {
+    try {
+      await _adminRepository.addPhenikaaStudent(student);
+      final list = await _adminRepository.getPhenikaaStudents(
+        query: state.searchPhenikaaStudentQuery,
+      );
+      final stats = await _adminRepository.getDashboardStats();
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          phenikaaStudents: list,
+          stats: stats,
+          successMessage:
+              'Đã thêm sinh viên ${student.fullName} (${student.studentId}) vào danh bạ thành công!',
+        ),
+      );
+    } catch (e) {
+      final cleanMsg = e.toString().replaceAll('Exception: ', '');
+      emit(state.copyWith(errorMessage: cleanMsg));
+      rethrow;
+    }
+  }
+
+  /// Xóa sinh viên khỏi danh bạ Phenikaa
+  Future<void> deletePhenikaaStudent(String studentId) async {
+    try {
+      await _adminRepository.deletePhenikaaStudent(studentId);
+      final list = await _adminRepository.getPhenikaaStudents(
+        query: state.searchPhenikaaStudentQuery,
+      );
+      emit(
+        state.copyWith(
+          status: AdminStatus.actionSuccess,
+          phenikaaStudents: list,
+          successMessage: 'Đã xóa sinh viên khỏi danh bạ Phenikaa!',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Lỗi xóa sinh viên: $e'));
     }
   }
 }

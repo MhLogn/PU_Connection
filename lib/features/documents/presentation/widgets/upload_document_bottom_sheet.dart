@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
@@ -30,7 +32,8 @@ class UploadDocumentBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<UploadDocumentBottomSheet> createState() => _UploadDocumentBottomSheetState();
+  State<UploadDocumentBottomSheet> createState() =>
+      _UploadDocumentBottomSheetState();
 }
 
 class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
@@ -91,15 +94,17 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
           _selectedFileType = ext;
           if (_titleController.text.trim().isEmpty) {
             final dotIdx = fileName.lastIndexOf('.');
-            _titleController.text = dotIdx > 0 ? fileName.substring(0, dotIdx) : fileName;
+            _titleController.text = dotIdx > 0
+                ? fileName.substring(0, dotIdx)
+                : fileName;
           }
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể chọn tệp: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể chọn tệp: $e')));
       }
     }
   }
@@ -110,17 +115,42 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
     final code = _codeController.text.trim().toUpperCase();
 
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.doc_name_required)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.doc_name_required)));
       return;
     }
 
     if (_selectedFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.no_file_selected)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.no_file_selected)));
       return;
+    }
+
+    final desc = _descController.text.trim();
+
+    // Tiền kiểm tra từ ngữ không phù hợp (Bad Words Filter) trước khi tải tệp
+    if (sl.isRegistered<BadWordsFilterService>()) {
+      final filter = sl<BadWordsFilterService>();
+      final textToCheck = '$title $code $desc';
+      final checkResult = filter.check(
+        textToCheck,
+        actionLabel: 'tải lên tài liệu',
+      );
+      if (!checkResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              checkResult.suggestionMessage ??
+                  'Tiêu đề hoặc mô tả tài liệu chứa từ ngữ không phù hợp.',
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isUploading = true);
@@ -132,7 +162,9 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
 
     if (authState is Authenticated) {
       authorId = authState.user.uid;
-      authorName = authState.user.displayName.isNotEmpty ? authState.user.displayName : 'Sinh viên Phenikaa';
+      authorName = authState.user.displayName.isNotEmpty
+          ? authState.user.displayName
+          : 'Sinh viên Phenikaa';
       authorStudentId = authState.user.studentId;
     }
 
@@ -147,14 +179,16 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
       authorId: authorId,
       authorName: authorName,
       authorStudentId: authorStudentId,
-      description: _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
+      description: _descController.text.trim().isNotEmpty
+          ? _descController.text.trim()
+          : null,
       createdAt: DateTime.now(),
     );
 
     final success = await context.read<DocumentCubit>().uploadDocument(
-          document: newDoc,
-          file: _selectedFile!,
-        );
+      document: newDoc,
+      file: _selectedFile!,
+    );
 
     if (mounted) {
       setState(() => _isUploading = false);
@@ -184,7 +218,9 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.3 : 0.08),
+            color: Colors.black.withValues(
+              alpha: AppTheme.isDark(context) ? 0.3 : 0.08,
+            ),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -212,12 +248,19 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(Icons.file_upload_rounded, color: AppTheme.accentColor(context), size: 24),
+                      Icon(
+                        Icons.file_upload_rounded,
+                        color: AppTheme.accentColor(context),
+                        size: 24,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.contribute_dialog_title,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -262,10 +305,12 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                       child: Icon(
                         _selectedFile != null
                             ? (_selectedFileType == 'pdf'
-                                ? Icons.picture_as_pdf_rounded
-                                : Icons.insert_drive_file_rounded)
+                                  ? Icons.picture_as_pdf_rounded
+                                  : Icons.insert_drive_file_rounded)
                             : Icons.upload_file_rounded,
-                        color: _selectedFile != null ? Colors.white : colorScheme.onSurfaceVariant,
+                        color: _selectedFile != null
+                            ? Colors.white
+                            : colorScheme.onSurfaceVariant,
                         size: 24,
                       ),
                     ),
@@ -293,7 +338,10 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                             _selectedFile != null
                                 ? '$_selectedFileSize • .${_selectedFileType.toUpperCase()}'
                                 : 'PDF, Word (DOCX), ZIP, RAR, Excel',
-                            style: TextStyle(fontSize: 12, color: colorScheme.outline),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.outline,
+                            ),
                           ),
                         ],
                       ),
@@ -316,7 +364,9 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                 labelText: l10n.doc_title_label,
                 hintText: l10n.doc_title_hint,
                 prefixIcon: const Icon(Icons.title_rounded),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -326,7 +376,9 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                 labelText: l10n.course_code_label,
                 hintText: l10n.course_code_hint,
                 prefixIcon: const Icon(Icons.code_rounded),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -336,16 +388,17 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
               decoration: InputDecoration(
                 labelText: l10n.faculty_label,
                 prefixIcon: const Icon(Icons.apartment_rounded),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               items: _faculties
-                  .map((f) => DropdownMenuItem(
-                        value: f,
-                        child: Text(
-                          f,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ))
+                  .map(
+                    (f) => DropdownMenuItem(
+                      value: f,
+                      child: Text(f, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
                   .toList(),
               onChanged: (val) {
                 if (val != null) setState(() => _selectedFaculty = val);
@@ -358,17 +411,25 @@ class _UploadDocumentBottomSheetState extends State<UploadDocumentBottomSheet> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
               label: Text(
                 _isUploading ? l10n.uploading_to_cloud : l10n.upload_btn,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.accentColor(context),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ],

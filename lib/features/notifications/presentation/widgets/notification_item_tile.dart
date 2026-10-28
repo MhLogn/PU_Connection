@@ -49,7 +49,11 @@ class NotificationItemTile extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         color: colorScheme.error,
-        child: const Icon(Icons.delete_sweep_rounded, color: Colors.white, size: 26),
+        child: const Icon(
+          Icons.delete_sweep_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
       ),
       child: Material(
         color: isRead
@@ -92,7 +96,9 @@ class NotificationItemTile extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 1.5),
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: typeColor.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
@@ -113,7 +119,9 @@ class NotificationItemTile extends StatelessWidget {
                             _formatTime(notification.createdAt),
                             style: TextStyle(
                               fontSize: 11,
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                           if (!isRead) ...[
@@ -121,8 +129,8 @@ class NotificationItemTile extends StatelessWidget {
                             Container(
                               width: 8,
                               height: 8,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF28C28),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -136,7 +144,9 @@ class NotificationItemTile extends StatelessWidget {
                         notification.title,
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
+                          fontWeight: isRead
+                              ? FontWeight.w600
+                              : FontWeight.bold,
                           color: colorScheme.onSurface,
                         ),
                       ),
@@ -183,7 +193,10 @@ class NotificationItemTile extends StatelessWidget {
                           children: [
                             Icon(Icons.mark_email_read_rounded, size: 18),
                             SizedBox(width: 8),
-                            Text('Đánh dấu đã đọc', style: TextStyle(fontSize: 13)),
+                            Text(
+                              'Đánh dấu đã đọc',
+                              style: TextStyle(fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -191,9 +204,16 @@ class NotificationItemTile extends StatelessWidget {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                          Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: Colors.red,
+                          ),
                           SizedBox(width: 8),
-                          Text('Xóa thông báo', style: TextStyle(fontSize: 13, color: Colors.red)),
+                          Text(
+                            'Xóa thông báo',
+                            style: TextStyle(fontSize: 13, color: Colors.red),
+                          ),
                         ],
                       ),
                     ),
@@ -224,11 +244,7 @@ class NotificationItemTile extends StatelessWidget {
         color: typeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
-        notification.type.icon,
-        color: typeColor,
-        size: 22,
-      ),
+      child: Icon(notification.type.icon, color: typeColor, size: 22),
     );
   }
 }

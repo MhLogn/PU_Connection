@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../domain/entities/document_entity.dart';
 import '../../domain/entities/document_review_entity.dart';
 import '../cubit/document_cubit.dart';
@@ -60,9 +62,32 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
   Future<void> _handleSubmit() async {
     if (widget.currentUserId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng đăng nhập để đánh giá tài liệu')),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để đánh giá tài liệu'),
+        ),
       );
       return;
+    }
+
+    final comment = _commentController.text.trim();
+    if (comment.isNotEmpty && sl.isRegistered<BadWordsFilterService>()) {
+      final checkResult = sl<BadWordsFilterService>().check(
+        comment,
+        actionLabel: 'gửi đánh giá',
+      );
+      if (!checkResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              checkResult.suggestionMessage ??
+                  'Nhận xét tài liệu chứa từ ngữ không phù hợp.',
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isSubmitting = true);
@@ -128,7 +153,10 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                     children: [
                       const Text(
                         'Đánh giá tài liệu',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -162,10 +190,14 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                     child: Column(
@@ -173,7 +205,10 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                       children: [
                         const Text(
                           'Bạn thấy tài liệu này thế nào?',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 10),
 
@@ -213,10 +248,13 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                           controller: _commentController,
                           maxLines: 3,
                           decoration: InputDecoration(
-                            hintText: 'Nhận xét về độ chính xác, tính hữu ích của tài liệu (không bắt buộc)...',
+                            hintText:
+                                'Nhận xét về độ chính xác, tính hữu ích của tài liệu (không bắt buộc)...',
                             hintStyle: TextStyle(
                               fontSize: 12.5,
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                             filled: true,
                             fillColor: colorScheme.surface,
@@ -224,13 +262,17 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                           ),
@@ -266,7 +308,11 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                   // Danh sách đánh giá khác
                   Row(
                     children: [
-                      const Icon(Icons.rate_review_rounded, size: 18, color: Colors.amber),
+                      const Icon(
+                        Icons.rate_review_rounded,
+                        size: 18,
+                        color: Colors.amber,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Các đánh giá khác',
@@ -292,7 +338,9 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                               'Chưa có nhận xét nào. Hãy là người đầu tiên đánh giá!',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                           ),
@@ -311,13 +359,21 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                             children: [
                               CircleAvatar(
                                 radius: 16,
-                                backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.1),
-                                backgroundImage: (r.userAvatar != null && r.userAvatar!.isNotEmpty)
+                                backgroundColor: AppTheme.primaryColor(
+                                  context,
+                                ).withValues(alpha: 0.1),
+                                backgroundImage:
+                                    (r.userAvatar != null &&
+                                        r.userAvatar!.isNotEmpty)
                                     ? NetworkImage(r.userAvatar!)
                                     : null,
-                                child: (r.userAvatar == null || r.userAvatar!.isEmpty)
+                                child:
+                                    (r.userAvatar == null ||
+                                        r.userAvatar!.isEmpty)
                                     ? Text(
-                                        r.userName.isNotEmpty ? r.userName[0].toUpperCase() : 'U',
+                                        r.userName.isNotEmpty
+                                            ? r.userName[0].toUpperCase()
+                                            : 'U',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
@@ -332,7 +388,8 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           r.userName,
@@ -343,7 +400,11 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                                         ),
                                         Row(
                                           children: [
-                                            const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                            const Icon(
+                                              Icons.star_rounded,
+                                              size: 14,
+                                              color: Colors.amber,
+                                            ),
                                             const SizedBox(width: 2),
                                             Text(
                                               r.rating.toStringAsFixed(1),
@@ -363,7 +424,8 @@ class _DocumentReviewSheetState extends State<DocumentReviewSheet> {
                                         r.comment,
                                         style: TextStyle(
                                           fontSize: 12.5,
-                                          color: colorScheme.onSurface.withValues(alpha: 0.85),
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.85),
                                         ),
                                       ),
                                     ],

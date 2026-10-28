@@ -10,10 +10,9 @@ import 'document_state.dart';
 class DocumentCubit extends Cubit<DocumentState> {
   final DocumentRepository _documentRepository;
 
-  DocumentCubit({
-    required DocumentRepository documentRepository,
-  })  : _documentRepository = documentRepository,
-        super(const DocumentState());
+  DocumentCubit({required DocumentRepository documentRepository})
+    : _documentRepository = documentRepository,
+      super(const DocumentState());
 
   void init() {
     loadDocuments();
@@ -28,13 +27,15 @@ class DocumentCubit extends Cubit<DocumentState> {
     final targetQuery = query ?? state.searchQuery;
 
     if (!refresh) {
-      emit(state.copyWith(
-        status: DocumentStatus.loading,
-        selectedFaculty: targetFaculty,
-        searchQuery: targetQuery,
-        clearLastDocument: true,
-        hasMore: true,
-      ));
+      emit(
+        state.copyWith(
+          status: DocumentStatus.loading,
+          selectedFaculty: targetFaculty,
+          searchQuery: targetQuery,
+          clearLastDocument: true,
+          hasMore: true,
+        ),
+      );
     }
 
     try {
@@ -45,25 +46,31 @@ class DocumentCubit extends Cubit<DocumentState> {
         limit: 15,
       );
 
-      emit(state.copyWith(
-        status: DocumentStatus.loaded,
-        documents: result.items,
-        selectedFaculty: targetFaculty,
-        searchQuery: targetQuery,
-        lastDocument: result.lastDocument,
-        hasMore: result.hasMore,
-        isLoadingMore: false,
-      ));
+      emit(
+        state.copyWith(
+          status: DocumentStatus.loaded,
+          documents: result.items,
+          selectedFaculty: targetFaculty,
+          searchQuery: targetQuery,
+          lastDocument: result.lastDocument,
+          hasMore: result.hasMore,
+          isLoadingMore: false,
+        ),
+      );
     } catch (error) {
-      emit(state.copyWith(
-        status: DocumentStatus.error,
-        errorMessage: error.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: DocumentStatus.error,
+          errorMessage: error.toString(),
+        ),
+      );
     }
   }
 
   Future<void> loadMoreDocuments() async {
-    if (state.isLoadingMore || !state.hasMore || state.status == DocumentStatus.loading) {
+    if (state.isLoadingMore ||
+        !state.hasMore ||
+        state.status == DocumentStatus.loading) {
       return;
     }
 
@@ -71,22 +78,27 @@ class DocumentCubit extends Cubit<DocumentState> {
 
     try {
       final result = await _documentRepository.getDocumentsPaged(
-        faculty: state.selectedFaculty == 'Tất cả' ? null : state.selectedFaculty,
+        faculty: state.selectedFaculty == 'Tất cả'
+            ? null
+            : state.selectedFaculty,
         searchQuery: state.searchQuery,
         lastDocument: state.lastDocument,
         limit: 15,
       );
 
       final existingIds = state.documents.map((d) => d.id).toSet();
-      final newUniqueItems =
-          result.items.where((d) => !existingIds.contains(d.id)).toList();
+      final newUniqueItems = result.items
+          .where((d) => !existingIds.contains(d.id))
+          .toList();
 
-      emit(state.copyWith(
-        documents: [...state.documents, ...newUniqueItems],
-        lastDocument: result.lastDocument,
-        hasMore: result.hasMore && newUniqueItems.isNotEmpty,
-        isLoadingMore: false,
-      ));
+      emit(
+        state.copyWith(
+          documents: [...state.documents, ...newUniqueItems],
+          lastDocument: result.lastDocument,
+          hasMore: result.hasMore && newUniqueItems.isNotEmpty,
+          isLoadingMore: false,
+        ),
+      );
     } catch (_) {
       emit(state.copyWith(isLoadingMore: false));
     }
@@ -106,19 +118,25 @@ class DocumentCubit extends Cubit<DocumentState> {
     required File file,
   }) async {
     try {
-      emit(state.copyWith(isUploading: true, clearError: true, clearSuccess: true));
+      emit(
+        state.copyWith(isUploading: true, clearError: true, clearSuccess: true),
+      );
       await _documentRepository.uploadDocument(document: document, file: file);
-      emit(state.copyWith(
-        isUploading: false,
-        successMessage: 'Tải tài liệu lên thành công!',
-      ));
+      emit(
+        state.copyWith(
+          isUploading: false,
+          successMessage: 'Tải tài liệu lên thành công!',
+        ),
+      );
       await loadDocuments(refresh: true);
       return true;
     } catch (e) {
-      emit(state.copyWith(
-        isUploading: false,
-        errorMessage: 'Lỗi tải tài liệu: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(
+          isUploading: false,
+          errorMessage: 'Lỗi tải tài liệu: ${e.toString()}',
+        ),
+      );
       return false;
     }
   }
@@ -128,14 +146,19 @@ class DocumentCubit extends Cubit<DocumentState> {
     bool openAfterDownload = true,
   }) async {
     try {
-      emit(state.copyWith(
-        downloadingDocId: doc.id,
-        downloadProgress: 0.1,
-        clearError: true,
-      ));
+      emit(
+        state.copyWith(
+          downloadingDocId: doc.id,
+          downloadProgress: 0.1,
+          clearError: true,
+        ),
+      );
 
       final extension = doc.fileType.isNotEmpty ? doc.fileType : 'pdf';
-      final fileName = '${doc.code}_${doc.title}.$extension'.replaceAll(' ', '_');
+      final fileName = '${doc.code}_${doc.title}.$extension'.replaceAll(
+        ' ',
+        '_',
+      );
 
       final file = await _documentRepository.downloadDocument(
         fileUrl: doc.fileUrl,
@@ -149,11 +172,13 @@ class DocumentCubit extends Cubit<DocumentState> {
 
       await _documentRepository.incrementDownloads(doc.id);
 
-      emit(state.copyWith(
-        clearDownloadingDocId: true,
-        downloadProgress: 1.0,
-        successMessage: 'Đã tải thành công: ${doc.title}',
-      ));
+      emit(
+        state.copyWith(
+          clearDownloadingDocId: true,
+          downloadProgress: 1.0,
+          successMessage: 'Đã tải thành công: ${doc.title}',
+        ),
+      );
 
       if (openAfterDownload && file.existsSync()) {
         await OpenFilex.open(file.path);
@@ -161,10 +186,12 @@ class DocumentCubit extends Cubit<DocumentState> {
 
       return file;
     } catch (e) {
-      emit(state.copyWith(
-        clearDownloadingDocId: true,
-        errorMessage: 'Không thể tải tài liệu: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(
+          clearDownloadingDocId: true,
+          errorMessage: 'Không thể tải tài liệu: ${e.toString()}',
+        ),
+      );
       return null;
     }
   }
@@ -173,29 +200,29 @@ class DocumentCubit extends Cubit<DocumentState> {
     try {
       await _documentRepository.deleteDocument(documentId);
       final updated = state.documents.where((d) => d.id != documentId).toList();
-      emit(state.copyWith(
-        documents: updated,
-        successMessage: 'Đã xóa tài liệu thành công',
-      ));
+      emit(
+        state.copyWith(
+          documents: updated,
+          successMessage: 'Đã xóa tài liệu thành công',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        errorMessage: 'Lỗi khi xóa tài liệu: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(errorMessage: 'Lỗi khi xóa tài liệu: ${e.toString()}'),
+      );
     }
   }
 
   Future<void> submitReview(DocumentReviewEntity review) async {
     try {
       await _documentRepository.submitDocumentReview(review);
-      emit(state.copyWith(
-        successMessage: 'Cảm ơn bạn đã đánh giá tài liệu!',
-      ));
+      emit(state.copyWith(successMessage: 'Cảm ơn bạn đã đánh giá tài liệu!'));
       // Tải lại danh sách documents để cập nhật average rating mới
       loadDocuments(refresh: true);
     } catch (e) {
-      emit(state.copyWith(
-        errorMessage: 'Lỗi khi gửi đánh giá: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(errorMessage: 'Lỗi khi gửi đánh giá: ${e.toString()}'),
+      );
     }
   }
 

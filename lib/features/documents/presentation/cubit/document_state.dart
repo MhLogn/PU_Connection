@@ -60,30 +60,36 @@ class DocumentState extends Equatable {
       searchQuery: searchQuery ?? this.searchQuery,
       isUploading: isUploading ?? this.isUploading,
       uploadProgress: uploadProgress ?? this.uploadProgress,
-      downloadingDocId: clearDownloadingDocId ? null : (downloadingDocId ?? this.downloadingDocId),
+      downloadingDocId: clearDownloadingDocId
+          ? null
+          : (downloadingDocId ?? this.downloadingDocId),
       downloadProgress: downloadProgress ?? this.downloadProgress,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+      successMessage: clearSuccess
+          ? null
+          : (successMessage ?? this.successMessage),
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      lastDocument: clearLastDocument ? null : (lastDocument ?? this.lastDocument),
+      lastDocument: clearLastDocument
+          ? null
+          : (lastDocument ?? this.lastDocument),
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        documents,
-        selectedFaculty,
-        searchQuery,
-        isUploading,
-        uploadProgress,
-        downloadingDocId,
-        downloadProgress,
-        errorMessage,
-        successMessage,
-        hasMore,
-        isLoadingMore,
-        lastDocument,
-      ];
+    status,
+    documents,
+    selectedFaculty,
+    searchQuery,
+    isUploading,
+    uploadProgress,
+    downloadingDocId,
+    downloadProgress,
+    errorMessage,
+    successMessage,
+    hasMore,
+    isLoadingMore,
+    lastDocument,
+  ];
 }

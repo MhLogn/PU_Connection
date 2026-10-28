@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
@@ -13,18 +13,15 @@ class PdfViewerPage extends StatefulWidget {
   final DocumentEntity document;
   final String? localFilePath;
 
-  const PdfViewerPage({
-    super.key,
-    required this.document,
-    this.localFilePath,
-  });
+  const PdfViewerPage({super.key, required this.document, this.localFilePath});
 
   @override
   State<PdfViewerPage> createState() => _PdfViewerPageState();
 }
 
 class _PdfViewerPageState extends State<PdfViewerPage> {
-  final Completer<PDFViewController> _controller = Completer<PDFViewController>();
+  final Completer<PDFViewController> _controller =
+      Completer<PDFViewController>();
   String? _localPath;
   bool _isLoading = true;
   double _downloadProgress = 0.0;
@@ -36,7 +33,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.localFilePath != null && File(widget.localFilePath!).existsSync()) {
+    if (widget.localFilePath != null &&
+        File(widget.localFilePath!).existsSync()) {
       _localPath = widget.localFilePath;
       _isLoading = false;
     } else {
@@ -103,9 +101,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
       await OpenFilex.open(_localPath!);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.downloading),
-        ),
+        SnackBar(content: Text(AppLocalizations.of(context)!.downloading)),
       );
     }
   }
@@ -131,7 +127,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.blueContainer(context),
                     borderRadius: BorderRadius.circular(4),
@@ -148,7 +147,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
                 const SizedBox(width: 6),
                 Text(
                   widget.document.faculty,
-                  style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
               ],
             ),
@@ -166,7 +168,11 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
                 ),
                 child: Text(
                   l10n.page_indicator(_currentPage, _totalPages),
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
             ),
@@ -181,7 +187,11 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
     );
   }
 
-  Widget _buildBody(BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildBody(
+    BuildContext context,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     if (_isLoading) {
       return Center(
         child: Padding(
@@ -221,11 +231,18 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 56, color: AppTheme.coralColor(context)),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 56,
+                color: AppTheme.coralColor(context),
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.error_loading_pdf,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -293,7 +310,9 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
         ),
         if (!_isReady)
           Center(
-            child: CircularProgressIndicator(color: AppTheme.primaryColor(context)),
+            child: CircularProgressIndicator(
+              color: AppTheme.primaryColor(context),
+            ),
           ),
       ],
     );

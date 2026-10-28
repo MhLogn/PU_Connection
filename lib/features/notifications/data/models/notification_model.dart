@@ -44,11 +44,17 @@ class NotificationModel extends NotificationEntity {
       return DateTime.now();
     }
 
+    final rawContent = map['content'] as String?;
+    final rawBody = map['body'] as String?;
+    final resolvedContent = (rawContent != null && rawContent.isNotEmpty)
+        ? rawContent
+        : (rawBody ?? '');
+
     return NotificationModel(
       id: id,
       userId: map['userId'] as String? ?? '',
       title: map['title'] as String? ?? '',
-      content: map['content'] as String? ?? '',
+      content: resolvedContent,
       type: NotificationType.fromString(map['type'] as String?),
       senderName: map['senderName'] as String? ?? 'Phenikaa University',
       senderAvatar: map['senderAvatar'] as String?,

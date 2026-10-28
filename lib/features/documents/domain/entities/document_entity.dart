@@ -73,20 +73,20 @@ class DocumentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        code,
-        faculty,
-        fileUrl,
-        fileType,
-        fileSize,
-        authorId,
-        authorName,
-        authorStudentId,
-        downloads,
-        rating,
-        description,
-        originPostId,
-        createdAt,
-      ];
+    id,
+    title,
+    code,
+    faculty,
+    fileUrl,
+    fileType,
+    fileSize,
+    authorId,
+    authorName,
+    authorStudentId,
+    downloads,
+    rating,
+    description,
+    originPostId,
+    createdAt,
+  ];
 }

@@ -37,11 +37,11 @@ class AdminDashboardStats extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalStudents,
-        totalPosts,
-        totalDocuments,
-        pendingReports,
-        bannedUsersCount,
-        facultyDistribution,
-      ];
+    totalStudents,
+    totalPosts,
+    totalDocuments,
+    pendingReports,
+    bannedUsersCount,
+    facultyDistribution,
+  ];
 }

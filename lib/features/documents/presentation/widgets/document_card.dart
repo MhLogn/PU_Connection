@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/document_entity.dart';
 import '../pages/pdf_viewer_page.dart';
-import 'document_review_sheet.dart';
 
 class DocumentCard extends StatelessWidget {
   final DocumentEntity document;
@@ -26,36 +22,66 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    final isPdf = document.fileType.toLowerCase() == 'pdf';
-    final isZip = ['zip', 'rar', '7z'].contains(document.fileType.toLowerCase());
+    final ext = document.fileType.toLowerCase().trim();
+    final isPdf = ext == 'pdf';
+    final isZip = ['zip', 'rar', '7z'].contains(ext);
+    final isDoc = ['doc', 'docx', 'txt', 'rtf'].contains(ext);
+    final isSlide = ['ppt', 'pptx'].contains(ext);
+    final isSheet = ['xls', 'xlsx', 'csv'].contains(ext);
 
-    final List<Color> gradientColors = isPdf
-        ? [const Color(0xFFE53935), const Color(0xFFFF7043)]
+    final Color fileSolidColor = isPdf
+        ? const Color(0xFFEF4444)
         : isZip
-            ? [const Color(0xFFF76B1C), const Color(0xFFFFB03A)]
-            : [AppTheme.primaryColor(context), const Color(0xFF3865A8)];
+        ? AppTheme.accentColor(context)
+        : isDoc
+        ? AppTheme.primaryColor(context)
+        : isSlide
+        ? const Color(0xFFEA580C)
+        : isSheet
+        ? const Color(0xFF059669)
+        : AppTheme.primaryColor(context);
+
+    final IconData fileIcon = isPdf
+        ? Icons.picture_as_pdf_rounded
+        : isZip
+        ? Icons.folder_zip_rounded
+        : isDoc
+        ? Icons.description_rounded
+        : isSlide
+        ? Icons.slideshow_rounded
+        : isSheet
+        ? Icons.table_chart_rounded
+        : Icons.insert_drive_file_rounded;
 
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.isDark(context)
+              ? Colors.white12
+              : AppTheme.borderLight,
+          width: 0.8,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.025),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(
+              alpha: AppTheme.isDark(context) ? 0.2 : 0.02,
+            ),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             if (isPdf && document.fileUrl.isNotEmpty) {
               Navigator.push(
@@ -71,38 +97,20 @@ class DocumentCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 46,
-                      height: 46,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: gradientColors,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(13),
-                        boxShadow: [
-                          BoxShadow(
-                            color: gradientColors.first.withValues(alpha: 0.25),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: fileSolidColor,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
-                        child: Icon(
-                          isPdf
-                              ? Icons.picture_as_pdf_rounded
-                              : isZip
-                                  ? Icons.folder_zip_rounded
-                                  : Icons.description_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                        child: Icon(fileIcon, color: Colors.white, size: 22),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -113,9 +121,12 @@ class DocumentCard extends StatelessWidget {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor(context).withValues(alpha: 0.1),
+                                  color: AppTheme.blueContainer(context),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -124,21 +135,30 @@ class DocumentCard extends StatelessWidget {
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.bold,
                                     color: AppTheme.primaryColor(context),
+                                    letterSpacing: 0.2,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              if (document.originPostId != null && document.originPostId!.isNotEmpty) ...[
+                              if (document.originPostId != null &&
+                                  document.originPostId!.isNotEmpty) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.orangeContainer(context),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.dynamic_feed_rounded, size: 10, color: AppTheme.accentColor(context)),
+                                      Icon(
+                                        Icons.dynamic_feed_rounded,
+                                        size: 10.5,
+                                        color: AppTheme.accentColor(context),
+                                      ),
                                       const SizedBox(width: 3),
                                       Text(
                                         'Bảng tin',
@@ -160,7 +180,10 @@ class DocumentCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.65,
+                                    ),
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
@@ -171,51 +194,130 @@ class DocumentCard extends StatelessWidget {
                             document.title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, height: 1.3),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.5,
+                              height: 1.3,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
+                          if (document.description != null &&
+                              document.description!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              document.description!.trim(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.55,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  ext.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.75,
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Text(
                                 document.fileSize,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              const Icon(Icons.download_rounded, size: 14, color: Colors.grey),
-                              const SizedBox(width: 2),
                               Text(
-                                '${document.downloads} ${l10n.downloads_count}',
+                                '•',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              InkWell(
-                                onTap: () => _openReviewSheet(context),
-                                borderRadius: BorderRadius.circular(6),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.file_download_outlined,
+                                    size: 13.5,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        '${document.rating}',
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                                  const SizedBox(width: 2.5),
+                                  Text(
+                                    '${document.downloads} ${l10n.downloads_count}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.6,
                                       ),
-                                    ],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (document.authorName.isNotEmpty) ...[
+                                Text(
+                                  '•',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
                                   ),
                                 ),
-                              ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.person_outline_rounded,
+                                      size: 13,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2.5),
+                                    Text(
+                                      document.authorName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ],
@@ -224,12 +326,14 @@ class DocumentCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     if (isDownloading)
                       SizedBox(
-                        width: 36,
-                        height: 36,
+                        width: 38,
+                        height: 38,
                         child: Padding(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(7),
                           child: CircularProgressIndicator(
-                            value: downloadProgress > 0 ? downloadProgress : null,
+                            value: downloadProgress > 0
+                                ? downloadProgress
+                                : null,
                             strokeWidth: 2.5,
                             color: AppTheme.primaryColor(context),
                           ),
@@ -241,22 +345,27 @@ class DocumentCard extends StatelessWidget {
                         children: [
                           IconButton.filledTonal(
                             style: IconButton.styleFrom(
-                              backgroundColor: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                              backgroundColor: AppTheme.blueContainer(context),
                               foregroundColor: AppTheme.primaryColor(context),
                               padding: const EdgeInsets.all(8),
                               minimumSize: const Size(36, 36),
                             ),
                             icon: Icon(
-                              isPdf ? Icons.visibility_rounded : Icons.download_rounded,
+                              isPdf
+                                  ? Icons.menu_book_rounded
+                                  : Icons.download_rounded,
                               size: 18,
                             ),
-                            tooltip: isPdf ? l10n.pdf_viewer_title : l10n.download,
+                            tooltip: isPdf
+                                ? l10n.pdf_viewer_title
+                                : l10n.download,
                             onPressed: () {
                               if (isPdf && document.fileUrl.isNotEmpty) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => PdfViewerPage(document: document),
+                                    builder: (_) =>
+                                        PdfViewerPage(document: document),
                                   ),
                                 );
                               } else {
@@ -268,19 +377,26 @@ class DocumentCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             IconButton.filledTonal(
                               style: IconButton.styleFrom(
-                                backgroundColor: Colors.red.withValues(alpha: 0.08),
-                                foregroundColor: Colors.red.shade600,
+                                backgroundColor: AppTheme.coralColor(
+                                  context,
+                                ).withValues(alpha: 0.1),
+                                foregroundColor: AppTheme.coralColor(context),
                                 padding: const EdgeInsets.all(8),
                                 minimumSize: const Size(36, 36),
                               ),
-                              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                              ),
                               tooltip: 'Xóa tài liệu',
                               onPressed: () {
                                 showDialog(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     title: const Text('Xác nhận xóa tài liệu'),
-                                    content: Text('Bạn có chắc muốn xóa tài liệu "${document.title}"? Thao tác này không thể hoàn tác.'),
+                                    content: Text(
+                                      'Bạn có chắc muốn xóa tài liệu "${document.title}"? Thao tác này không thể hoàn tác.',
+                                    ),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(ctx),
@@ -291,8 +407,13 @@ class DocumentCard extends StatelessWidget {
                                           Navigator.pop(ctx);
                                           onDelete!();
                                         },
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-                                        child: const Text('Xóa', style: TextStyle(color: Colors.white)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.coralColor(
+                                            context,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        child: const Text('Xóa'),
                                       ),
                                     ],
                                   ),
@@ -321,25 +442,6 @@ class DocumentCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _openReviewSheet(BuildContext context) {
-    final authState = context.read<AuthCubit>().state;
-    String uid = '';
-    String name = 'Sinh viên Phenikaa';
-    String? avatar;
-    if (authState is Authenticated) {
-      uid = authState.user.uid;
-      name = authState.user.displayName;
-      avatar = authState.user.avatarUrl;
-    }
-    DocumentReviewSheet.show(
-      context,
-      document: document,
-      currentUserId: uid,
-      currentUserName: name,
-      currentUserAvatar: avatar,
     );
   }
 }

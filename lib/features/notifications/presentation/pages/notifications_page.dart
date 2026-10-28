@@ -22,8 +22,8 @@ class NotificationsPage extends StatelessWidget {
       builder: (ctx) => FractionallySizedBox(
         heightFactor: 0.88,
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: NotificationsPage(isBottomSheet: true),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: const NotificationsPage(isBottomSheet: true),
         ),
       ),
     );
@@ -141,7 +141,9 @@ class NotificationsPage extends StatelessWidget {
                     '${notif.createdAt.day.toString().padLeft(2, '0')}/${notif.createdAt.month.toString().padLeft(2, '0')}/${notif.createdAt.year} ${notif.createdAt.hour.toString().padLeft(2, '0')}:${notif.createdAt.minute.toString().padLeft(2, '0')}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                   ),
                 ],
@@ -175,9 +177,9 @@ class NotificationsPage extends StatelessWidget {
           );
           context.read<InAppNotificationsCubit>().clearMessage();
         } else if (state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.successMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.successMessage!)));
           context.read<InAppNotificationsCubit>().clearMessage();
         }
       },
@@ -193,7 +195,10 @@ class NotificationsPage extends StatelessWidget {
             backgroundColor: colorScheme.surface,
             leading: isBottomSheet
                 ? IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 28,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   )
                 : const BackButton(),
@@ -203,17 +208,23 @@ class NotificationsPage extends StatelessWidget {
                   'Thông báo',
                   style: TextStyle(
                     fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.isDark(context)
+                        ? Colors.white
+                        : AppTheme.deepBlue,
+                    letterSpacing: -0.2,
                   ),
                 ),
                 if (unreadCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.accentColor(context),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
@@ -236,7 +247,10 @@ class NotificationsPage extends StatelessWidget {
                   icon: const Icon(Icons.done_all_rounded, size: 18),
                   label: const Text(
                     'Đọc tất cả',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               const SizedBox(width: 8),
@@ -256,33 +270,34 @@ class NotificationsPage extends StatelessWidget {
 
               // Danh sách thông báo
               Expanded(
-                child: state.status == NotificationsStatus.loading &&
+                child:
+                    state.status == NotificationsStatus.loading &&
                         state.notifications.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : notifications.isEmpty
-                        ? _buildEmptyState(context, state)
-                        : ListView.separated(
-                            itemCount: notifications.length,
-                            separatorBuilder: (_, __) =>
-                                const Divider(height: 1, indent: 68),
-                            itemBuilder: (context, index) {
-                              final notif = notifications[index];
-                              return NotificationItemTile(
-                                notification: notif,
-                                onTap: () => _handleNotificationTap(context, notif),
-                                onDismissed: () {
-                                  context
-                                      .read<InAppNotificationsCubit>()
-                                      .deleteNotification(notif.id);
-                                },
-                                onMarkAsRead: () {
-                                  context
-                                      .read<InAppNotificationsCubit>()
-                                      .markAsRead(notif.id);
-                                },
-                              );
+                    ? _buildEmptyState(context, state)
+                    : ListView.separated(
+                        itemCount: notifications.length,
+                        separatorBuilder: (_, __) =>
+                            const Divider(height: 1, indent: 68),
+                        itemBuilder: (context, index) {
+                          final notif = notifications[index];
+                          return NotificationItemTile(
+                            notification: notif,
+                            onTap: () => _handleNotificationTap(context, notif),
+                            onDismissed: () {
+                              context
+                                  .read<InAppNotificationsCubit>()
+                                  .deleteNotification(notif.id);
                             },
-                          ),
+                            onMarkAsRead: () {
+                              context
+                                  .read<InAppNotificationsCubit>()
+                                  .markAsRead(notif.id);
+                            },
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -306,7 +321,9 @@ class NotificationsPage extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -332,7 +349,7 @@ class NotificationsPage extends StatelessWidget {
             Text(
               isFiltered
                   ? 'Khi có thông báo mới thuộc danh mục này, bạn sẽ nhận được tại đây.'
-                  : 'Bạn đã xem hết các thông báo từ trường Đại học Phenikaa và bạn bè.',
+                  : 'Bạn đã xem hết các thông báo từ Đại học Phenikaa và bạn bè.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,

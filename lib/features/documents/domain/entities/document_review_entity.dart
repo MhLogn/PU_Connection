@@ -45,13 +45,13 @@ class DocumentReviewEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        documentId,
-        userId,
-        userName,
-        userAvatar,
-        rating,
-        comment,
-        createdAt,
-      ];
+    id,
+    documentId,
+    userId,
+    userName,
+    userAvatar,
+    rating,
+    comment,
+    createdAt,
+  ];
 }

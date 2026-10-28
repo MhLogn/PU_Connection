@@ -42,7 +42,9 @@ class InAppNotificationsState {
     return InAppNotificationsState(
       status: status ?? this.status,
       notifications: notifications ?? this.notifications,
-      selectedFilter: selectedFilter != null ? selectedFilter() : this.selectedFilter,
+      selectedFilter: selectedFilter != null
+          ? selectedFilter()
+          : this.selectedFilter,
       errorMessage: errorMessage,
       successMessage: successMessage,
     );

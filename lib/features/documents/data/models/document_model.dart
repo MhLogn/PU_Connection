@@ -39,8 +39,9 @@ class DocumentModel extends DocumentEntity {
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : (map['createdAt'] is String
-              ? DateTime.tryParse(map['createdAt'] as String) ?? DateTime.now()
-              : DateTime.now()),
+                ? DateTime.tryParse(map['createdAt'] as String) ??
+                      DateTime.now()
+                : DateTime.now()),
     );
   }
 

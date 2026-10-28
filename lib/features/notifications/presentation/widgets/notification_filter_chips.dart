@@ -103,7 +103,10 @@ class NotificationFilterChips extends StatelessWidget {
             if (count > 0) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? activeColor
@@ -115,7 +118,9 @@ class NotificationFilterChips extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : colorScheme.onSurfaceVariant,
+                    color: isSelected
+                        ? Colors.white
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
