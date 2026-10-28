@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../auth/data/datasources/phenikaa_student_directory.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/chat_cubit.dart';
@@ -22,17 +23,6 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
   final List<Map<String, String>> _selectedMembers = [];
   String _searchQuery = '';
   bool _isLoading = false;
-
-  List<Map<String, String>> get _mockStudents => PhenikaaStudentDirectory.defaultStudents
-      .map((s) => {
-            'id': s.studentId,
-            'name': s.fullName,
-            'studentId': s.studentId,
-            'faculty': s.faculty,
-            'major': s.major,
-            'avatar': '',
-          })
-      .toList();
 
   @override
   void dispose() {
@@ -62,9 +52,31 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
       return;
     }
 
+    if (sl.isRegistered<BadWordsFilterService>()) {
+      final checkResult = sl<BadWordsFilterService>().check(
+        groupName,
+        actionLabel: 'tạo nhóm trò chuyện',
+      );
+      if (!checkResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              checkResult.suggestionMessage ??
+                  'Tên nhóm chứa từ ngữ không phù hợp với chuẩn mực văn hóa sinh viên.',
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
+
     if (_selectedMembers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ít nhất 1 thành viên cho nhóm')),
+        const SnackBar(
+          content: Text('Vui lòng chọn ít nhất 1 thành viên cho nhóm'),
+        ),
       );
       return;
     }
@@ -116,9 +128,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể tạo nhóm: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể tạo nhóm: $e')));
       }
     }
   }
@@ -171,7 +183,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -183,7 +197,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                     const SizedBox(width: 10),
                     const Text(
                       'Tạo nhóm trò chuyện',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -198,7 +215,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
             child: Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -219,7 +238,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                     size: 22,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -252,9 +274,17 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                       backgroundColor: AppTheme.primaryColor(context),
                       child: Text(
                         member['name']?.isNotEmpty == true
-                            ? member['name']!.trim().split(' ').last[0].toUpperCase()
+                            ? member['name']!
+                                  .trim()
+                                  .split(' ')
+                                  .last[0]
+                                  .toUpperCase()
                             : 'P',
-                        style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     label: Text(
@@ -272,7 +302,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide.none,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 0,
+                    ),
                   );
                 },
               ),
@@ -282,7 +315,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
             child: Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.25,
+                ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.35),
@@ -314,7 +349,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
@@ -322,25 +360,30 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection(FirebaseConstants.phenikaaStudentsCollection)
+                  .collection(FirebaseConstants.usersCollection)
                   .snapshots(),
               builder: (context, snapshot) {
-                List<Map<String, String>> students = _mockStudents;
+                List<Map<String, String>> students = [];
 
                 if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
                   final liveList = snapshot.data!.docs
                       .where((doc) => doc.id != currentUserId)
                       .map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    return {
-                      'id': doc.id,
-                      'name': data['fullName'] as String? ?? data['name'] as String? ?? 'Sinh viên Phenikaa',
-                      'studentId': data['studentId'] as String? ?? '',
-                      'faculty': data['faculty'] as String? ?? '',
-                      'major': data['major'] as String? ?? '',
-                      'avatar': data['avatarUrl'] as String? ?? '',
-                    };
-                  }).toList();
+                        final data = doc.data() as Map<String, dynamic>;
+                        return {
+                          'id': doc.id,
+                          'name':
+                              data['displayName'] as String? ??
+                              data['fullName'] as String? ??
+                              data['name'] as String? ??
+                              'Sinh viên Phenikaa',
+                          'studentId': data['studentId'] as String? ?? '',
+                          'faculty': data['faculty'] as String? ?? '',
+                          'major': data['major'] as String? ?? '',
+                          'avatar': data['avatarUrl'] as String? ?? '',
+                        };
+                      })
+                      .toList();
 
                   students = liveList;
                 }
@@ -363,11 +406,18 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_search_rounded, size: 44, color: colorScheme.outline),
+                          Icon(
+                            Icons.person_search_rounded,
+                            size: 44,
+                            color: colorScheme.outline,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             'Không tìm thấy sinh viên',
-                            style: TextStyle(color: colorScheme.outline, fontSize: 13.5),
+                            style: TextStyle(
+                              color: colorScheme.outline,
+                              fontSize: 13.5,
+                            ),
                           ),
                         ],
                       ),
@@ -376,7 +426,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   itemCount: filteredList.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 6),
                   itemBuilder: (context, index) {
@@ -385,7 +438,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                     final name = student['name'] ?? 'Sinh viên';
                     final studentId = student['studentId'] ?? '';
                     final faculty = student['faculty'] ?? '';
-                    final isSelected = _selectedMembers.any((m) => m['id'] == sId);
+                    final isSelected = _selectedMembers.any(
+                      (m) => m['id'] == sId,
+                    );
 
                     final initials = name.isNotEmpty
                         ? name.trim().split(' ').last[0].toUpperCase()
@@ -394,13 +449,19 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                     return Container(
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.primaryColor(context).withValues(alpha: 0.06)
+                            ? AppTheme.primaryColor(
+                                context,
+                              ).withValues(alpha: 0.06)
                             : colorScheme.surface,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isSelected
-                              ? AppTheme.primaryColor(context).withValues(alpha: 0.5)
-                              : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                              ? AppTheme.primaryColor(
+                                  context,
+                                ).withValues(alpha: 0.5)
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.3,
+                                ),
                           width: isSelected ? 1.5 : 1.0,
                         ),
                       ),
@@ -409,7 +470,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                         onChanged: (_) => _toggleMember(student),
                         activeColor: AppTheme.primaryColor(context),
                         checkColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         secondary: CircleAvatar(
                           radius: 19,
                           backgroundColor: isSelected
@@ -418,7 +481,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                           child: Text(
                             initials,
                             style: TextStyle(
-                              color: isSelected ? Colors.white : AppTheme.primaryColor(context),
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTheme.primaryColor(context),
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
@@ -427,7 +492,9 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                         title: Text(
                           name,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
@@ -451,21 +518,30 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
             child: SizedBox(
               height: 48,
               child: ElevatedButton(
-                onPressed: (_isLoading || _nameController.text.trim().isEmpty || _selectedMembers.isEmpty)
+                onPressed:
+                    (_isLoading ||
+                        _nameController.text.trim().isEmpty ||
+                        _selectedMembers.isEmpty)
                     ? null
                     : _createGroup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor(context),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  disabledBackgroundColor: colorScheme.outlineVariant
+                      .withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 2,
                 ),
                 child: _isLoading
                     ? const SizedBox(
                         width: 22,
                         height: 22,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -476,7 +552,10 @@ class _CreateGroupBottomSheetState extends State<CreateGroupBottomSheet> {
                             _selectedMembers.isEmpty
                                 ? 'Tạo nhóm'
                                 : 'Tạo nhóm (${_selectedMembers.length} thành viên)',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),

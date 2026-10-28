@@ -55,8 +55,8 @@ class GroupInfoBottomSheet extends StatefulWidget {
 
   String get effectiveConversationId =>
       (conversationId != null && conversationId!.isNotEmpty)
-          ? conversationId!
-          : (conversation?.id ?? '');
+      ? conversationId!
+      : (conversation?.id ?? '');
 
   @override
   State<GroupInfoBottomSheet> createState() => _GroupInfoBottomSheetState();
@@ -101,11 +101,19 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
           .get();
       if (userDoc.exists && userDoc.data() != null) {
         final data = userDoc.data()!;
-        name = data['displayName'] as String? ?? data['fullName'] as String? ?? name;
-        studentId = data['studentId'] as String? ?? data['username'] as String? ?? studentId;
+        name =
+            data['displayName'] as String? ??
+            data['fullName'] as String? ??
+            name;
+        studentId =
+            data['studentId'] as String? ??
+            data['username'] as String? ??
+            studentId;
         faculty = data['faculty'] as String? ?? faculty;
         major = data['major'] as String? ?? major;
-        cohort = (data['cohort'] is num) ? (data['cohort'] as num).toInt() : cohort;
+        cohort = (data['cohort'] is num)
+            ? (data['cohort'] as num).toInt()
+            : cohort;
         email = data['email'] as String? ?? email;
         avatarUrl = data['avatarUrl'] as String? ?? avatarUrl;
       }
@@ -124,7 +132,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
           studentId = data['studentId'] as String? ?? studentId;
           faculty = data['faculty'] as String? ?? faculty;
           major = data['major'] as String? ?? major;
-          cohort = (data['cohort'] is num) ? (data['cohort'] as num).toInt() : cohort;
+          cohort = (data['cohort'] is num)
+              ? (data['cohort'] as num).toInt()
+              : cohort;
           email = data['email'] as String? ?? email;
         }
       } catch (_) {}
@@ -181,7 +191,12 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (detailCtx) => Container(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + MediaQuery.of(detailCtx).padding.bottom),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          24 + MediaQuery.of(detailCtx).padding.bottom,
+        ),
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -212,14 +227,23 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor(context).withValues(alpha: 0.1),
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.badge_rounded, size: 16, color: AppTheme.primaryColor(context)),
+                      Icon(
+                        Icons.badge_rounded,
+                        size: 16,
+                        color: AppTheme.primaryColor(context),
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'THẺ THÀNH VIÊN NHÓM',
@@ -268,7 +292,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981),
                         shape: BoxShape.circle,
-                        border: Border.all(color: colorScheme.surface, width: 2.5),
+                        border: Border.all(
+                          color: colorScheme.surface,
+                          width: 2.5,
+                        ),
                       ),
                     ),
                   ),
@@ -283,7 +310,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                   Flexible(
                     child: Text(
                       member.name,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -304,16 +334,25 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                 children: [
                   if (member.isAdmin)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2.5,
+                      ),
                       margin: const EdgeInsets.only(right: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentColor(context).withValues(alpha: 0.15),
+                        color: AppTheme.accentColor(
+                          context,
+                        ).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.stars_rounded, size: 13, color: AppTheme.accentColor(context)),
+                          Icon(
+                            Icons.stars_rounded,
+                            size: 13,
+                            color: AppTheme.accentColor(context),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Trưởng nhóm',
@@ -328,9 +367,14 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                     ),
                   if (member.isMe)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2.5,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                        color: AppTheme.primaryColor(
+                          context,
+                        ).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -349,7 +393,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.25,
+                ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -361,7 +407,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                     context,
                     icon: Icons.badge_outlined,
                     label: 'MSSV',
-                    value: member.studentId.isNotEmpty ? member.studentId : 'Chưa cập nhật',
+                    value: member.studentId.isNotEmpty
+                        ? member.studentId
+                        : 'Chưa cập nhật',
                     canCopy: member.studentId.isNotEmpty,
                   ),
                   const Divider(height: 16),
@@ -417,7 +465,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                     final currentFac = authState.user.faculty;
 
                     try {
-                      final convId = await context.read<ChatCubit>().startDirectChat(
+                      final convId = await context
+                          .read<ChatCubit>()
+                          .startDirectChat(
                             currentUserId: currentUid,
                             currentUserName: currentName,
                             currentUserAvatar: currentAvatar,
@@ -446,17 +496,23 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Không thể mở tin nhắn 1-1: $e')),
+                          SnackBar(
+                            content: Text('Không thể mở tin nhắn 1-1: $e'),
+                          ),
                         );
                       }
                     }
                   },
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                  label: Text('Nhắn tin riêng với ${member.name.split(' ').last}'),
+                  label: Text(
+                    'Nhắn tin riêng với ${member.name.split(' ').last}',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor(context),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -483,8 +539,14 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                   label: const Text('Xem hồ sơ cá nhân đầy đủ'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primaryColor(context),
-                    side: BorderSide(color: AppTheme.primaryColor(context).withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(
+                      color: AppTheme.primaryColor(
+                        context,
+                      ).withValues(alpha: 0.5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -512,7 +574,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primaryColor(context),
                     side: BorderSide(color: AppTheme.primaryColor(context)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -575,7 +639,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
     );
   }
 
-  Future<void> _confirmLeaveGroup(BuildContext context, String groupName) async {
+  Future<void> _confirmLeaveGroup(
+    BuildContext context,
+    String groupName,
+  ) async {
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) return;
     final currentUserId = authState.user.uid;
@@ -638,14 +705,16 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
     return StreamBuilder<DocumentSnapshot>(
       stream: convId.isNotEmpty
           ? FirebaseFirestore.instance
-              .collection(FirebaseConstants.chatsCollection)
-              .doc(convId)
-              .snapshots()
+                .collection(FirebaseConstants.chatsCollection)
+                .doc(convId)
+                .snapshots()
           : null,
       builder: (context, snapshot) {
         ConversationEntity conv;
 
-        if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
+        if (snapshot.hasData &&
+            snapshot.data != null &&
+            snapshot.data!.exists) {
           conv = ConversationModel.fromFirestore(snapshot.data!);
         } else if (widget.conversation != null) {
           conv = widget.conversation!;
@@ -653,7 +722,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
           conv = ConversationEntity(
             id: convId.isNotEmpty ? convId : 'group_chat',
             isGroup: true,
-            groupName: widget.fallbackGroupName.isNotEmpty ? widget.fallbackGroupName : 'Nhóm trò chuyện',
+            groupName: widget.fallbackGroupName.isNotEmpty
+                ? widget.fallbackGroupName
+                : 'Nhóm trò chuyện',
             participantIds: widget.fallbackParticipantIds,
             participantNames: const {},
           );
@@ -661,7 +732,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
 
         final groupName = conv.groupName.isNotEmpty
             ? conv.groupName
-            : (widget.fallbackGroupName.isNotEmpty ? widget.fallbackGroupName : 'Nhóm trò chuyện');
+            : (widget.fallbackGroupName.isNotEmpty
+                  ? widget.fallbackGroupName
+                  : 'Nhóm trò chuyện');
 
         final groupInitial = groupName.isNotEmpty
             ? groupName.trim()[0].toUpperCase()
@@ -701,7 +774,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -710,7 +786,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                            color: AppTheme.primaryColor(
+                              context,
+                            ).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -722,7 +800,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                         const SizedBox(width: 8),
                         const Text(
                           'Thông tin nhóm',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -753,7 +834,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   groupName,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -761,7 +845,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
@@ -780,7 +867,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: colorScheme.outlineVariant.withValues(alpha: 0.35),
@@ -812,7 +901,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
                       isDense: true,
                     ),
                   ),
@@ -843,13 +935,18 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
               ),
               Expanded(
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   itemCount: memberIds.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 6),
                   itemBuilder: (context, index) {
                     final mId = memberIds[index];
-                    final fallbackName = conv.participantNames[mId] ?? 'Sinh viên Phenikaa';
-                    final fallbackFaculty = conv.participantFaculties[mId] ?? '';
+                    final fallbackName =
+                        conv.participantNames[mId] ?? 'Sinh viên Phenikaa';
+                    final fallbackFaculty =
+                        conv.participantFaculties[mId] ?? '';
                     final fallbackAvatar = conv.participantAvatars[mId] ?? '';
 
                     return FutureBuilder<GroupMember>(
@@ -862,38 +959,58 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                         currentUserId: currentUserId,
                       ),
                       builder: (context, memberSnap) {
-                        final member = memberSnap.data ??
+                        final member =
+                            memberSnap.data ??
                             GroupMember(
                               id: mId,
                               name: fallbackName,
                               faculty: fallbackFaculty,
                               isAdmin: adminId.isNotEmpty && adminId == mId,
-                              isMe: currentUserId.isNotEmpty && currentUserId == mId,
+                              isMe:
+                                  currentUserId.isNotEmpty &&
+                                  currentUserId == mId,
                             );
 
                         if (_searchQuery.isNotEmpty) {
-                          final matchName = member.name.toLowerCase().contains(_searchQuery);
-                          final matchId = member.studentId.toLowerCase().contains(_searchQuery);
-                          final matchFac = member.faculty.toLowerCase().contains(_searchQuery);
+                          final matchName = member.name.toLowerCase().contains(
+                            _searchQuery,
+                          );
+                          final matchId = member.studentId
+                              .toLowerCase()
+                              .contains(_searchQuery);
+                          final matchFac = member.faculty
+                              .toLowerCase()
+                              .contains(_searchQuery);
                           if (!matchName && !matchId && !matchFac) {
                             return const SizedBox.shrink();
                           }
                         }
 
                         final initials = member.name.isNotEmpty
-                            ? member.name.trim().split(' ').last[0].toUpperCase()
+                            ? member.name
+                                  .trim()
+                                  .split(' ')
+                                  .last[0]
+                                  .toUpperCase()
                             : 'P';
 
                         return Container(
                           decoration: BoxDecoration(
                             color: member.isMe
-                                ? AppTheme.primaryColor(context).withValues(alpha: 0.05)
-                                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                                ? AppTheme.primaryColor(
+                                    context,
+                                  ).withValues(alpha: 0.05)
+                                : colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: member.isMe
-                                  ? AppTheme.primaryColor(context).withValues(alpha: 0.3)
-                                  : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                  ? AppTheme.primaryColor(
+                                      context,
+                                    ).withValues(alpha: 0.3)
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: 0.3,
+                                    ),
                             ),
                           ),
                           child: Material(
@@ -903,7 +1020,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                               borderRadius: BorderRadius.circular(14),
                               onTap: () => _showMemberDetail(context, member),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 child: Row(
                                   children: [
                                     Stack(
@@ -911,9 +1031,12 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                         CircleAvatar(
                                           radius: 20,
                                           backgroundColor: member.isAdmin
-                                              ? AppTheme.accentColor(context).withValues(alpha: 0.2)
+                                              ? AppTheme.accentColor(
+                                                  context,
+                                                ).withValues(alpha: 0.2)
                                               : AppTheme.blueContainer(context),
-                                          backgroundImage: member.avatarUrl.isNotEmpty
+                                          backgroundImage:
+                                              member.avatarUrl.isNotEmpty
                                               ? NetworkImage(member.avatarUrl)
                                               : null,
                                           child: member.avatarUrl.isEmpty
@@ -921,8 +1044,12 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                                   initials,
                                                   style: TextStyle(
                                                     color: member.isAdmin
-                                                        ? AppTheme.accentColor(context)
-                                                        : AppTheme.primaryColor(context),
+                                                        ? AppTheme.accentColor(
+                                                            context,
+                                                          )
+                                                        : AppTheme.primaryColor(
+                                                            context,
+                                                          ),
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 13,
                                                   ),
@@ -938,7 +1065,10 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF10B981),
                                               shape: BoxShape.circle,
-                                              border: Border.all(color: colorScheme.surface, width: 1.5),
+                                              border: Border.all(
+                                                color: colorScheme.surface,
+                                                width: 1.5,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -947,36 +1077,51 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               Flexible(
                                                 child: Text(
-                                                  member.isMe ? '${member.name} (Bạn)' : member.name,
+                                                  member.isMe
+                                                      ? '${member.name} (Bạn)'
+                                                      : member.name,
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 13.5,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                               if (member.isAdmin) ...[
                                                 const SizedBox(width: 6),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 6, vertical: 1.5),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 1.5,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    color: AppTheme.accentColor(context)
-                                                        .withValues(alpha: 0.15),
-                                                    borderRadius: BorderRadius.circular(6),
+                                                    color: AppTheme.accentColor(
+                                                      context,
+                                                    ).withValues(alpha: 0.15),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     'Trưởng nhóm',
                                                     style: TextStyle(
                                                       fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: AppTheme.accentColor(context),
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          AppTheme.accentColor(
+                                                            context,
+                                                          ),
                                                     ),
                                                   ),
                                                 ),
@@ -988,11 +1133,12 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                             member.studentId.isNotEmpty
                                                 ? 'MSSV: ${member.studentId} • ${member.faculty}'
                                                 : (member.faculty.isNotEmpty
-                                                    ? member.faculty
-                                                    : 'Sinh viên Phenikaa'),
+                                                      ? member.faculty
+                                                      : 'Sinh viên Phenikaa'),
                                             style: TextStyle(
                                               fontSize: 11.5,
-                                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                              color: colorScheme.onSurface
+                                                  .withValues(alpha: 0.6),
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -1002,7 +1148,9 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                                     Icon(
                                       Icons.chevron_right_rounded,
                                       size: 18,
-                                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.4,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1022,14 +1170,23 @@ class _GroupInfoBottomSheetState extends State<GroupInfoBottomSheet> {
                   height: 44,
                   child: OutlinedButton.icon(
                     onPressed: () => _confirmLeaveGroup(context, groupName),
-                    icon: const Icon(Icons.exit_to_app_rounded, color: Colors.redAccent, size: 18),
+                    icon: const Icon(
+                      Icons.exit_to_app_rounded,
+                      color: Colors.redAccent,
+                      size: 18,
+                    ),
                     label: const Text(
                       'Rời khỏi nhóm trò chuyện',
-                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.redAccent),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),

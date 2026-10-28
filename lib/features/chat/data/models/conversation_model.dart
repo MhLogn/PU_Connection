@@ -35,7 +35,9 @@ class ConversationModel extends ConversationEntity {
 
     Map<String, int> parseIntMap(dynamic val) {
       if (val is Map) {
-        return val.map((k, v) => MapEntry(k.toString(), (v is num) ? v.toInt() : 0));
+        return val.map(
+          (k, v) => MapEntry(k.toString(), (v is num) ? v.toInt() : 0),
+        );
       }
       return {};
     }
@@ -73,7 +75,9 @@ class ConversationModel extends ConversationEntity {
       'participantFaculties': participantFaculties,
       'lastMessage': lastMessage,
       'lastMessageSenderId': lastMessageSenderId,
-      'lastMessageAt': lastMessageAt != null ? Timestamp.fromDate(lastMessageAt!) : FieldValue.serverTimestamp(),
+      'lastMessageAt': lastMessageAt != null
+          ? Timestamp.fromDate(lastMessageAt!)
+          : FieldValue.serverTimestamp(),
       'unreadCounts': unreadCounts,
       'isGroup': isGroup,
       'groupName': groupName,

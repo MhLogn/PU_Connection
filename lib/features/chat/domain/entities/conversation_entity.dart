@@ -32,7 +32,10 @@ class ConversationEntity extends Equatable {
   });
 
   String getOtherParticipantId(String currentUserId) {
-    return participantIds.firstWhere((id) => id != currentUserId, orElse: () => '');
+    return participantIds.firstWhere(
+      (id) => id != currentUserId,
+      orElse: () => '',
+    );
   }
 
   String getOtherParticipantName(String currentUserId) {
@@ -109,18 +112,18 @@ class ConversationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        participantIds,
-        participantNames,
-        participantAvatars,
-        participantFaculties,
-        lastMessage,
-        lastMessageSenderId,
-        lastMessageAt,
-        unreadCounts,
-        isGroup,
-        groupName,
-        groupAvatar,
-        adminId,
-      ];
+    id,
+    participantIds,
+    participantNames,
+    participantAvatars,
+    participantFaculties,
+    lastMessage,
+    lastMessageSenderId,
+    lastMessageAt,
+    unreadCounts,
+    isGroup,
+    groupName,
+    groupAvatar,
+    adminId,
+  ];
 }

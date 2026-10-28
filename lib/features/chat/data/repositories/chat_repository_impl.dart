@@ -10,25 +10,34 @@ class ChatRepositoryImpl implements ChatRepository {
   final FirebaseFirestore _firestore;
 
   ChatRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
-  Stream<List<ConversationEntity>> getConversationsStream(String currentUserId) {
+  Stream<List<ConversationEntity>> getConversationsStream(
+    String currentUserId,
+  ) {
     return _firestore
         .collection(FirebaseConstants.chatsCollection)
         .where('participantIds', arrayContains: currentUserId)
         .snapshots()
         .map((snapshot) {
-      final list = snapshot.docs
-          .map((doc) => ConversationModel.fromFirestore(doc))
-          .toList();
-      list.sort((a, b) {
-        final timeA = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final timeB = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return timeB.compareTo(timeA);
-      });
-      return list;
-    });
+          final list = snapshot.docs
+              .where((doc) {
+                final data = doc.data();
+                final deletedFor = data['deletedFor'] as List<dynamic>?;
+                return deletedFor == null || !deletedFor.contains(currentUserId);
+              })
+              .map((doc) => ConversationModel.fromFirestore(doc))
+              .toList();
+          list.sort((a, b) {
+            final timeA =
+                a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final timeB =
+                b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return timeB.compareTo(timeA);
+          });
+          return list;
+        });
   }
 
   @override
@@ -40,10 +49,10 @@ class ChatRepositoryImpl implements ChatRepository {
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => MessageModel.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => MessageModel.fromFirestore(doc))
+              .toList();
+        });
   }
 
   @override
@@ -74,10 +83,12 @@ class ChatRepositoryImpl implements ChatRepository {
       createdAt: message.createdAt,
       isRead: false,
       isDelivered: true,
+      readBy: [message.senderId],
     );
 
-    final otherParticipants =
-        participantIds.where((id) => id != message.senderId).toList();
+    final otherParticipants = participantIds
+        .where((id) => id != message.senderId)
+        .toList();
 
     String displayLastMessage = message.content;
     if (displayLastMessage.isEmpty) {
@@ -93,6 +104,7 @@ class ChatRepositoryImpl implements ChatRepository {
       'lastMessageSenderId': message.senderId,
       'lastMessageAt': FieldValue.serverTimestamp(),
       'typingUsers.${message.senderId}': false,
+      'deletedFor': FieldValue.arrayRemove(participantIds),
     };
 
     for (final otherId in otherParticipants) {
@@ -143,10 +155,7 @@ class ChatRepositoryImpl implements ChatRepository {
         'lastMessage': '',
         'lastMessageSenderId': '',
         'lastMessageAt': FieldValue.serverTimestamp(),
-        'unreadCounts': {
-          currentUserId: 0,
-          otherUserId: 0,
-        },
+        'unreadCounts': {currentUserId: 0, otherUserId: 0},
       });
     } else {
       await convDoc.set({
@@ -174,6 +183,69 @@ class ChatRepositoryImpl implements ChatRepository {
     await convDoc.set({
       'unreadCounts.$currentUserId': 0,
     }, SetOptions(merge: true));
+
+    // Cập nhật trạng thái isRead và readBy cho các tin nhắn được gửi từ người khác
+    try {
+      final chatSnap = await convDoc.get();
+      final isGroup = chatSnap.data()?['isGroup'] == true;
+      final participantIds = List<String>.from(
+        chatSnap.data()?['participantIds'] ?? [],
+      );
+
+      final unreadMessages = await convDoc
+          .collection(FirebaseConstants.messagesSubcollection)
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      if (unreadMessages.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in unreadMessages.docs) {
+          final data = doc.data();
+          final senderId = data['senderId'] as String? ?? '';
+          if (senderId != currentUserId) {
+            final List<dynamic> existingReadBy = List.from(data['readBy'] ?? []);
+            final readSet = existingReadBy.map((e) => e.toString()).toSet();
+            readSet.add(currentUserId);
+
+            final Map<String, dynamic> updateFields = {
+              'readBy': FieldValue.arrayUnion([currentUserId]),
+            };
+
+            // Trong chat 1-1, người nhận đọc thì isRead = true
+            // Trong chat nhóm, isRead = true khi toàn bộ thành viên khác ngoài người gửi đã đọc
+            if (!isGroup) {
+              updateFields['isRead'] = true;
+            } else {
+              final otherParticipants =
+                  participantIds.where((id) => id != senderId).toSet();
+              if (otherParticipants.isNotEmpty &&
+                  otherParticipants.every((id) => readSet.contains(id))) {
+                updateFields['isRead'] = true;
+              }
+            }
+
+            batch.update(doc.reference, updateFields);
+          }
+        }
+        await batch.commit();
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> deleteConversationForUser({
+    required String conversationId,
+    required String userId,
+  }) async {
+    try {
+      final convDoc = _firestore
+          .collection(FirebaseConstants.chatsCollection)
+          .doc(conversationId);
+      await convDoc.update({
+        'deletedFor': FieldValue.arrayUnion([userId]),
+        'unreadCounts.$userId': 0,
+      });
+    } catch (_) {}
   }
 
   @override
@@ -289,9 +361,7 @@ class ChatRepositoryImpl implements ChatRepository {
           .collection(FirebaseConstants.chatsCollection)
           .doc(conversationId);
       await convRef.set({
-        'typingUsers': {
-          userId: isTyping,
-        },
+        'typingUsers': {userId: isTyping},
       }, SetOptions(merge: true));
     } catch (_) {}
   }
@@ -303,11 +373,11 @@ class ChatRepositoryImpl implements ChatRepository {
         .doc(conversationId)
         .snapshots()
         .map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) return {};
-      final data = snapshot.data()!;
-      final typingMap = data['typingUsers'] as Map<String, dynamic>?;
-      if (typingMap == null) return {};
-      return typingMap.map((k, v) => MapEntry(k, v == true));
-    });
+          if (!snapshot.exists || snapshot.data() == null) return {};
+          final data = snapshot.data()!;
+          final typingMap = data['typingUsers'] as Map<String, dynamic>?;
+          if (typingMap == null) return {};
+          return typingMap.map((k, v) => MapEntry(k, v == true));
+        });
   }
 }

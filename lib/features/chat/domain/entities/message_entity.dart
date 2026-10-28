@@ -14,6 +14,7 @@ class MessageEntity extends Equatable {
   final DateTime createdAt;
   final bool isRead;
   final bool isDelivered;
+  final List<String> readBy;
 
   const MessageEntity({
     required this.messageId,
@@ -29,6 +30,7 @@ class MessageEntity extends Equatable {
     required this.createdAt,
     this.isRead = false,
     this.isDelivered = true,
+    this.readBy = const [],
   });
 
   MessageEntity copyWith({
@@ -45,6 +47,7 @@ class MessageEntity extends Equatable {
     DateTime? createdAt,
     bool? isRead,
     bool? isDelivered,
+    List<String>? readBy,
   }) {
     return MessageEntity(
       messageId: messageId ?? this.messageId,
@@ -60,23 +63,25 @@ class MessageEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
       isDelivered: isDelivered ?? this.isDelivered,
+      readBy: readBy ?? this.readBy,
     );
   }
 
   @override
   List<Object?> get props => [
-        messageId,
-        senderId,
-        senderName,
-        senderAvatar,
-        content,
-        imageUrl,
-        fileUrl,
-        fileName,
-        fileType,
-        fileSize,
-        createdAt,
-        isRead,
-        isDelivered,
-      ];
+    messageId,
+    senderId,
+    senderName,
+    senderAvatar,
+    content,
+    imageUrl,
+    fileUrl,
+    fileName,
+    fileType,
+    fileSize,
+    createdAt,
+    isRead,
+    isDelivered,
+    readBy,
+  ];
 }

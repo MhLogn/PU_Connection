@@ -34,10 +34,7 @@ class ChatMessageBubble extends StatelessWidget {
               maxScale: 4.0,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.network(imageUrl, fit: BoxFit.contain),
               ),
             ),
             IconButton(
@@ -58,7 +55,8 @@ class ChatMessageBubble extends StatelessWidget {
     if (fileUrl == null || fileUrl.isEmpty) return;
 
     final fileName = message.fileName ?? 'document';
-    final isPdf = fileName.toLowerCase().endsWith('.pdf') ||
+    final isPdf =
+        fileName.toLowerCase().endsWith('.pdf') ||
         (message.fileType != null && message.fileType!.toLowerCase() == 'pdf');
 
     if (isPdf) {
@@ -78,9 +76,7 @@ class ChatMessageBubble extends StatelessWidget {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => PdfViewerPage(document: doc),
-        ),
+        MaterialPageRoute(builder: (_) => PdfViewerPage(document: doc)),
       );
     } else {
       // Download to cache and open via open_filex
@@ -105,9 +101,7 @@ class ChatMessageBubble extends StatelessWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          messenger.showSnackBar(
-            SnackBar(content: Text('Lỗi khi mở tệp: $e')),
-          );
+          messenger.showSnackBar(SnackBar(content: Text('Lỗi khi mở tệp: $e')));
         }
       }
     }
@@ -175,7 +169,9 @@ class ChatMessageBubble extends StatelessWidget {
     ColorScheme colorScheme,
   ) {
     final fileName = message.fileName ?? 'Tài liệu đính kèm';
-    final ext = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : 'FILE';
+    final ext = fileName.contains('.')
+        ? fileName.split('.').last.toUpperCase()
+        : 'FILE';
     final isPdf = ext == 'PDF';
     final isDoc = ext == 'DOC' || ext == 'DOCX';
     final isXls = ext == 'XLS' || ext == 'XLSX';
@@ -262,7 +258,11 @@ class ChatMessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildBubble(BuildContext context, bool isDark, ColorScheme colorScheme) {
+  Widget _buildBubble(
+    BuildContext context,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
     final timeStr = DateFormat('HH:mm').format(message.createdAt);
 
     return ConstrainedBox(
@@ -276,13 +276,19 @@ class ChatMessageBubble extends StatelessWidget {
           color: isMe
               ? null
               : (isDark
-                  ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-                  : const Color(0xFFF1F5F9)),
+                    ? colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      )
+                    : const Color(0xFFF1F5F9)),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
-            bottomLeft: isMe ? const Radius.circular(18) : const Radius.circular(4),
-            bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(18),
+            bottomLeft: isMe
+                ? const Radius.circular(18)
+                : const Radius.circular(4),
+            bottomRight: isMe
+                ? const Radius.circular(4)
+                : const Radius.circular(18),
           ),
           boxShadow: [
             BoxShadow(
@@ -293,7 +299,9 @@ class ChatMessageBubble extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             if (message.imageUrl != null && message.imageUrl!.isNotEmpty) ...[
               GestureDetector(
@@ -356,15 +364,31 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 4),
-                  Tooltip(
-                    message: message.isRead ? 'Đã xem' : 'Đã gửi',
-                    child: Icon(
-                      Icons.done_all_rounded,
-                      size: 14,
-                      color: message.isRead
-                          ? const Color(0xFF38BDF8) // Cyan sáng khi đã xem
-                          : Colors.white60,        // Trắng mờ khi đã gửi
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final hasBeenRead = message.isRead ||
+                          message.readBy
+                              .where((id) => id != message.senderId)
+                              .isNotEmpty;
+                      final readersCount = message.readBy
+                          .where((id) => id != message.senderId)
+                          .length;
+                      final tooltipText = message.isRead
+                          ? 'Đã xem'
+                          : (readersCount > 0
+                              ? 'Đã xem ($readersCount)'
+                              : 'Đã gửi');
+                      return Tooltip(
+                        message: tooltipText,
+                        child: Icon(
+                          Icons.done_all_rounded,
+                          size: 14,
+                          color: hasBeenRead
+                              ? const Color(0xFF22C55E) // Xanh lục sáng khi đã xem (Seen)
+                              : Colors.white60, // Trắng mờ khi đã gửi
+                        ),
+                      );
+                    },
                   ),
                 ],
               ],

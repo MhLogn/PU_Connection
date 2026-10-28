@@ -74,13 +74,24 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor(context).withValues(alpha: 0.12),
+                    color: AppTheme.primaryColor(
+                      context,
+                    ).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.person_add_rounded, color: AppTheme.primaryColor(context)),
+                  child: Icon(
+                    Icons.person_add_rounded,
+                    color: AppTheme.primaryColor(context),
+                  ),
                 ),
-                title: const Text('Nhắn tin trực tiếp (1-1)', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Tìm kiếm và nhắn tin cho bạn bè, sinh viên Phenikaa', style: TextStyle(fontSize: 12)),
+                title: const Text(
+                  'Nhắn tin trực tiếp (1-1)',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Tìm kiếm và nhắn tin cho bạn bè, sinh viên Phenikaa',
+                  style: TextStyle(fontSize: 12),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _openDirectChatModal();
@@ -90,13 +101,24 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentColor(context).withValues(alpha: 0.15),
+                    color: AppTheme.accentColor(
+                      context,
+                    ).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.groups_rounded, color: AppTheme.accentColor(context)),
+                  child: Icon(
+                    Icons.groups_rounded,
+                    color: AppTheme.accentColor(context),
+                  ),
                 ),
-                title: const Text('Tạo nhóm trò chuyện', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Tạo nhóm học tập, đồ án hoặc sinh hoạt CLB', style: TextStyle(fontSize: 12)),
+                title: const Text(
+                  'Tạo nhóm trò chuyện',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Tạo nhóm học tập, đồ án hoặc sinh hoạt CLB',
+                  style: TextStyle(fontSize: 12),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _openCreateGroupModal();
@@ -139,9 +161,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Tin nhắn',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: AppTheme.isDark(context) ? Colors.white : AppTheme.deepBlue,
+            letterSpacing: -0.2,
+          ),
         ),
         actions: [
           IconButton(
@@ -156,15 +183,20 @@ class _ConversationsPageState extends State<ConversationsPage> {
         backgroundColor: AppTheme.accentColor(context),
         foregroundColor: Colors.white,
         tooltip: 'Soạn tin nhắn mới',
-        child: const Icon(Icons.add_comment_rounded, size: 24),
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: const Icon(Icons.add_comment_rounded, size: 22),
       ),
       body: BlocBuilder<ChatCubit, ChatState>(
         builder: (context, state) {
           final conversations = state.conversations.where((conv) {
             if (_searchQuery.isEmpty) return true;
-            final displayName = conv.getDisplayName(currentUserId).toLowerCase();
+            final displayName = conv
+                .getDisplayName(currentUserId)
+                .toLowerCase();
             final lastMsg = conv.lastMessage.toLowerCase();
-            return displayName.contains(_searchQuery) || lastMsg.contains(_searchQuery);
+            return displayName.contains(_searchQuery) ||
+                lastMsg.contains(_searchQuery);
           }).toList();
 
           return Column(
@@ -174,15 +206,18 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                      color: isDark ? Colors.white12 : AppTheme.borderLight,
+                      width: 0.8,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.2 : 0.02,
+                        ),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
@@ -215,7 +250,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
                           : null,
                       filled: false,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -280,7 +318,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 _searchQuery.isNotEmpty
                     ? 'Không tìm thấy cuộc trò chuyện nào'
                     : 'Chưa có cuộc trò chuyện nào',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -301,8 +342,13 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor(context),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],
@@ -331,8 +377,8 @@ class _ConversationsPageState extends State<ConversationsPage> {
 
         final initials = displayName.isNotEmpty
             ? (isGroup
-                ? displayName.trim()[0].toUpperCase()
-                : displayName.trim().split(' ').last[0].toUpperCase())
+                  ? displayName.trim()[0].toUpperCase()
+                  : displayName.trim().split(' ').last[0].toUpperCase())
             : (isGroup ? 'N' : 'P');
 
         final isMeLastSender = conv.lastMessageSenderId == currentUserId;
@@ -356,26 +402,26 @@ class _ConversationsPageState extends State<ConversationsPage> {
         return Container(
           decoration: BoxDecoration(
             color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: hasUnread
-                  ? AppTheme.accentColor(context).withValues(alpha: 0.4)
-                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
-              width: hasUnread ? 1.5 : 1.0,
+                  ? AppTheme.accentColor(context).withValues(alpha: 0.5)
+                  : (isDark ? Colors.white12 : AppTheme.borderLight),
+              width: hasUnread ? 1.2 : 0.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.025),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                blurRadius: 6,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               onTap: () {
                 Navigator.push(
                   context,
@@ -393,8 +439,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
                   ),
                 );
               },
+              onLongPress: () {
+                _showConversationActions(context, conv, currentUserId);
+              },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Stack(
@@ -405,7 +457,11 @@ class _ConversationsPageState extends State<ConversationsPage> {
                               ? AppTheme.primaryColor(context)
                               : AppTheme.blueContainer(context),
                           child: isGroup
-                              ? const Icon(Icons.groups_rounded, color: Colors.white, size: 24)
+                              ? const Icon(
+                                  Icons.groups_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
                               : Text(
                                   initials,
                                   style: TextStyle(
@@ -425,12 +481,20 @@ class _ConversationsPageState extends State<ConversationsPage> {
                               if (!userSnap.hasData || !userSnap.data!.exists) {
                                 return const SizedBox.shrink();
                               }
-                              final data = userSnap.data!.data() as Map<String, dynamic>?;
-                              final rawOnline = data?['isOnline'] as bool? ?? false;
-                              final lastActiveTs = data?['lastActive'] as Timestamp?;
+                              final data =
+                                  userSnap.data!.data()
+                                      as Map<String, dynamic>?;
+                              final rawOnline =
+                                  data?['isOnline'] as bool? ?? false;
+                              final lastActiveTs =
+                                  data?['lastActive'] as Timestamp?;
                               final lastActive = lastActiveTs?.toDate();
-                              final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
-                              final isOnline = rawOnline && isRecent;
+                              final isOnline = rawOnline &&
+                                  lastActive != null &&
+                                  DateTime.now()
+                                          .difference(lastActive)
+                                          .inMinutes <=
+                                      5;
                               if (!isOnline) return const SizedBox.shrink();
                               return Positioned(
                                 right: 0,
@@ -441,7 +505,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF10B981),
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: colorScheme.surface, width: 2),
+                                    border: Border.all(
+                                      color: colorScheme.surface,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                               );
@@ -462,7 +529,9 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   displayName,
                                   style: TextStyle(
                                     fontSize: 14.5,
-                                    fontWeight: hasUnread ? FontWeight.bold : FontWeight.w600,
+                                    fontWeight: hasUnread
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -474,8 +543,12 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   fontSize: 11,
                                   color: hasUnread
                                       ? AppTheme.accentColor(context)
-                                      : colorScheme.onSurface.withValues(alpha: 0.45),
-                                  fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                                      : colorScheme.onSurface.withValues(
+                                          alpha: 0.45,
+                                        ),
+                                  fontWeight: hasUnread
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -485,10 +558,15 @@ class _ConversationsPageState extends State<ConversationsPage> {
                             children: [
                               if (isGroup) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   margin: const EdgeInsets.only(right: 6),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.accentColor(context).withValues(alpha: 0.12),
+                                    color: AppTheme.accentColor(
+                                      context,
+                                    ).withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
@@ -513,10 +591,15 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                 ),
                               ] else if (otherFaculty.isNotEmpty) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   margin: const EdgeInsets.only(right: 6),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor(context).withValues(alpha: 0.08),
+                                    color: AppTheme.primaryColor(
+                                      context,
+                                    ).withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -536,17 +619,24 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 12.5,
-                                    fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: hasUnread
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     color: hasUnread
                                         ? colorScheme.onSurface
-                                        : colorScheme.onSurface.withValues(alpha: 0.6),
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.6,
+                                          ),
                                   ),
                                 ),
                               ),
                               if (hasUnread) ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.accentColor(context),
                                     borderRadius: BorderRadius.circular(10),
@@ -573,6 +663,113 @@ class _ConversationsPageState extends State<ConversationsPage> {
           ),
         );
       },
+    );
+  }
+
+  void _showConversationActions(
+    BuildContext context,
+    ConversationEntity conv,
+    String currentUserId,
+  ) {
+    final displayName = conv.getDisplayName(currentUserId);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Divider(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                ),
+                title: const Text(
+                  'Xóa đoạn chat',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Ẩn lịch sử cuộc trò chuyện này khỏi danh sách',
+                  style: TextStyle(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  showDialog(
+                    context: context,
+                    builder: (dialogCtx) => AlertDialog(
+                      title: const Text('Xóa đoạn chat?'),
+                      content: Text(
+                        'Bạn có chắc chắn muốn xóa đoạn chat với "$displayName"? Lịch sử trò chuyện sẽ được ẩn khỏi danh sách của bạn.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogCtx),
+                          child: const Text('Hủy'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogCtx);
+                            context
+                                .read<ChatCubit>()
+                                .deleteConversationForUser(
+                                  conversationId: conv.id,
+                                  userId: currentUserId,
+                                );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Đã xóa đoạn chat thành công.'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Xóa',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

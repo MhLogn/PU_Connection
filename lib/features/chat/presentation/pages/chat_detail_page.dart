@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
@@ -77,6 +79,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         isTyping: false,
       );
     }
+    context.read<ChatCubit>().closeCurrentConversation(widget.conversationId);
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -195,7 +198,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void _openHeaderTarget() {
     if (widget.isGroup) {
       final conversations = context.read<ChatCubit>().state.conversations;
-      final matchingConvs = conversations.where((c) => c.id == widget.conversationId);
+      final matchingConvs = conversations.where(
+        (c) => c.id == widget.conversationId,
+      );
       final currentConv = matchingConvs.isNotEmpty
           ? matchingConvs.first
           : ConversationEntity(
@@ -240,7 +245,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         final sizeInBytes = await file.length();
         String sizeFormatted = '${(sizeInBytes / 1024).toStringAsFixed(1)} KB';
         if (sizeInBytes > 1024 * 1024) {
-          sizeFormatted = '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+          sizeFormatted =
+              '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
         }
         setState(() {
           _selectedFile = file;
@@ -250,9 +256,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể chọn tệp: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể chọn tệp: $e')));
       }
     }
   }
@@ -296,6 +302,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void _sendMessage() {
     final text = _textController.text.trim();
     if (text.isEmpty && _selectedImage == null && _selectedFile == null) return;
+
+    // Tiền kiểm tra từ ngữ không phù hợp (Bad Words Filter) trước khi gửi tin nhắn
+    if (text.isNotEmpty && sl.isRegistered<BadWordsFilterService>()) {
+      final checkResult = sl<BadWordsFilterService>().check(
+        text,
+        actionLabel: 'gửi tin nhắn',
+      );
+      if (!checkResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              checkResult.suggestionMessage ??
+                  'Tin nhắn chứa từ ngữ không phù hợp với chuẩn mực văn hóa Phenikaa.',
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
 
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) return;
@@ -396,12 +423,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           if (!userSnap.hasData || !userSnap.data!.exists) {
                             return const SizedBox.shrink();
                           }
-                          final data = userSnap.data!.data() as Map<String, dynamic>?;
+                          final data =
+                              userSnap.data!.data() as Map<String, dynamic>?;
                           final rawOnline = data?['isOnline'] as bool? ?? false;
-                          final lastActiveTs = data?['lastActive'] as Timestamp?;
+                          final lastActiveTs =
+                              data?['lastActive'] as Timestamp?;
                           final lastActive = lastActiveTs?.toDate();
-                          final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
-                          final isOnline = rawOnline && isRecent;
+                          final isOnline = rawOnline &&
+                              lastActive != null &&
+                              DateTime.now().difference(lastActive).inMinutes <=
+                                  5;
                           if (!isOnline) return const SizedBox.shrink();
                           return Positioned(
                             right: 0,
@@ -449,27 +480,40 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         StreamBuilder<DocumentSnapshot>(
                           stream: widget.otherUserId.isNotEmpty
                               ? FirebaseFirestore.instance
-                                  .collection(FirebaseConstants.usersCollection)
-                                  .doc(widget.otherUserId)
-                                  .snapshots()
+                                    .collection(
+                                      FirebaseConstants.usersCollection,
+                                    )
+                                    .doc(widget.otherUserId)
+                                    .snapshots()
                               : null,
                           builder: (context, userSnap) {
-                            final data = userSnap.data?.data() as Map<String, dynamic>?;
-                            final rawOnline = data?['isOnline'] as bool? ?? false;
-                            final lastActiveTs = data?['lastActive'] as Timestamp?;
+                            final data =
+                                userSnap.data?.data() as Map<String, dynamic>?;
+                            final rawOnline =
+                                data?['isOnline'] as bool? ?? false;
+                            final lastActiveTs =
+                                data?['lastActive'] as Timestamp?;
                             final lastActive = lastActiveTs?.toDate();
-                            final isRecent = lastActive == null || DateTime.now().difference(lastActive).inMinutes <= 5;
-                            final isOnline = rawOnline && isRecent;
+                            final isOnline = rawOnline &&
+                                lastActive != null &&
+                                DateTime.now()
+                                        .difference(lastActive)
+                                        .inMinutes <=
+                                    5;
 
                             String statusText;
-                            Color statusColor = colorScheme.onSurface.withValues(alpha: 0.6);
+                            Color statusColor = colorScheme.onSurface
+                                .withValues(alpha: 0.6);
 
                             if (isOnline) {
                               statusText = 'Đang hoạt động';
                               statusColor = const Color(0xFF10B981);
                             } else if (lastActive != null) {
-                              final locale = Localizations.localeOf(context).languageCode;
-                              statusText = 'Hoạt động ${timeago.format(lastActive, locale: locale)}';
+                              final locale = Localizations.localeOf(
+                                context,
+                              ).languageCode;
+                              statusText =
+                                  'Hoạt động ${timeago.format(lastActive, locale: locale)}';
                             } else if (widget.otherUserFaculty.isNotEmpty) {
                               statusText = widget.otherUserFaculty;
                             } else {
@@ -494,7 +538,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                     statusText,
                                     style: TextStyle(
                                       fontSize: 11,
-                                      fontWeight: isOnline ? FontWeight.w600 : FontWeight.normal,
+                                      fontWeight: isOnline
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
                                       color: statusColor,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -671,7 +717,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Widget _buildSelectedFilePreview(ColorScheme colorScheme) {
     final fileName = _selectedFileName ?? 'Tệp đính kèm';
-    final ext = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : 'FILE';
+    final ext = fileName.contains('.')
+        ? fileName.split('.').last.toUpperCase()
+        : 'FILE';
     final isPdf = ext == 'PDF';
 
     return Container(
@@ -700,7 +748,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               children: [
                 Text(
                   fileName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -851,29 +902,34 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          gradient: isMe ? AppTheme.oceanGradient : null,
           color: isMe
-              ? null
+              ? AppTheme.primaryColor(context)
               : (isDark
                     ? colorScheme.surfaceContainerHighest.withValues(
                         alpha: 0.35,
                       )
-                    : const Color(0xFFF1F5F9)),
+                    : Colors.white),
+          border: isMe
+              ? null
+              : Border.all(
+                  color: isDark ? Colors.white12 : AppTheme.borderLight,
+                  width: 0.8,
+                ),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
+            topLeft: const Radius.circular(12),
+            topRight: const Radius.circular(12),
             bottomLeft: isMe
-                ? const Radius.circular(18)
-                : const Radius.circular(4),
+                ? const Radius.circular(12)
+                : const Radius.circular(2),
             bottomRight: isMe
-                ? const Radius.circular(4)
-                : const Radius.circular(18),
+                ? const Radius.circular(2)
+                : const Radius.circular(12),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -940,10 +996,31 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 4),
-                  const Icon(
-                    Icons.done_all_rounded,
-                    size: 13,
-                    color: Colors.white70,
+                  Builder(
+                    builder: (context) {
+                      final hasBeenRead = message.isRead ||
+                          message.readBy
+                              .where((id) => id != message.senderId)
+                              .isNotEmpty;
+                      final readersCount = message.readBy
+                          .where((id) => id != message.senderId)
+                          .length;
+                      final tooltipText = message.isRead
+                          ? 'Đã xem'
+                          : (readersCount > 0
+                              ? 'Đã xem ($readersCount)'
+                              : 'Đã gửi');
+                      return Tooltip(
+                        message: tooltipText,
+                        child: Icon(
+                          Icons.done_all_rounded,
+                          size: 13,
+                          color: hasBeenRead
+                              ? const Color(0xFF22C55E) // Xanh lục sáng khi người nhận đã xem
+                              : Colors.white60,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ],

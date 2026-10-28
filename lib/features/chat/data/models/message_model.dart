@@ -16,6 +16,7 @@ class MessageModel extends MessageEntity {
     required super.createdAt,
     super.isRead = false,
     super.isDelivered = true,
+    super.readBy = const [],
   });
 
   factory MessageModel.fromMap(Map<String, dynamic> map, String id) {
@@ -39,6 +40,10 @@ class MessageModel extends MessageEntity {
       createdAt: parseDate(map['createdAt']),
       isRead: map['isRead'] as bool? ?? false,
       isDelivered: map['isDelivered'] as bool? ?? true,
+      readBy: (map['readBy'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 
@@ -61,6 +66,7 @@ class MessageModel extends MessageEntity {
       'createdAt': Timestamp.fromDate(createdAt),
       'isRead': isRead,
       'isDelivered': isDelivered,
+      'readBy': readBy,
     };
   }
 }

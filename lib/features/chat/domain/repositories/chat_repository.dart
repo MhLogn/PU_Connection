@@ -41,6 +41,10 @@ abstract class ChatRepository {
     required String conversationId,
     required String currentUserId,
   });
+  Future<void> deleteConversationForUser({
+    required String conversationId,
+    required String userId,
+  });
   Future<void> setTypingStatus({
     required String conversationId,
     required String userId,

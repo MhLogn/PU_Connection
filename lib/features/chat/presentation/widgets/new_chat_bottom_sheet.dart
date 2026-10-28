@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../auth/data/datasources/phenikaa_student_directory.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubit/chat_cubit.dart';
@@ -20,16 +19,6 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isLoading = false;
-
-  List<Map<String, String>> get _mockStudents => PhenikaaStudentDirectory.defaultStudents
-      .map((s) => {
-            'id': s.studentId,
-            'name': s.fullName,
-            'studentId': s.studentId,
-            'faculty': s.faculty,
-            'major': s.major,
-          })
-      .toList();
 
   @override
   void dispose() {
@@ -108,14 +97,6 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = AppTheme.isDark(context);
 
-    final filteredMock = _mockStudents.where((s) {
-      if (_searchQuery.isEmpty) return true;
-      final name = (s['name'] ?? '').toLowerCase();
-      final id = (s['studentId'] ?? '').toLowerCase();
-      final faculty = (s['faculty'] ?? '').toLowerCase();
-      return name.contains(_searchQuery) || id.contains(_searchQuery) || faculty.contains(_searchQuery);
-    }).toList();
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       padding: const EdgeInsets.only(top: 10),
@@ -154,7 +135,10 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                     SizedBox(width: 8),
                     Text(
                       'Cuộc trò chuyện mới',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -169,7 +153,9 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.35,
+                ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -202,7 +188,10 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
@@ -215,17 +204,26 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection(FirebaseConstants.phenikaaStudentsCollection)
+                  .collection(FirebaseConstants.usersCollection)
                   .snapshots(),
               builder: (context, snapshot) {
-                List<Map<String, String>> students = filteredMock;
+                final authState = context.read<AuthCubit>().state;
+                final myUid = authState is Authenticated ? authState.user.uid : '';
+
+                List<Map<String, String>> students = [];
 
                 if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  final liveList = snapshot.data!.docs.map((doc) {
+                  final liveList = snapshot.data!.docs
+                      .where((doc) => doc.id != myUid)
+                      .map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
                     return {
                       'id': doc.id,
-                      'name': data['fullName'] as String? ?? data['name'] as String? ?? 'Sinh viên Phenikaa',
+                      'name':
+                          data['displayName'] as String? ??
+                          data['fullName'] as String? ??
+                          data['name'] as String? ??
+                          'Sinh viên Phenikaa',
                       'studentId': data['studentId'] as String? ?? '',
                       'faculty': data['faculty'] as String? ?? '',
                       'major': data['major'] as String? ?? '',
@@ -253,11 +251,18 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_search_rounded, size: 48, color: colorScheme.outline),
+                          Icon(
+                            Icons.person_search_rounded,
+                            size: 48,
+                            color: colorScheme.outline,
+                          ),
                           const SizedBox(height: 10),
                           Text(
                             'Không tìm thấy sinh viên phù hợp',
-                            style: TextStyle(color: colorScheme.outline, fontSize: 14),
+                            style: TextStyle(
+                              color: colorScheme.outline,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
@@ -266,7 +271,10 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   itemCount: students.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 6),
                   itemBuilder: (context, index) {
@@ -285,7 +293,9 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                         color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.35,
+                          ),
                         ),
                       ),
                       child: ListTile(
@@ -302,7 +312,10 @@ class _NewChatBottomSheetState extends State<NewChatBottomSheet> {
                         ),
                         title: Text(
                           name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                         subtitle: Text(
                           'MSSV: $studentId • $faculty',

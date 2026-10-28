@@ -22,12 +22,13 @@ class ChatCubit extends Cubit<ChatState> {
   ChatCubit({
     required ChatRepository chatRepository,
     CloudinaryService? cloudinaryService,
-  })  : _chatRepository = chatRepository,
-        _cloudinaryService = cloudinaryService ??
-            (sl.isRegistered<CloudinaryService>()
-                ? sl<CloudinaryService>()
-                : CloudinaryService()),
-        super(const ChatState());
+  }) : _chatRepository = chatRepository,
+       _cloudinaryService =
+           cloudinaryService ??
+           (sl.isRegistered<CloudinaryService>()
+               ? sl<CloudinaryService>()
+               : CloudinaryService()),
+       super(const ChatState());
 
   void initConversations(String currentUserId) {
     if (currentUserId.isEmpty) return;
@@ -38,88 +39,92 @@ class ChatCubit extends Cubit<ChatState> {
     _convSubscription = _chatRepository
         .getConversationsStream(currentUserId)
         .listen(
-      (conversations) {
-        if (!_isFirstConvLoad) {
-          for (final conv in conversations) {
-            final lastTime = conv.lastMessageAt;
-            final prevTime = _lastNotifiedMessageTimes[conv.id];
+          (conversations) {
+            if (!_isFirstConvLoad) {
+              for (final conv in conversations) {
+                final lastTime = conv.lastMessageAt;
+                final prevTime = _lastNotifiedMessageTimes[conv.id];
 
-            final isFromOther = conv.lastMessageSenderId.isNotEmpty &&
-                conv.lastMessageSenderId != currentUserId;
-            final isNotActive = state.activeConversationId != conv.id;
+                final isFromOther =
+                    conv.lastMessageSenderId.isNotEmpty &&
+                    conv.lastMessageSenderId != currentUserId;
+                final isNotActive = state.activeConversationId != conv.id;
 
-            if (lastTime != null && isFromOther && isNotActive) {
-              if (prevTime == null || lastTime.isAfter(prevTime)) {
-                _lastNotifiedMessageTimes[conv.id] = lastTime;
+                if (lastTime != null && isFromOther && isNotActive) {
+                  if (prevTime == null || lastTime.isAfter(prevTime)) {
+                    _lastNotifiedMessageTimes[conv.id] = lastTime;
 
-                final senderName = conv.isGroup
-                    ? '${conv.participantNames[conv.lastMessageSenderId] ?? "Thành viên"} (${conv.groupName.isNotEmpty ? conv.groupName : "Nhóm"})'
-                    : conv.getOtherParticipantName(currentUserId);
+                    final senderName = conv.isGroup
+                        ? '${conv.participantNames[conv.lastMessageSenderId] ?? "Thành viên"} (${conv.groupName.isNotEmpty ? conv.groupName : "Nhóm"})'
+                        : conv.getOtherParticipantName(currentUserId);
 
-                try {
-                  if (sl.isRegistered<NotificationService>()) {
-                    sl<NotificationService>().showNotification(
-                      id: conv.id.hashCode,
-                      title: 'Tin nhắn mới từ $senderName',
-                      body: conv.lastMessage,
-                      payload: 'chat:${conv.id}',
-                    );
+                    try {
+                      if (sl.isRegistered<NotificationService>()) {
+                        sl<NotificationService>().showNotification(
+                          id: conv.id.hashCode,
+                          title: 'Tin nhắn mới từ $senderName',
+                          body: conv.lastMessage,
+                          payload: 'chat:${conv.id}',
+                        );
+                      }
+                    } catch (_) {}
                   }
-                } catch (_) {}
+                }
               }
             }
-          }
-        }
 
-        for (final conv in conversations) {
-          if (conv.lastMessageAt != null) {
-            _lastNotifiedMessageTimes[conv.id] = conv.lastMessageAt!;
-          }
-        }
-        _isFirstConvLoad = false;
+            for (final conv in conversations) {
+              if (conv.lastMessageAt != null) {
+                _lastNotifiedMessageTimes[conv.id] = conv.lastMessageAt!;
+              }
+            }
+            _isFirstConvLoad = false;
 
-        emit(state.copyWith(
-          status: ChatStatus.loaded,
-          conversations: conversations,
-        ));
-      },
-      onError: (error) {
-        emit(state.copyWith(
-          status: ChatStatus.error,
-          errorMessage: error.toString(),
-        ));
-      },
-    );
+            emit(
+              state.copyWith(
+                status: ChatStatus.loaded,
+                conversations: conversations,
+              ),
+            );
+          },
+          onError: (error) {
+            emit(
+              state.copyWith(
+                status: ChatStatus.error,
+                errorMessage: error.toString(),
+              ),
+            );
+          },
+        );
   }
 
   void openConversation(String conversationId, String currentUserId) {
     _msgSubscription?.cancel();
     _typingSubscription?.cancel();
-    emit(state.copyWith(
-      activeConversationId: conversationId,
-      currentMessages: [],
-      typingUsers: {},
-    ));
+    emit(
+      state.copyWith(
+        activeConversationId: conversationId,
+        currentMessages: [],
+        typingUsers: {},
+      ),
+    );
 
     _msgSubscription = _chatRepository
         .getMessagesStream(conversationId)
         .listen(
-      (messages) {
-        emit(state.copyWith(currentMessages: messages));
-      },
-      onError: (error) {
-        // Silently handle or log if disconnected on signout
-      },
-    );
+          (messages) {
+            emit(state.copyWith(currentMessages: messages));
+          },
+          onError: (error) {
+            // Silently handle or log if disconnected on signout
+          },
+        );
 
     _typingSubscription = _chatRepository
         .getTypingStream(conversationId)
-        .listen(
-      (typingMap) {
-        emit(state.copyWith(typingUsers: typingMap));
-      },
-      onError: (_) {},
-    );
+        .listen((typingMap) {
+          emit(state.copyWith(typingUsers: typingMap));
+        }, onError: (_) {});
 
     _chatRepository.markAsRead(
       conversationId: conversationId,
@@ -127,16 +132,23 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  void closeCurrentConversation() {
+  void closeCurrentConversation([String? conversationId]) {
+    if (conversationId != null &&
+        state.activeConversationId != null &&
+        state.activeConversationId != conversationId) {
+      return;
+    }
     _msgSubscription?.cancel();
     _msgSubscription = null;
     _typingSubscription?.cancel();
     _typingSubscription = null;
-    emit(state.copyWith(
-      resetActiveConversation: true,
-      currentMessages: [],
-      typingUsers: {},
-    ));
+    emit(
+      state.copyWith(
+        resetActiveConversation: true,
+        currentMessages: [],
+        typingUsers: {},
+      ),
+    );
   }
 
   Future<void> setTypingStatus({
@@ -214,10 +226,12 @@ class ChatCubit extends Cubit<ChatState> {
       );
       emit(state.copyWith(isSending: false));
     } catch (e) {
-      emit(state.copyWith(
-        isSending: false,
-        errorMessage: 'Không thể gửi tin nhắn: $e',
-      ));
+      emit(
+        state.copyWith(
+          isSending: false,
+          errorMessage: 'Không thể gửi tin nhắn: $e',
+        ),
+      );
     }
   }
 
@@ -270,10 +284,12 @@ class ChatCubit extends Cubit<ChatState> {
       openConversation(convId, creatorId);
       return convId;
     } catch (e) {
-      emit(state.copyWith(
-        isSending: false,
-        errorMessage: 'Không thể tạo nhóm: $e',
-      ));
+      emit(
+        state.copyWith(
+          isSending: false,
+          errorMessage: 'Không thể tạo nhóm: $e',
+        ),
+      );
       rethrow;
     }
   }
@@ -294,6 +310,24 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  Future<void> deleteConversationForUser({
+    required String conversationId,
+    required String userId,
+  }) async {
+    try {
+      await _chatRepository.deleteConversationForUser(
+        conversationId: conversationId,
+        userId: userId,
+      );
+      final updatedList = state.conversations
+          .where((c) => c.id != conversationId)
+          .toList();
+      emit(state.copyWith(conversations: updatedList));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Không thể xóa đoạn chat: $e'));
+    }
+  }
+
   Future<void> updateGroupInfo({
     required String conversationId,
     String? groupName,
@@ -306,7 +340,9 @@ class ChatCubit extends Cubit<ChatState> {
         groupAvatar: groupAvatar,
       );
     } catch (e) {
-      emit(state.copyWith(errorMessage: 'Không thể cập nhật thông tin nhóm: $e'));
+      emit(
+        state.copyWith(errorMessage: 'Không thể cập nhật thông tin nhóm: $e'),
+      );
       rethrow;
     }
   }
