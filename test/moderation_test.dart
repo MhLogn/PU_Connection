@@ -92,42 +92,106 @@ void main() {
       expect(true, isTrue);
     });
 
-    test('blockUser and unblockUser update blocked stream and list of IDs', () async {
-      const blocked = BlockedUserEntity(
-        userId: 'user_bad_1',
-        userName: 'Nguyễn Văn X',
-        userFaculty: 'Kinh tế',
+    test(
+      'submitReport prevents duplicate pending reports from the same reporter',
+      () async {
+        final report1 = ReportEntity(
+          id: 'rep_test_1',
+          reporterId: 'user_1',
+          targetId: 'post_1',
+          targetType: ReportTargetType.post,
+          reason: ReportReason.spam,
+          createdAt: DateTime.now(),
+        );
+        await repository.submitReport(report1);
+
+        final report2 = ReportEntity(
+          id: 'rep_test_2',
+          reporterId: 'user_1',
+          targetId: 'post_1',
+          targetType: ReportTargetType.post,
+          reason: ReportReason.inappropriate,
+          createdAt: DateTime.now(),
+        );
+
+        expect(
+          () => repository.submitReport(report2),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Bạn đã gửi báo cáo cho nội dung này trước đó'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('submitReport throws exception if post is deleted', () async {
+      ModerationRepositoryImpl.markPostDeletedForTesting('post_deleted_999');
+
+      final report = ReportEntity(
+        id: 'rep_test_del',
+        reporterId: 'user_1',
+        targetId: 'post_deleted_999',
+        targetType: ReportTargetType.post,
+        reason: ReportReason.spam,
+        createdAt: DateTime.now(),
       );
 
-      final stream = repository.getBlockedUsersStream('user_1');
-
-      expectLater(
-        stream,
-        emitsInOrder([
-          predicate<List<BlockedUserEntity>>((l) => l.isEmpty),
-          predicate<List<BlockedUserEntity>>((l) => l.length == 1 && l.first.userId == 'user_bad_1'),
-          predicate<List<BlockedUserEntity>>((l) => l.isEmpty),
-        ]),
+      expect(
+        () => repository.submitReport(report),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Bài viết không tồn tại hoặc đã bị gỡ trước đó'),
+          ),
+        ),
       );
-
-      await Future.delayed(const Duration(milliseconds: 50));
-      await repository.blockUser(
-        currentUserId: 'user_1',
-        blockedUser: blocked,
-      );
-
-      final idsAfterBlock = await repository.getBlockedUserIds('user_1');
-      expect(idsAfterBlock, contains('user_bad_1'));
-
-      await Future.delayed(const Duration(milliseconds: 50));
-      await repository.unblockUser(
-        currentUserId: 'user_1',
-        blockedUserId: 'user_bad_1',
-      );
-
-      final idsAfterUnblock = await repository.getBlockedUserIds('user_1');
-      expect(idsAfterUnblock, isEmpty);
     });
+
+    test(
+      'blockUser and unblockUser update blocked stream and list of IDs',
+      () async {
+        const blocked = BlockedUserEntity(
+          userId: 'user_bad_1',
+          userName: 'Nguyễn Văn X',
+          userFaculty: 'Kinh tế',
+        );
+
+        final stream = repository.getBlockedUsersStream('user_1');
+
+        expectLater(
+          stream,
+          emitsInOrder([
+            predicate<List<BlockedUserEntity>>((l) => l.isEmpty),
+            predicate<List<BlockedUserEntity>>(
+              (l) => l.length == 1 && l.first.userId == 'user_bad_1',
+            ),
+            predicate<List<BlockedUserEntity>>((l) => l.isEmpty),
+          ]),
+        );
+
+        await Future.delayed(const Duration(milliseconds: 50));
+        await repository.blockUser(
+          currentUserId: 'user_1',
+          blockedUser: blocked,
+        );
+
+        final idsAfterBlock = await repository.getBlockedUserIds('user_1');
+        expect(idsAfterBlock, contains('user_bad_1'));
+
+        await Future.delayed(const Duration(milliseconds: 50));
+        await repository.unblockUser(
+          currentUserId: 'user_1',
+          blockedUserId: 'user_bad_1',
+        );
+
+        final idsAfterUnblock = await repository.getBlockedUserIds('user_1');
+        expect(idsAfterUnblock, isEmpty);
+      },
+    );
   });
 
   group('ModerationCubit Tests', () {
@@ -176,10 +240,7 @@ void main() {
         userName: 'Spam Account',
       );
 
-      await cubit.blockUser(
-        currentUserId: 'user_me',
-        blockedUser: blocked,
-      );
+      await cubit.blockUser(currentUserId: 'user_me', blockedUser: blocked);
 
       expect(cubit.state.status, ModerationActionStatus.success);
       expect(cubit.state.blockedUserIds, contains('user_spammer'));

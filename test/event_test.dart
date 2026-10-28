@@ -29,14 +29,17 @@ void main() {
       expect(testEvent.isFull, isFalse);
     });
 
-    test('isFull is true when currentParticipants reaches or exceeds maxParticipants', () {
-      final fullEvent = testEvent.copyWith(
-        maxParticipants: 2,
-        registeredStudentIds: ['23010390', '23010111'],
-      );
-      expect(fullEvent.isFull, isTrue);
-      expect(fullEvent.spotsRemaining, equals(0));
-    });
+    test(
+      'isFull is true when currentParticipants reaches or exceeds maxParticipants',
+      () {
+        final fullEvent = testEvent.copyWith(
+          maxParticipants: 2,
+          registeredStudentIds: ['23010390', '23010111'],
+        );
+        expect(fullEvent.isFull, isTrue);
+        expect(fullEvent.spotsRemaining, equals(0));
+      },
+    );
 
     test('copyWith properly updates fields without mutating original', () {
       final updated = testEvent.copyWith(

@@ -33,7 +33,10 @@ void main() {
 
       await notificationService.setNotificationsEnabled(false);
       expect(notificationService.isNotificationsEnabled(), false);
-      expect(prefs.getBool(NotificationService.prefNotificationsEnabled), false);
+      expect(
+        prefs.getBool(NotificationService.prefNotificationsEnabled),
+        false,
+      );
     });
 
     test('Channel constants are configured correctly', () {
@@ -47,15 +50,21 @@ void main() {
       expect(NotificationService.topicEvents, 'phenikaa_events');
     });
 
-    test('getFcmToken returns null gracefully when Firebase is not initialized in test', () async {
-      final token = await notificationService.getFcmToken();
-      expect(token, isNull);
-    });
+    test(
+      'getFcmToken returns null gracefully when Firebase is not initialized in test',
+      () async {
+        final token = await notificationService.getFcmToken();
+        expect(token, isNull);
+      },
+    );
 
-    test('syncUserFcmToken and clearUserFcmToken handle empty or uninitialized safely', () async {
-      await notificationService.syncUserFcmToken('');
-      await notificationService.clearUserFcmToken('');
-      expect(true, isTrue);
-    });
+    test(
+      'syncUserFcmToken and clearUserFcmToken handle empty or uninitialized safely',
+      () async {
+        await notificationService.syncUserFcmToken('');
+        await notificationService.clearUserFcmToken('');
+        expect(true, isTrue);
+      },
+    );
   });
 }

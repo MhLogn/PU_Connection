@@ -56,10 +56,14 @@ class MockDocumentRepository implements DocumentRepository {
     }
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final q = searchQuery.toLowerCase();
-      result = result.where((d) =>
-          d.title.toLowerCase().contains(q) ||
-          d.code.toLowerCase().contains(q) ||
-          d.faculty.toLowerCase().contains(q)).toList();
+      result = result
+          .where(
+            (d) =>
+                d.title.toLowerCase().contains(q) ||
+                d.code.toLowerCase().contains(q) ||
+                d.faculty.toLowerCase().contains(q),
+          )
+          .toList();
     }
     return PaginatedResult<DocumentEntity>(
       items: result,
@@ -69,24 +73,36 @@ class MockDocumentRepository implements DocumentRepository {
   }
 
   @override
-  Stream<List<DocumentEntity>> getDocuments({String? faculty, String? searchQuery}) {
+  Stream<List<DocumentEntity>> getDocuments({
+    String? faculty,
+    String? searchQuery,
+  }) {
     var result = _docs;
     if (faculty != null && faculty != 'Tất cả') {
       result = result.where((d) => d.faculty == faculty).toList();
     }
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final q = searchQuery.toLowerCase();
-      result = result.where((d) =>
-          d.title.toLowerCase().contains(q) ||
-          d.code.toLowerCase().contains(q) ||
-          d.faculty.toLowerCase().contains(q)).toList();
+      result = result
+          .where(
+            (d) =>
+                d.title.toLowerCase().contains(q) ||
+                d.code.toLowerCase().contains(q) ||
+                d.faculty.toLowerCase().contains(q),
+          )
+          .toList();
     }
     return Stream.value(result);
   }
 
   @override
-  Future<DocumentEntity> uploadDocument({required DocumentEntity document, required File file}) async {
-    final newDoc = document.copyWith(id: 'new_${DateTime.now().millisecondsSinceEpoch}');
+  Future<DocumentEntity> uploadDocument({
+    required DocumentEntity document,
+    required File file,
+  }) async {
+    final newDoc = document.copyWith(
+      id: 'new_${DateTime.now().millisecondsSinceEpoch}',
+    );
     _docs.add(newDoc);
     return newDoc;
   }
@@ -117,11 +133,15 @@ class MockDocumentRepository implements DocumentRepository {
 
   @override
   Stream<List<DocumentReviewEntity>> watchDocumentReviews(String documentId) {
-    return Stream.value(_reviews.where((r) => r.documentId == documentId).toList());
+    return Stream.value(
+      _reviews.where((r) => r.documentId == documentId).toList(),
+    );
   }
 
   @override
-  Future<List<DocumentReviewEntity>> getDocumentReviews(String documentId) async {
+  Future<List<DocumentReviewEntity>> getDocumentReviews(
+    String documentId,
+  ) async {
     return _reviews.where((r) => r.documentId == documentId).toList();
   }
 }
@@ -178,10 +198,7 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
       );
 
-      final updated = entity.copyWith(
-        title: 'Updated Title',
-        downloads: 99,
-      );
+      final updated = entity.copyWith(title: 'Updated Title', downloads: 99);
 
       expect(updated.title, 'Updated Title');
       expect(updated.code, 'ORIG-100');

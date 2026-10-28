@@ -94,12 +94,18 @@ void main() {
     test('PostModel correctly handles tagged users serialization', () {
       final taggedPost = post.copyWith(
         taggedUserIds: ['user_789', 'user_999'],
-        taggedUserNames: {'user_789': 'Trần Thị Mai', 'user_999': 'Lê Hoàng Nam'},
+        taggedUserNames: {
+          'user_789': 'Trần Thị Mai',
+          'user_999': 'Lê Hoàng Nam',
+        },
       );
 
       final map = taggedPost.toMap();
       expect(map['taggedUserIds'], ['user_789', 'user_999']);
-      expect(map['taggedUserNames'], {'user_789': 'Trần Thị Mai', 'user_999': 'Lê Hoàng Nam'});
+      expect(map['taggedUserNames'], {
+        'user_789': 'Trần Thị Mai',
+        'user_999': 'Lê Hoàng Nam',
+      });
 
       final reconstructed = PostModel.fromMap(map, 'post_tagged');
       expect(reconstructed.taggedUserIds.length, 2);
@@ -124,15 +130,18 @@ void main() {
       feedCubit.close();
     });
 
-    test('loadFeed fetches initial 15 items and sets hasMore correctly', () async {
-      await feedCubit.loadFeed();
+    test(
+      'loadFeed fetches initial 15 items and sets hasMore correctly',
+      () async {
+        await feedCubit.loadFeed();
 
-      expect(feedCubit.state, isA<FeedLoaded>());
-      final state = feedCubit.state as FeedLoaded;
-      expect(state.posts.length, 15);
-      expect(state.hasMore, true);
-      expect(state.isLoadingMore, false);
-    });
+        expect(feedCubit.state, isA<FeedLoaded>());
+        final state = feedCubit.state as FeedLoaded;
+        expect(state.posts.length, 15);
+        expect(state.hasMore, true);
+        expect(state.isLoadingMore, false);
+      },
+    );
 
     test('loadMorePosts appends next page and updates hasMore', () async {
       await feedCubit.loadFeed();
@@ -140,7 +149,29 @@ void main() {
 
       final state = feedCubit.state as FeedLoaded;
       expect(state.posts.length, 20); // 15 + 5 remaining
-      expect(state.hasMore, false); // Less than 15 returned, so hasMore is false
+      expect(
+        state.hasMore,
+        false,
+      ); // Less than 15 returned, so hasMore is false
+    });
+
+    test('addComment optimistically increments comment count for target post', () async {
+      await feedCubit.loadFeed();
+      final initialPost = (feedCubit.state as FeedLoaded).posts.first;
+      expect(initialPost.commentCount, 0);
+
+      await feedCubit.addComment(
+        postId: initialPost.postId,
+        authorId: 'user_tester',
+        authorName: 'Tester',
+        authorAvatar: '',
+        authorStudentId: '23010304',
+        authorFaculty: 'CNTT',
+        content: 'Bình luận thử nghiệm',
+      );
+
+      final updatedPost = (feedCubit.state as FeedLoaded).posts.first;
+      expect(updatedPost.commentCount, 1);
     });
   });
 }
@@ -181,7 +212,11 @@ class _MockPostRepository implements PostRepository {
   }
 
   @override
-  Stream<List<PostEntity>> getFeedPosts({String? faculty, String? subjectCode, String? category}) {
+  Stream<List<PostEntity>> getFeedPosts({
+    String? faculty,
+    String? subjectCode,
+    String? category,
+  }) {
     return Stream.value(_allPosts);
   }
 
@@ -189,7 +224,11 @@ class _MockPostRepository implements PostRepository {
   Future<void> createPost(PostEntity post) async {}
 
   @override
-  Future<void> toggleLikePost({required String postId, required String userId, required bool isCurrentlyLiked}) async {}
+  Future<void> toggleLikePost({
+    required String postId,
+    required String userId,
+    required bool isCurrentlyLiked,
+  }) async {}
 
   @override
   Future<void> deletePost(String postId) async {}

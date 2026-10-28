@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 520" width="820" height="520">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#000000" stroke="#000000"/>
+    </marker>
+  </defs>
+  <!-- Nền trắng chuẩn Draw.io -->
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  
+  <!-- Tiêu đề nhóm -->
+  <text x="410" y="32" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#000000" text-anchor="middle">Sơ đồ Use-case Nhóm 6: Mạng lưới Sinh viên, CLB &amp; An toàn Học đường</text>
+  
+  
+  <!-- System Boundary -->
+  <rect x="220" y="55" width="410" height="445" fill="#ffffff" stroke="#000000" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="235" y="75" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#000000">Phân hệ Mạng lưới Sinh viên &amp; CLB</text>
+
+  <!-- Actors -->
+  
+    <g class="actor">
+      <!-- Head -->
+      <circle cx="100" cy="220" r="12" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <!-- Body -->
+      <line x1="100" y1="232" x2="100" y2="260" stroke="#000000" stroke-width="1.5"/>
+      <!-- Arms -->
+      <line x1="82" y1="242" x2="118" y2="242" stroke="#000000" stroke-width="1.5"/>
+      <!-- Left Leg -->
+      <line x1="100" y1="260" x2="86" y2="284" stroke="#000000" stroke-width="1.5"/>
+      <!-- Right Leg -->
+      <line x1="100" y1="260" x2="114" y2="284" stroke="#000000" stroke-width="1.5"/>
+      <!-- Label -->
+      <text x="100" y="300" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#000000" text-anchor="middle">Sinh viên (User)</text>
+    </g>
+  
+  
+    <g class="actor">
+      <!-- Head -->
+      <circle cx="720" cy="280" r="12" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <!-- Body -->
+      <line x1="720" y1="292" x2="720" y2="320" stroke="#000000" stroke-width="1.5"/>
+      <!-- Arms -->
+      <line x1="702" y1="302" x2="738" y2="302" stroke="#000000" stroke-width="1.5"/>
+      <!-- Left Leg -->
+      <line x1="720" y1="320" x2="706" y2="344" stroke="#000000" stroke-width="1.5"/>
+      <!-- Right Leg -->
+      <line x1="720" y1="320" x2="734" y2="344" stroke="#000000" stroke-width="1.5"/>
+      <!-- Label -->
+      <text x="720" y="360" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#000000" text-anchor="middle">Chủ nhiệm CLB / Admin</text>
+    </g>
+  
+
+  <!-- Use Cases -->
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="115" rx="115" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="111" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC23</text>
+      <text x="420" y="127" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Tìm sinh viên theo khoa</text>
+    </g>
+  
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="185" rx="115" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="181" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC24</text>
+      <text x="420" y="197" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Theo dõi / Bỏ theo dõi</text>
+    </g>
+  
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="255" rx="115" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="251" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC25</text>
+      <text x="420" y="267" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Xem CLB &amp; Ứng tuyển</text>
+    </g>
+  
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="325" rx="115" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="321" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC26</text>
+      <text x="420" y="337" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Đăng ký tham gia sự kiện</text>
+    </g>
+  
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="395" rx="115" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="391" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC27</text>
+      <text x="420" y="407" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Chặn người dùng vi phạm</text>
+    </g>
+  
+  
+    <g class="usecase">
+      <ellipse cx="420" cy="465" rx="115" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+      <text x="420" y="461" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">UC28</text>
+      <text x="420" y="477" font-family="Arial, sans-serif" font-size="11" fill="#000000" text-anchor="middle">Xem thông báo hệ thống</text>
+    </g>
+  
+
+  <!-- Associations Sinh vien -->
+  <line x1="130" y1="210" x2="305" y2="120" stroke="#000000" stroke-width="1.2"/>
+  <line x1="130" y1="220" x2="305" y2="185" stroke="#000000" stroke-width="1.2"/>
+  <line x1="130" y1="230" x2="305" y2="255" stroke="#000000" stroke-width="1.2"/>
+  <line x1="130" y1="240" x2="305" y2="325" stroke="#000000" stroke-width="1.2"/>
+  <line x1="130" y1="250" x2="305" y2="395" stroke="#000000" stroke-width="1.2"/>
+  <line x1="130" y1="260" x2="305" y2="465" stroke="#000000" stroke-width="1.2"/>
+
+  <!-- Associations Chu nhiem CLB -->
+  <line x1="690" y1="275" x2="535" y2="260" stroke="#000000" stroke-width="1.2"/>
+  <line x1="690" y1="290" x2="535" y2="330" stroke="#000000" stroke-width="1.2"/>
+
+  <!-- Include / Extend -->
+  
+    <line x1="420" y1="159" x2="420" y2="141" stroke="#000000" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+    
+      <rect x="388" y="136" width="64" height="16" fill="#ffffff" stroke="none"/>
+      <text x="420" y="148" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#000000" text-anchor="middle">&lt;&lt;extend&gt;&gt;</text>
+    
+  
+  
+    <line x1="420" y1="369" x2="420" y2="141" stroke="#000000" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+    
+      <rect x="388" y="241" width="64" height="16" fill="#ffffff" stroke="none"/>
+      <text x="420" y="253" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#000000" text-anchor="middle">&lt;&lt;extend&gt;&gt;</text>
+    
+  
+
+</svg>

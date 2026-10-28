@@ -10,35 +10,51 @@ void main() {
       geminiService = GeminiService(apiKey: '');
     });
 
-    test('Answers Calculus question correctly in campus offline mode', () async {
-      final reply = await geminiService.sendMessage('Cho mình xin đề cương môn giải tích 2');
-      expect(reply, contains('Giải tích 1 & 2'));
-      expect(reply, contains('Tích phân kép'));
-      expect(reply, contains('Chuỗi số'));
-    });
+    test(
+      'Answers Calculus question correctly in campus offline mode',
+      () async {
+        final reply = await geminiService.sendMessage(
+          'Cho mình xin đề cương môn giải tích 2',
+        );
+        expect(reply, contains('Giải tích 1 & 2'));
+        expect(reply, contains('Tích phân kép'));
+        expect(reply, contains('Chuỗi số'));
+      },
+    );
 
     test('Answers Computer Science and C++ questions correctly', () async {
-      final reply = await geminiService.sendMessage('Đề cương lập trình C++ và cấu trúc dữ liệu');
+      final reply = await geminiService.sendMessage(
+        'Đề cương lập trình C++ và cấu trúc dữ liệu',
+      );
       expect(reply, contains('Công nghệ Thông tin Phenikaa'));
       expect(reply, contains('Lập trình C/C++'));
       expect(reply, contains('OOP'));
     });
 
-    test('Answers English and TOEIC exemption requirements correctly', () async {
-      final reply = await geminiService.sendMessage('Quy định miễn tiếng anh bằng bằng TOEIC thế nào?');
-      expect(reply, contains('TOEIC'));
-      expect(reply, contains('450'));
-      expect(reply, contains('Phòng Đào tạo'));
-    });
+    test(
+      'Answers English and TOEIC exemption requirements correctly',
+      () async {
+        final reply = await geminiService.sendMessage(
+          'Quy định miễn tiếng anh bằng bằng TOEIC thế nào?',
+        );
+        expect(reply, contains('TOEIC'));
+        expect(reply, contains('450'));
+        expect(reply, contains('Phòng Đào tạo'));
+      },
+    );
 
     test('Answers Training Points (DRL) question correctly', () async {
-      final reply = await geminiService.sendMessage('Cách tính điểm rèn luyện đrl');
+      final reply = await geminiService.sendMessage(
+        'Cách tính điểm rèn luyện đrl',
+      );
       expect(reply, contains('Điểm Rèn Luyện (ĐRL)'));
       expect(reply, contains('Xuất sắc'));
     });
 
     test('Answers Campus Department contacts question correctly', () async {
-      final reply = await geminiService.sendMessage('Số điện thoại và phòng ban tòa A1');
+      final reply = await geminiService.sendMessage(
+        'Số điện thoại và phòng ban tòa A1',
+      );
       expect(reply, contains('Phòng Đào tạo (P.101 Tòa A1)'));
       expect(reply, contains('Phòng Công tác Sinh viên (P.103 Tòa A1)'));
     });
@@ -53,6 +69,23 @@ void main() {
 
     test('resetChat resets session gracefully', () {
       expect(() => geminiService.resetChat(), returnsNormally);
+    });
+
+    test('GeminiService defaults to unconfigured without hardcoded secrets', () {
+      final defaultService = GeminiService();
+      // Without dart-define GEMINI_API_KEY, isConfigured should be false
+      const envKey = String.fromEnvironment('GEMINI_API_KEY');
+      if (envKey.isEmpty) {
+        expect(defaultService.isConfigured, isFalse);
+        expect(GeminiService.defaultApiKey, isEmpty);
+      }
+    });
+
+    test('updateApiKey dynamically configures the service', () {
+      final service = GeminiService(apiKey: '');
+      expect(service.isConfigured, isFalse);
+      service.updateApiKey('test-api-key');
+      expect(service.isConfigured, isTrue);
     });
   });
 }

@@ -10,7 +10,8 @@ import 'package:pu_connection/features/auth/presentation/cubit/auth_state.dart';
 class MockAuthRepository implements AuthRepository {
   UserEntity? currentUser;
   String currentPassword = 'password123';
-  final StreamController<UserEntity?> _controller = StreamController<UserEntity?>.broadcast();
+  final StreamController<UserEntity?> _controller =
+      StreamController<UserEntity?>.broadcast();
 
   MockAuthRepository({this.currentUser});
 
@@ -19,6 +20,9 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<UserEntity?> getUserProfile(String uid) async => currentUser;
+
+  @override
+  Future<UserEntity?> getUserByStudentId(String studentId) async => currentUser;
 
   @override
   Future<void> updateUserProfile(UserEntity user) async {
@@ -41,7 +45,9 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<PhenikaaStudentEntity> verifyStudentIdentifier(String identifier) async {
+  Future<PhenikaaStudentEntity> verifyStudentIdentifier(
+    String identifier,
+  ) async {
     return const PhenikaaStudentEntity(
       studentId: '23010390',
       fullName: 'Sinh viên Test',
@@ -53,7 +59,10 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<bool> isStudentActivated({required String studentId, required String email}) async => true;
+  Future<bool> isStudentActivated({
+    required String studentId,
+    required String email,
+  }) async => true;
 
   @override
   Future<void> registerAndSendVerificationLink({
@@ -62,10 +71,16 @@ class MockAuthRepository implements AuthRepository {
   }) async {}
 
   @override
-  Future<void> resendEmailVerificationLink({required String email, required String password}) async {}
+  Future<void> resendEmailVerificationLink({
+    required String email,
+    required String password,
+  }) async {}
 
   @override
-  Future<UserEntity> signInWithEmailAndPassword({required String email, required String password}) async {
+  Future<UserEntity> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
     return currentUser!;
   }
 
@@ -79,37 +94,47 @@ class MockAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     _controller.add(null);
   }
+
+  @override
+  Future<bool> verifyAdminPrivilege(String uid) async =>
+      currentUser?.isAdmin ?? false;
+
+  @override
+  Future<bool> isCurrentUserAdmin() async => currentUser?.isAdmin ?? false;
 }
 
 void main() {
   group('UserEntity & UserModel Tests', () {
-    test('UserModel serialization with bio, avatarUrl, coverUrl, currentSubjects', () {
-      final model = UserModel.fromMap({
-        'email': '23010390@st.phenikaa-uni.edu.vn',
-        'displayName': 'Nguyễn Văn Test',
-        'studentId': '23010390',
-        'bio': 'Yêu thích lập trình và AI',
-        'avatarUrl': 'https://example.com/avatar.png',
-        'coverUrl': 'https://example.com/cover.png',
-        'faculty': 'Công nghệ thông tin',
-        'major': 'Kỹ thuật phần mềm',
-        'cohort': 17,
-        'currentSubjects': ['Lập trình mạng', 'Trí tuệ nhân tạo (AI)'],
-      }, 'uid_test');
+    test(
+      'UserModel serialization with bio, avatarUrl, coverUrl, currentSubjects',
+      () {
+        final model = UserModel.fromMap({
+          'email': '23010390@st.phenikaa-uni.edu.vn',
+          'displayName': 'Nguyễn Văn Test',
+          'studentId': '23010390',
+          'bio': 'Yêu thích lập trình và AI',
+          'avatarUrl': 'https://example.com/avatar.png',
+          'coverUrl': 'https://example.com/cover.png',
+          'faculty': 'Công nghệ thông tin',
+          'major': 'Kỹ thuật phần mềm',
+          'cohort': 17,
+          'currentSubjects': ['Lập trình mạng', 'Trí tuệ nhân tạo (AI)'],
+        }, 'uid_test');
 
-      expect(model.uid, 'uid_test');
-      expect(model.bio, 'Yêu thích lập trình và AI');
-      expect(model.avatarUrl, 'https://example.com/avatar.png');
-      expect(model.coverUrl, 'https://example.com/cover.png');
-      expect(model.currentSubjects.length, 2);
-      expect(model.currentSubjects, contains('Lập trình mạng'));
+        expect(model.uid, 'uid_test');
+        expect(model.bio, 'Yêu thích lập trình và AI');
+        expect(model.avatarUrl, 'https://example.com/avatar.png');
+        expect(model.coverUrl, 'https://example.com/cover.png');
+        expect(model.currentSubjects.length, 2);
+        expect(model.currentSubjects, contains('Lập trình mạng'));
 
-      final map = model.toMap();
-      expect(map['bio'], 'Yêu thích lập trình và AI');
-      expect(map['avatarUrl'], 'https://example.com/avatar.png');
-      expect(map['coverUrl'], 'https://example.com/cover.png');
-      expect(map['currentSubjects'], contains('Trí tuệ nhân tạo (AI)'));
-    });
+        final map = model.toMap();
+        expect(map['bio'], 'Yêu thích lập trình và AI');
+        expect(map['avatarUrl'], 'https://example.com/avatar.png');
+        expect(map['coverUrl'], 'https://example.com/cover.png');
+        expect(map['currentSubjects'], contains('Trí tuệ nhân tạo (AI)'));
+      },
+    );
 
     test('UserModel copyWith modifies fields cleanly', () {
       const user = UserModel(
@@ -153,21 +178,24 @@ void main() {
       cubit.close();
     });
 
-    test('updateUserProfile updates state to Authenticated with new user', () async {
-      final updated = initialUser.copyWith(
-        displayName: 'Nguyễn Văn A Updated',
-        bio: 'Đam mê nghiên cứu khoa học',
-        currentSubjects: ['Lập trình di động', 'Cơ sở dữ liệu'],
-      );
+    test(
+      'updateUserProfile updates state to Authenticated with new user',
+      () async {
+        final updated = initialUser.copyWith(
+          displayName: 'Nguyễn Văn A Updated',
+          bio: 'Đam mê nghiên cứu khoa học',
+          currentSubjects: ['Lập trình di động', 'Cơ sở dữ liệu'],
+        );
 
-      await cubit.updateUserProfile(updated);
+        await cubit.updateUserProfile(updated);
 
-      expect(cubit.state, isA<Authenticated>());
-      final authState = cubit.state as Authenticated;
-      expect(authState.user.displayName, 'Nguyễn Văn A Updated');
-      expect(authState.user.bio, 'Đam mê nghiên cứu khoa học');
-      expect(authState.user.currentSubjects.length, 2);
-    });
+        expect(cubit.state, isA<Authenticated>());
+        final authState = cubit.state as Authenticated;
+        expect(authState.user.displayName, 'Nguyễn Văn A Updated');
+        expect(authState.user.bio, 'Đam mê nghiên cứu khoa học');
+        expect(authState.user.currentSubjects.length, 2);
+      },
+    );
 
     test('changePassword succeeds with correct current password', () async {
       await expectLater(
@@ -180,24 +208,30 @@ void main() {
       expect(repository.currentPassword, 'newPassword456');
     });
 
-    test('changePassword throws exception when current password is wrong', () async {
-      await expectLater(
-        cubit.changePassword(
-          currentPassword: 'wrong_password',
-          newPassword: 'newPassword456',
-        ),
-        throwsA(isA<Exception>()),
-      );
-    });
+    test(
+      'changePassword throws exception when current password is wrong',
+      () async {
+        await expectLater(
+          cubit.changePassword(
+            currentPassword: 'wrong_password',
+            newPassword: 'newPassword456',
+          ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
 
-    test('changePassword throws exception when new password is too short', () async {
-      await expectLater(
-        cubit.changePassword(
-          currentPassword: 'password123',
-          newPassword: '123',
-        ),
-        throwsA(isA<Exception>()),
-      );
-    });
+    test(
+      'changePassword throws exception when new password is too short',
+      () async {
+        await expectLater(
+          cubit.changePassword(
+            currentPassword: 'password123',
+            newPassword: '123',
+          ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
   });
 }

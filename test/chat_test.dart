@@ -11,7 +11,10 @@ import 'package:pu_connection/features/chat/presentation/cubit/chat_state.dart';
 
 class MockCloudinaryService extends CloudinaryService {
   @override
-  Future<String?> uploadImage(dynamic file, {String folder = 'pu_connection/images'}) async {
+  Future<String?> uploadImage(
+    dynamic file, {
+    String folder = 'pu_connection/images',
+  }) async {
     return 'https://cloudinary.com/test_image.jpg';
   }
 }
@@ -25,10 +28,7 @@ class MockChatRepository implements ChatRepository {
         'userA': 'Nguyễn Văn An',
         'userB': 'Trần Thị Mai',
       },
-      participantFaculties: const {
-        'userA': 'CNTT',
-        'userB': 'Dược - Y',
-      },
+      participantFaculties: const {'userA': 'CNTT', 'userB': 'Dược - Y'},
       lastMessage: 'Chào bạn, cho mình xin tài liệu nhé!',
       lastMessageSenderId: 'userB',
       lastMessageAt: DateTime(2026, 1, 1),
@@ -49,7 +49,9 @@ class MockChatRepository implements ChatRepository {
   };
 
   @override
-  Stream<List<ConversationEntity>> getConversationsStream(String currentUserId) {
+  Stream<List<ConversationEntity>> getConversationsStream(
+    String currentUserId,
+  ) {
     return Stream.value(_conversations);
   }
 
@@ -136,8 +138,17 @@ class MockChatRepository implements ChatRepository {
     required String currentUserId,
   }) async {}
 
+  @override
+  Future<void> deleteConversationForUser({
+    required String conversationId,
+    required String userId,
+  }) async {
+    _conversations.removeWhere((c) => c.id == conversationId);
+  }
+
   final Map<String, Map<String, bool>> _typingStatus = {};
-  final StreamController<Map<String, bool>> _typingController = StreamController<Map<String, bool>>.broadcast();
+  final StreamController<Map<String, bool>> _typingController =
+      StreamController<Map<String, bool>>.broadcast();
 
   @override
   Future<void> setTypingStatus({
@@ -182,6 +193,7 @@ void main() {
       expect(map['fileType'], 'pdf');
       expect(map['fileSize'], '1.8 MB');
       expect(map['isRead'], true);
+      expect(map['readBy'], isEmpty);
 
       final fromMap = MessageModel.fromMap(map, 'msg_100');
       expect(fromMap.messageId, 'msg_100');
@@ -191,6 +203,25 @@ void main() {
       expect(fromMap.fileUrl, 'https://example.com/de_cuong.pdf');
       expect(fromMap.fileName, 'de_cuong.pdf');
       expect(fromMap.isRead, msg.isRead);
+      expect(fromMap.readBy, isEmpty);
+    });
+
+    test('MessageModel serializes and deserializes readBy list correctly [CHAT-003]', () {
+      final msg = MessageModel(
+        messageId: 'msg_200',
+        senderId: 'user_sender',
+        senderName: 'Sender',
+        content: 'Xin chào nhóm học tập!',
+        createdAt: DateTime(2026, 1, 1),
+        readBy: const ['user_sender', 'user_member_1', 'user_member_2'],
+      );
+
+      final map = msg.toMap();
+      expect(map['readBy'], ['user_sender', 'user_member_1', 'user_member_2']);
+
+      final restored = MessageModel.fromMap(map, 'msg_200');
+      expect(restored.readBy, ['user_sender', 'user_member_1', 'user_member_2']);
+      expect(restored.readBy.contains('user_member_1'), isTrue);
     });
 
     test('MessageEntity copyWith updates specified fields', () {
@@ -202,46 +233,52 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
       );
 
-      final updated = entity.copyWith(content: 'Modified', isRead: true, imageUrl: 'https://img.com/1.png');
+      final updated = entity.copyWith(
+        content: 'Modified',
+        isRead: true,
+        imageUrl: 'https://img.com/1.png',
+        readBy: ['userA', 'userB'],
+      );
       expect(updated.content, 'Modified');
       expect(updated.imageUrl, 'https://img.com/1.png');
       expect(updated.isRead, true);
       expect(updated.senderId, 'userA');
+      expect(updated.readBy, ['userA', 'userB']);
     });
   });
 
   group('ConversationModel & ConversationEntity Tests', () {
-    test('ConversationModel converts to and from Map correctly for 1-1 chat', () {
-      final conv = ConversationModel(
-        id: 'user1_user2',
-        participantIds: const ['user1', 'user2'],
-        participantNames: const {
-          'user1': 'Hà Mạnh Long',
-          'user2': 'Nguyễn Văn An',
-        },
-        participantFaculties: const {
-          'user1': 'CNTT',
-          'user2': 'Dược - Y',
-        },
-        lastMessage: 'Ok bạn nha!',
-        lastMessageSenderId: 'user1',
-        lastMessageAt: DateTime(2026, 3, 1),
-        unreadCounts: const {'user1': 0, 'user2': 1},
-      );
+    test(
+      'ConversationModel converts to and from Map correctly for 1-1 chat',
+      () {
+        final conv = ConversationModel(
+          id: 'user1_user2',
+          participantIds: const ['user1', 'user2'],
+          participantNames: const {
+            'user1': 'Hà Mạnh Long',
+            'user2': 'Nguyễn Văn An',
+          },
+          participantFaculties: const {'user1': 'CNTT', 'user2': 'Dược - Y'},
+          lastMessage: 'Ok bạn nha!',
+          lastMessageSenderId: 'user1',
+          lastMessageAt: DateTime(2026, 3, 1),
+          unreadCounts: const {'user1': 0, 'user2': 1},
+        );
 
-      final map = conv.toMap();
-      expect(map['participantIds'], ['user1', 'user2']);
-      expect(map['lastMessage'], 'Ok bạn nha!');
-      expect(map['isGroup'], false);
+        final map = conv.toMap();
+        expect(map['participantIds'], ['user1', 'user2']);
+        expect(map['lastMessage'], 'Ok bạn nha!');
+        expect(map['isGroup'], false);
 
-      final fromMap = ConversationModel.fromMap(map, 'user1_user2');
-      expect(fromMap.id, 'user1_user2');
-      expect(fromMap.isGroup, false);
-      expect(fromMap.participantIds.length, 2);
-      expect(fromMap.getDisplayName('user1'), 'Nguyễn Văn An');
-      expect(fromMap.getOtherParticipantFaculty('user1'), 'Dược - Y');
-      expect(fromMap.getUnreadCount('user2'), 1);
-    });
+        final fromMap = ConversationModel.fromMap(map, 'user1_user2');
+        expect(fromMap.id, 'user1_user2');
+        expect(fromMap.isGroup, false);
+        expect(fromMap.participantIds.length, 2);
+        expect(fromMap.getDisplayName('user1'), 'Nguyễn Văn An');
+        expect(fromMap.getOtherParticipantFaculty('user1'), 'Dược - Y');
+        expect(fromMap.getUnreadCount('user2'), 1);
+      },
+    );
 
     test('ConversationModel handles group chat correctly', () {
       final groupConv = ConversationModel(
@@ -314,7 +351,10 @@ void main() {
 
       expect(cubit.state.activeConversationId, 'userA_userB');
       expect(cubit.state.currentMessages.length, 1);
-      expect(cubit.state.currentMessages.first.content, 'Chào bạn, cho mình xin tài liệu nhé!');
+      expect(
+        cubit.state.currentMessages.first.content,
+        'Chào bạn, cho mình xin tài liệu nhé!',
+      );
     });
 
     test('sendMessage sends message through repository', () async {
@@ -344,20 +384,23 @@ void main() {
       expect(cubit.state.activeConversationId, 'userX_userY');
     });
 
-    test('createGroupConversation creates group and sets active conversation', () async {
-      final convId = await cubit.createGroupConversation(
-        groupName: 'Nhóm Ôn Thi Giải Tích',
-        creatorId: 'userA',
-        creatorName: 'Hà Mạnh Long',
-        members: [
-          {'id': 'userB', 'name': 'Trần Thị Mai', 'faculty': 'Dược - Y'},
-          {'id': 'userC', 'name': 'Lê Hoàng Nam', 'faculty': 'Kinh tế'},
-        ],
-      );
+    test(
+      'createGroupConversation creates group and sets active conversation',
+      () async {
+        final convId = await cubit.createGroupConversation(
+          groupName: 'Nhóm Ôn Thi Giải Tích',
+          creatorId: 'userA',
+          creatorName: 'Hà Mạnh Long',
+          members: [
+            {'id': 'userB', 'name': 'Trần Thị Mai', 'faculty': 'Dược - Y'},
+            {'id': 'userC', 'name': 'Lê Hoàng Nam', 'faculty': 'Kinh tế'},
+          ],
+        );
 
-      expect(convId, startsWith('group_'));
-      expect(cubit.state.activeConversationId, convId);
-    });
+        expect(convId, startsWith('group_'));
+        expect(cubit.state.activeConversationId, convId);
+      },
+    );
 
     test('leaveGroup leaves group and resets active conversation', () async {
       final convId = await cubit.createGroupConversation(
@@ -371,10 +414,7 @@ void main() {
 
       expect(cubit.state.activeConversationId, convId);
 
-      await cubit.leaveGroup(
-        conversationId: convId,
-        userId: 'userA',
-      );
+      await cubit.leaveGroup(conversationId: convId, userId: 'userA');
 
       expect(cubit.state.activeConversationId, isNull);
     });

@@ -33,7 +33,9 @@ void main() {
       expect(group.hasRequested('pending_3'), isTrue);
       expect(group.hasRequested('outside_4'), isFalse);
 
-      final fullGroup = group.copyWith(memberIds: ['lead_1', 'member_2', 'member_3']);
+      final fullGroup = group.copyWith(
+        memberIds: ['lead_1', 'member_2', 'member_3'],
+      );
       expect(fullGroup.isFull, isTrue);
     });
 
@@ -84,7 +86,9 @@ void main() {
     });
 
     test('getStudyGroups filters by subject', () async {
-      final mathGroups = await repository.getStudyGroups(subject: 'Giải tích 2');
+      final mathGroups = await repository.getStudyGroups(
+        subject: 'Giải tích 2',
+      );
       expect(mathGroups, isNotEmpty);
       expect(mathGroups.every((g) => g.subject == 'Giải tích 2'), isTrue);
     });
@@ -168,7 +172,10 @@ void main() {
 
       cubit.setSubjectFilter('Giải tích 2');
       expect(cubit.state.selectedSubjectFilter, 'Giải tích 2');
-      expect(cubit.state.filteredGroups.every((g) => g.subject == 'Giải tích 2'), isTrue);
+      expect(
+        cubit.state.filteredGroups.every((g) => g.subject == 'Giải tích 2'),
+        isTrue,
+      );
     });
 
     test('createGroup adds group to cubit state', () async {

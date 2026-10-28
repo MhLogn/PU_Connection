@@ -16,7 +16,10 @@ void main() {
     });
 
     test('fromString parses common strings correctly', () {
-      expect(NotificationType.fromString('academic'), NotificationType.academic);
+      expect(
+        NotificationType.fromString('academic'),
+        NotificationType.academic,
+      );
       expect(NotificationType.fromString('study'), NotificationType.academic);
       expect(NotificationType.fromString('social'), NotificationType.social);
       expect(NotificationType.fromString('friend'), NotificationType.social);
@@ -80,6 +83,39 @@ void main() {
       expect(model.isRead, true);
       expect(model.senderAvatar, isNull);
     });
+
+    test('fromMap parses both content and body schemas with fallback [NOTIF-002]', () {
+      // 1. Map with only body (legacy / club notifications)
+      final mapWithBody = {
+        'userId': 'user_1',
+        'title': 'CLB được duyệt',
+        'body': 'Đề xuất thành lập CLB của bạn đã được duyệt.',
+        'type': 'club_approved',
+      };
+      final notifFromBody = NotificationModel.fromMap(mapWithBody, 'doc_body');
+      expect(notifFromBody.content, 'Đề xuất thành lập CLB của bạn đã được duyệt.');
+
+      // 2. Map with only content
+      final mapWithContent = {
+        'userId': 'user_2',
+        'title': 'Thông báo hệ thống',
+        'content': 'Hệ thống bảo trì vào lúc 23h.',
+        'type': 'system',
+      };
+      final notifFromContent = NotificationModel.fromMap(mapWithContent, 'doc_content');
+      expect(notifFromContent.content, 'Hệ thống bảo trì vào lúc 23h.');
+
+      // 3. Map with both: content takes precedence if not empty
+      final mapWithBoth = {
+        'userId': 'user_3',
+        'title': 'Tiêu đề',
+        'content': 'Nội dung chính',
+        'body': 'Nội dung phụ',
+        'type': 'system',
+      };
+      final notifFromBoth = NotificationModel.fromMap(mapWithBoth, 'doc_both');
+      expect(notifFromBoth.content, 'Nội dung chính');
+    });
   });
 
   group('NotificationEntity Tests', () {
@@ -116,13 +152,21 @@ void main() {
       final state = InAppNotificationsState(
         notifications: [
           NotificationEntity(
-            id: '1', userId: 'u', title: 'A', content: 'a',
-            type: NotificationType.academic, senderName: 'S',
+            id: '1',
+            userId: 'u',
+            title: 'A',
+            content: 'a',
+            type: NotificationType.academic,
+            senderName: 'S',
             createdAt: DateTime.now(),
           ),
           NotificationEntity(
-            id: '2', userId: 'u', title: 'B', content: 'b',
-            type: NotificationType.social, senderName: 'S',
+            id: '2',
+            userId: 'u',
+            title: 'B',
+            content: 'b',
+            type: NotificationType.social,
+            senderName: 'S',
             createdAt: DateTime.now(),
           ),
         ],
@@ -135,13 +179,21 @@ void main() {
         selectedFilter: NotificationType.academic,
         notifications: [
           NotificationEntity(
-            id: '1', userId: 'u', title: 'A', content: 'a',
-            type: NotificationType.academic, senderName: 'S',
+            id: '1',
+            userId: 'u',
+            title: 'A',
+            content: 'a',
+            type: NotificationType.academic,
+            senderName: 'S',
             createdAt: DateTime.now(),
           ),
           NotificationEntity(
-            id: '2', userId: 'u', title: 'B', content: 'b',
-            type: NotificationType.social, senderName: 'S',
+            id: '2',
+            userId: 'u',
+            title: 'B',
+            content: 'b',
+            type: NotificationType.social,
+            senderName: 'S',
             createdAt: DateTime.now(),
           ),
         ],
@@ -154,19 +206,34 @@ void main() {
       final state = InAppNotificationsState(
         notifications: [
           NotificationEntity(
-            id: '1', userId: 'u', title: 'A', content: 'a',
-            type: NotificationType.academic, senderName: 'S',
-            createdAt: DateTime.now(), isRead: false,
+            id: '1',
+            userId: 'u',
+            title: 'A',
+            content: 'a',
+            type: NotificationType.academic,
+            senderName: 'S',
+            createdAt: DateTime.now(),
+            isRead: false,
           ),
           NotificationEntity(
-            id: '2', userId: 'u', title: 'B', content: 'b',
-            type: NotificationType.social, senderName: 'S',
-            createdAt: DateTime.now(), isRead: true,
+            id: '2',
+            userId: 'u',
+            title: 'B',
+            content: 'b',
+            type: NotificationType.social,
+            senderName: 'S',
+            createdAt: DateTime.now(),
+            isRead: true,
           ),
           NotificationEntity(
-            id: '3', userId: 'u', title: 'C', content: 'c',
-            type: NotificationType.event, senderName: 'S',
-            createdAt: DateTime.now(), isRead: false,
+            id: '3',
+            userId: 'u',
+            title: 'C',
+            content: 'c',
+            type: NotificationType.event,
+            senderName: 'S',
+            createdAt: DateTime.now(),
+            isRead: false,
           ),
         ],
       );

@@ -14,7 +14,9 @@ void main() {
     await sl.reset();
   });
 
-  testWidgets('App renders SplashPage and transitions to IntroPage', (WidgetTester tester) async {
+  testWidgets('App renders SplashPage and transitions to IntroPage', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const PUConnectionApp());
 
     expect(find.text('PU Connection'), findsOneWidget);

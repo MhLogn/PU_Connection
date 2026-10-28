@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pu_connection/features/clubs/domain/entities/club_entity.dart';
 import 'package:pu_connection/features/clubs/data/models/club_model.dart';
+import 'package:pu_connection/features/clubs/domain/entities/club_creation_request_entity.dart';
+import 'package:pu_connection/features/clubs/data/models/club_creation_request_model.dart';
 import 'package:pu_connection/features/clubs/data/repositories/club_repository_impl.dart';
 import 'package:pu_connection/features/clubs/presentation/cubit/club_cubit.dart';
 import 'package:pu_connection/features/clubs/presentation/cubit/club_state.dart';
@@ -37,20 +39,75 @@ void main() {
         'leaderName': 'Trần Văn B',
         'members': ['uid_1'],
         'membersCount': 50,
+        'status': 'approved',
       }, 'club_ai');
 
       expect(model.id, 'club_ai');
       expect(model.name, 'CLB AI');
       expect(model.description, 'CLB nghiên cứu trí tuệ nhân tạo');
       expect(model.isMember('uid_1'), isTrue);
+      expect(model.status, 'approved');
 
       final map = model.toMap();
       expect(map['name'], 'CLB AI');
       expect(map['category'], 'Học thuật');
+      expect(map['status'], 'approved');
     });
   });
 
-  group('ClubCubit Tests', () {
+  group('ClubCreationRequestEntity & Model Tests', () {
+    final now = DateTime(2026, 10, 26, 10, 0);
+    final request = ClubCreationRequestEntity(
+      id: 'req_123',
+      clubName: 'CLB Robotics Phenikaa',
+      category: 'Học thuật',
+      description: 'CLB sáng tạo và chế tạo Robot tự hành',
+      reason: 'Phát triển phong trào nghiên cứu khoa học kỹ thuật',
+      founderId: 'student_uid_1',
+      founderName: 'Lê Hoàng Long',
+      founderEmail: 'long.lh@phenikaa-uni.edu.vn',
+      founderStudentId: '22010123',
+      schedule: 'Thứ 7 hàng tuần, 14h - 17h',
+      location: 'Xưởng Maker Space Tòa A9',
+      status: 'pending',
+      createdAt: now,
+    );
+
+    test('Status getters return correct boolean values', () {
+      expect(request.isPending, isTrue);
+      expect(request.isApproved, isFalse);
+      expect(request.isRejected, isFalse);
+
+      final approvedReq = request.copyWith(status: 'approved');
+      expect(approvedReq.isApproved, isTrue);
+      expect(approvedReq.isPending, isFalse);
+
+      final rejectedReq = request.copyWith(
+        status: 'rejected',
+        adminFeedback: 'Mục tiêu chưa rõ ràng',
+      );
+      expect(rejectedReq.isRejected, isTrue);
+      expect(rejectedReq.adminFeedback, 'Mục tiêu chưa rõ ràng');
+    });
+
+    test('ClubCreationRequestModel serialization to and from Map', () {
+      final model = ClubCreationRequestModel.fromEntity(request);
+      final map = model.toMap();
+
+      expect(map['clubName'], 'CLB Robotics Phenikaa');
+      expect(map['category'], 'Học thuật');
+      expect(map['status'], 'pending');
+      expect(map['founderId'], 'student_uid_1');
+
+      final reconstructed = ClubCreationRequestModel.fromMap(map, 'req_123');
+      expect(reconstructed.id, 'req_123');
+      expect(reconstructed.clubName, 'CLB Robotics Phenikaa');
+      expect(reconstructed.founderName, 'Lê Hoàng Long');
+      expect(reconstructed.founderStudentId, '22010123');
+    });
+  });
+
+  group('ClubCubit & Request Workflow Tests', () {
     late ClubRepositoryImpl repository;
     late ClubCubit cubit;
 
@@ -74,7 +131,10 @@ void main() {
 
       cubit.filterCategory('Thể thao');
       expect(cubit.state.selectedCategory, 'Thể thao');
-      expect(cubit.state.filteredClubs.every((c) => c.category == 'Thể thao'), isTrue);
+      expect(
+        cubit.state.filteredClubs.every((c) => c.category == 'Thể thao'),
+        isTrue,
+      );
 
       cubit.filterCategory('Tất cả');
       expect(cubit.state.filteredClubs.length, cubit.state.clubs.length);
@@ -83,7 +143,10 @@ void main() {
     test('searchClubs filters correctly by keyword', () async {
       await Future.delayed(const Duration(milliseconds: 100));
       cubit.searchClubs('Basketball');
-      expect(cubit.state.filteredClubs.any((c) => c.name.contains('Basketball')), isTrue);
+      expect(
+        cubit.state.filteredClubs.any((c) => c.name.contains('Basketball')),
+        isTrue,
+      );
 
       cubit.searchClubs('');
       expect(cubit.state.filteredClubs.length, cubit.state.clubs.length);
@@ -97,10 +160,195 @@ void main() {
       expect(cubit.state.actionSuccessMessage, isNotNull);
 
       await cubit.toggleJoinClub(
-        club: firstClub.copyWith(memberIds: [...firstClub.memberIds, 'test_user_temp']),
+        club: firstClub.copyWith(
+          memberIds: [...firstClub.memberIds, 'test_user_temp'],
+        ),
         userId: 'test_user_temp',
       );
       expect(cubit.state.actionSuccessMessage, contains('Đã rời'));
+    });
+
+    test('Student submits club creation request successfully', () async {
+      cubit.initMyRequestsStream('student_123');
+      cubit.initPendingRequestsStream();
+
+      const newRequest = ClubCreationRequestEntity(
+        id: 'req_unique_1',
+        clubName: 'CLB Tranh Biện Phenikaa Debate',
+        category: 'Kỹ năng',
+        description: 'Môi trường rèn luyện tư duy phản biện và diễn thuyết',
+        reason: 'Chưa có CLB nào chuyên về tranh biện tại Phenikaa',
+        founderId: 'student_123',
+        founderName: 'Nguyễn Văn Minh',
+        founderEmail: 'minh.nv@phenikaa-uni.edu.vn',
+        founderStudentId: '22019999',
+      );
+
+      final success = await cubit.submitClubCreationRequest(newRequest);
+      expect(success, isTrue);
+      expect(cubit.state.actionSuccessMessage, contains('Đã gửi hồ sơ'));
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(cubit.state.myRequests.length, 1);
+      expect(cubit.state.myRequests.first.clubName, 'CLB Tranh Biện Phenikaa Debate');
+      expect(cubit.state.pendingRequests.length, 1);
+    });
+
+    test('Submitting request with duplicate club name is rejected', () async {
+      await Future.delayed(const Duration(milliseconds: 50));
+      // Try creating club with name identical to default club
+      const dupRequest = ClubCreationRequestEntity(
+        id: 'req_dup',
+        clubName: 'CLB Tin Học Phenikaa PRO',
+        category: 'Học thuật',
+        description: 'Tên trùng lặp',
+        reason: 'Thử nghiệm trùng lặp',
+        founderId: 'student_999',
+        founderName: 'Hacker',
+        founderEmail: 'test@phenikaa.vn',
+      );
+
+      final success = await cubit.submitClubCreationRequest(dupRequest);
+      expect(success, isFalse);
+      expect(cubit.state.errorMessage, contains('đã tồn tại'));
+    });
+
+    test('Admin approves club creation request: creates club and updates status', () async {
+      cubit.initMyRequestsStream('student_debate');
+      cubit.initPendingRequestsStream();
+
+      const req = ClubCreationRequestEntity(
+        id: 'req_debate',
+        clubName: 'CLB Tranh Biện PU Debate',
+        category: 'Kỹ năng',
+        description: 'Rèn luyện kỹ năng tư duy và phản biện',
+        reason: 'Thành lập môi trường giao lưu học thuật',
+        founderId: 'student_debate',
+        founderName: 'Trịnh Thảo Ly',
+        founderEmail: 'ly.tt@st.phenikaa-uni.edu.vn',
+        founderStudentId: '22010888',
+      );
+
+      await cubit.submitClubCreationRequest(req);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(cubit.state.pendingRequests.length, 1);
+
+      // Admin approves
+      final approved = await cubit.reviewClubRequest(
+        requestId: 'req_debate',
+        action: 'approve',
+        adminId: 'admin_master',
+        adminName: 'Trưởng Ban Quản Trị',
+      );
+      expect(approved, isTrue);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      // Pending requests count becomes 0
+      expect(cubit.state.pendingRequests.length, 0);
+
+      // Club now appears in official clubs list
+      expect(
+        cubit.state.clubs.any((c) => c.name == 'CLB Tranh Biện PU Debate'),
+        isTrue,
+      );
+      final newClub = cubit.state.clubs.firstWhere(
+        (c) => c.name == 'CLB Tranh Biện PU Debate',
+      );
+      expect(newClub.leaderId, 'student_debate');
+      expect(newClub.leaderName, 'Trịnh Thảo Ly');
+      expect(newClub.isMember('student_debate'), isTrue);
+      expect(newClub.status, 'approved');
+    });
+
+    test('Admin rejects club creation request with reason', () async {
+      cubit.initPendingRequestsStream();
+      cubit.initMyRequestsStream('student_bad');
+
+      const badReq = ClubCreationRequestEntity(
+        id: 'req_bad',
+        clubName: 'CLB Không Hợp Lệ',
+        category: 'Khác',
+        description: 'Nội dung sơ sài',
+        reason: 'Thích thì lập',
+        founderId: 'student_bad',
+        founderName: 'Nguyễn Văn C',
+        founderEmail: 'c.nv@phenikaa.vn',
+      );
+
+      await cubit.submitClubCreationRequest(badReq);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(cubit.state.pendingRequests.length, 1);
+
+      // Admin rejects with feedback
+      final rejected = await cubit.reviewClubRequest(
+        requestId: 'req_bad',
+        action: 'reject',
+        rejectionReason: 'Mục đích không phù hợp tôn chỉ sinh viên Phenikaa',
+        adminId: 'admin_uid',
+        adminName: 'Admin Phòng CTSV',
+      );
+      expect(rejected, isTrue);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(cubit.state.pendingRequests.length, 0);
+
+      // In student's requests, request is marked rejected with feedback
+      expect(cubit.state.myRequests.first.isRejected, isTrue);
+      expect(
+        cubit.state.myRequests.first.adminFeedback,
+        'Mục đích không phù hợp tôn chỉ sinh viên Phenikaa',
+      );
+      // Club should NOT be in official clubs list
+      expect(
+        cubit.state.clubs.any((c) => c.name == 'CLB Không Hợp Lệ'),
+        isFalse,
+      );
+    });
+
+    test('Student cancels their pending club creation request', () async {
+      cubit.initMyRequestsStream('student_cancel');
+      cubit.initPendingRequestsStream();
+
+      const req = ClubCreationRequestEntity(
+        id: 'req_cancel_me',
+        clubName: 'CLB Tạm Thời',
+        category: 'Học thuật',
+        description: 'Sắp hủy',
+        reason: 'Sắp hủy',
+        founderId: 'student_cancel',
+        founderName: 'Người Hủy',
+        founderEmail: 'cancel@phenikaa.vn',
+      );
+
+      await cubit.submitClubCreationRequest(req);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(cubit.state.pendingRequests.length, 1);
+
+      final cancelled = await cubit.cancelClubRequest('req_cancel_me');
+      expect(cancelled, isTrue);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(cubit.state.pendingRequests.length, 0);
+      expect(cubit.state.myRequests.length, 0);
+    });
+
+    test('Leader updates club details successfully', () async {
+      await Future.delayed(const Duration(milliseconds: 50));
+      final original = cubit.state.clubs.first;
+
+      final updated = original.copyWith(
+        description: 'Mô tả mới đã được cập nhật bởi Ban Chủ Nhiệm',
+        schedule: 'Thứ 2 & Thứ 6 hàng tuần',
+      );
+
+      final success = await cubit.updateClub(updated);
+      expect(success, isTrue);
+      expect(cubit.state.actionSuccessMessage, contains('Cập nhật thông tin CLB thành công'));
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      final refreshed = cubit.state.clubs.firstWhere((c) => c.id == original.id);
+      expect(refreshed.description, 'Mô tả mới đã được cập nhật bởi Ban Chủ Nhiệm');
+      expect(refreshed.schedule, 'Thứ 2 & Thứ 6 hàng tuần');
     });
   });
 }
