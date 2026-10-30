@@ -1591,6 +1591,810 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Sự kiện đã hết chỗ'**
   String get register_event_full;
+
+  /// No description provided for @my_student_qr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR sinh viên của tôi'**
+  String get my_student_qr;
+
+  /// No description provided for @scan_student_qr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã QR sinh viên'**
+  String get scan_student_qr;
+
+  /// No description provided for @share_profile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ hồ sơ'**
+  String get share_profile;
+
+  /// No description provided for @copied_profile_link.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép liên kết hồ sơ của {name}!'**
+  String copied_profile_link(String name);
+
+  /// No description provided for @cannot_chat_with_self.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tự nhắn tin cho chính mình!'**
+  String get cannot_chat_with_self;
+
+  /// No description provided for @cannot_open_chat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở cuộc trò chuyện: {error}'**
+  String cannot_open_chat(String error);
+
+  /// No description provided for @cancel_friend_request_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy lời mời kết bạn?'**
+  String get cancel_friend_request_title;
+
+  /// No description provided for @cancel_friend_request_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến {name}?'**
+  String cancel_friend_request_confirm(String name);
+
+  /// No description provided for @cancel_request_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy lời mời'**
+  String get cancel_request_btn;
+
+  /// No description provided for @friend_request_from.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời kết bạn từ {name}'**
+  String friend_request_from(String name);
+
+  /// No description provided for @accept_friend_request.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận kết bạn'**
+  String get accept_friend_request;
+
+  /// No description provided for @decline_friend_request.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối lời mời'**
+  String get decline_friend_request;
+
+  /// No description provided for @unfriend_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy kết bạn?'**
+  String get unfriend_title;
+
+  /// No description provided for @unfriend_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn hủy kết bạn với {name}?'**
+  String unfriend_confirm(String name);
+
+  /// No description provided for @unfriend_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy kết bạn'**
+  String get unfriend_btn;
+
+  /// No description provided for @report_user.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo người dùng'**
+  String get report_user;
+
+  /// No description provided for @block_user.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn người dùng này'**
+  String get block_user;
+
+  /// No description provided for @block_user_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn người dùng này?'**
+  String get block_user_title;
+
+  /// No description provided for @block_user_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn sẽ không còn nhìn thấy bài viết, bình luận và không thể nhắn tin với {name}.'**
+  String block_user_confirm(String name);
+
+  /// No description provided for @block_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn'**
+  String get block_btn;
+
+  /// No description provided for @student_badge.
+  ///
+  /// In vi, this message translates to:
+  /// **'SINH VIÊN'**
+  String get student_badge;
+
+  /// No description provided for @admin_badge.
+  ///
+  /// In vi, this message translates to:
+  /// **'QUẢN TRỊ VIÊN'**
+  String get admin_badge;
+
+  /// No description provided for @student_id_short.
+  ///
+  /// In vi, this message translates to:
+  /// **'MSSV'**
+  String get student_id_short;
+
+  /// No description provided for @not_updated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cập nhật'**
+  String get not_updated;
+
+  /// No description provided for @posts_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get posts_label;
+
+  /// No description provided for @friends_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get friends_label;
+
+  /// No description provided for @followers_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Follower'**
+  String get followers_label;
+
+  /// No description provided for @following_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Following'**
+  String get following_label;
+
+  /// No description provided for @tab_posts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get tab_posts;
+
+  /// No description provided for @tab_friends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get tab_friends;
+
+  /// No description provided for @tab_docs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài liệu'**
+  String get tab_docs;
+
+  /// No description provided for @tab_about.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin'**
+  String get tab_about;
+
+  /// No description provided for @add_friend.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết bạn'**
+  String get add_friend;
+
+  /// No description provided for @request_sent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lời mời'**
+  String get request_sent;
+
+  /// No description provided for @respond_request.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phản hồi'**
+  String get respond_request;
+
+  /// No description provided for @friends_status.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get friends_status;
+
+  /// No description provided for @following_status.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang theo dõi'**
+  String get following_status;
+
+  /// No description provided for @follow_action.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi'**
+  String get follow_action;
+
+  /// No description provided for @no_friends_yet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bạn bè nào'**
+  String get no_friends_yet;
+
+  /// No description provided for @academic_info.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin học tập'**
+  String get academic_info;
+
+  /// No description provided for @cohort_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khóa đào tạo'**
+  String get cohort_label;
+
+  /// No description provided for @contact_email.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email liên hệ'**
+  String get contact_email;
+
+  /// No description provided for @enrolled_courses.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn học đang theo học'**
+  String get enrolled_courses;
+
+  /// No description provided for @error_deleting_post.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi khi xóa bài: {error}'**
+  String error_deleting_post(String error);
+
+  /// No description provided for @edit_profile_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa thông tin cá nhân'**
+  String get edit_profile_btn;
+
+  /// No description provided for @edit_profile_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa hồ sơ'**
+  String get edit_profile_title;
+
+  /// No description provided for @friends_list_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách bạn bè ({count})'**
+  String friends_list_btn(int count);
+
+  /// No description provided for @grade_excellent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất sắc'**
+  String get grade_excellent;
+
+  /// No description provided for @grade_very_good.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giỏi'**
+  String get grade_very_good;
+
+  /// No description provided for @grade_good.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khá'**
+  String get grade_good;
+
+  /// No description provided for @grade_average.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung bình'**
+  String get grade_average;
+
+  /// No description provided for @grade_drl_good.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốt'**
+  String get grade_drl_good;
+
+  /// No description provided for @semester_courses.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn học kỳ này'**
+  String get semester_courses;
+
+  /// No description provided for @subject_count.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} môn'**
+  String subject_count(int count);
+
+  /// No description provided for @joined_clubs_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ đã tham gia'**
+  String get joined_clubs_title;
+
+  /// No description provided for @joined_clubs_view_all.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} CLB • Xem tất cả >'**
+  String joined_clubs_view_all(int count);
+
+  /// No description provided for @club_category_members.
+  ///
+  /// In vi, this message translates to:
+  /// **'{category} • {count} thành viên'**
+  String club_category_members(String category, int count);
+
+  /// No description provided for @notification_center_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung tâm thông báo'**
+  String get notification_center_title;
+
+  /// No description provided for @notification_center_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem và quản lý tất cả thông báo trường học'**
+  String get notification_center_desc;
+
+  /// No description provided for @mark_all_read.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc tất cả'**
+  String get mark_all_read;
+
+  /// No description provided for @no_notifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có thông báo nào'**
+  String get no_notifications;
+
+  /// No description provided for @saved_posts_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết đã lưu'**
+  String get saved_posts_title;
+
+  /// No description provided for @saved_posts_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem lại bài viết và tài liệu ôn thi bạn đã lưu'**
+  String get saved_posts_desc;
+
+  /// No description provided for @study_groups_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhóm học tập & Bạn cùng tiến'**
+  String get study_groups_title;
+
+  /// No description provided for @study_groups_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm đồng đội ôn thi, giải bài tập và học nhóm'**
+  String get study_groups_desc;
+
+  /// No description provided for @clubs_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá hoạt động và câu lạc bộ Phenikaa'**
+  String get clubs_desc;
+
+  /// No description provided for @admin_portal_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cổng Quản Trị Viên'**
+  String get admin_portal_title;
+
+  /// No description provided for @admin_portal_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn'**
+  String get admin_portal_desc;
+
+  /// No description provided for @change_password_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu'**
+  String get change_password_title;
+
+  /// No description provided for @change_password_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật mật khẩu bảo vệ tài khoản'**
+  String get change_password_desc;
+
+  /// No description provided for @blocked_users_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng đã chặn'**
+  String get blocked_users_title;
+
+  /// No description provided for @blocked_users_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý danh sách tài khoản bạn đã chặn'**
+  String get blocked_users_desc;
+
+  /// No description provided for @friend_requests_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời kết bạn'**
+  String get friend_requests_title;
+
+  /// No description provided for @no_friend_requests.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lời mời kết bạn nào'**
+  String get no_friend_requests;
+
+  /// No description provided for @no_friend_requests_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi có sinh viên khác gửi lời mời kết bạn, thông báo sẽ hiển thị tại đây.'**
+  String get no_friend_requests_desc;
+
+  /// No description provided for @accept_request_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận'**
+  String get accept_request_btn;
+
+  /// No description provided for @decline_request_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get decline_request_btn;
+
+  /// No description provided for @copy_qr_code.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép mã'**
+  String get copy_qr_code;
+
+  /// No description provided for @copied_qr_code.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép mã định danh sinh viên vào khay nhớ tạm!'**
+  String get copied_qr_code;
+
+  /// No description provided for @scan_other_qr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã khác'**
+  String get scan_other_qr;
+
+  /// No description provided for @qr_scan_instruction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã để xem hồ sơ sinh viên, thông tin ngành học và kết nối trên PU Connection.'**
+  String get qr_scan_instruction;
+
+  /// No description provided for @invalid_qr_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR không hợp lệ'**
+  String get invalid_qr_title;
+
+  /// No description provided for @invalid_qr_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR này không thuộc định dạng thẻ sinh viên Đại học Phenikaa (PU Connection).'**
+  String get invalid_qr_desc;
+
+  /// No description provided for @profile_not_found_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy hồ sơ'**
+  String get profile_not_found_title;
+
+  /// No description provided for @profile_not_found_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy dữ liệu sinh viên tương ứng với mã \"{id}\" trên hệ thống trường.'**
+  String profile_not_found_desc(String id);
+
+  /// No description provided for @own_qr_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR của chính bạn'**
+  String get own_qr_title;
+
+  /// No description provided for @own_qr_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đây là mã thẻ sinh viên điện tử của tài khoản bạn đang đăng nhập.'**
+  String get own_qr_desc;
+
+  /// No description provided for @basic_info.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin cơ bản'**
+  String get basic_info;
+
+  /// No description provided for @bio_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiểu sử (Bio)'**
+  String get bio_label;
+
+  /// No description provided for @bio_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu ngắn về bản thân, chuyên môn hay phương châm học tập...'**
+  String get bio_hint;
+
+  /// No description provided for @faculty_major_section.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoa & Ngành đào tạo'**
+  String get faculty_major_section;
+
+  /// No description provided for @major_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngành học / Chuyên ngành'**
+  String get major_label;
+
+  /// No description provided for @academic_results.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả học tập'**
+  String get academic_results;
+
+  /// No description provided for @academic_results_note.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm GPA, tín chỉ và ĐRL được đồng bộ chính thức từ Cổng đào tạo Phenikaa (Chỉ xem).'**
+  String get academic_results_note;
+
+  /// No description provided for @gpa_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'GPA (0.0 – 4.0)'**
+  String get gpa_label;
+
+  /// No description provided for @credits_earned_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tín chỉ tích lũy'**
+  String get credits_earned_label;
+
+  /// No description provided for @training_points_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm rèn luyện (ĐRL)'**
+  String get training_points_label;
+
+  /// No description provided for @current_semester_subjects.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn học đang học trong kỳ'**
+  String get current_semester_subjects;
+
+  /// No description provided for @current_semester_subjects_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giúp bạn bè dễ dàng tìm kiếm bạn trong cùng lớp môn học để lập nhóm học tập.'**
+  String get current_semester_subjects_desc;
+
+  /// No description provided for @enter_subject_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên môn học (vd: Nhập môn AI)...'**
+  String get enter_subject_hint;
+
+  /// No description provided for @popular_subjects_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý môn học phổ biến:'**
+  String get popular_subjects_hint;
+
+  /// No description provided for @change_cover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi ảnh bìa'**
+  String get change_cover;
+
+  /// No description provided for @add_cover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh'**
+  String get add_cover;
+
+  /// No description provided for @add_cover_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn để thêm ảnh bìa trang cá nhân'**
+  String get add_cover_hint;
+
+  /// No description provided for @profile_saved_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu thông tin hồ sơ thành công!'**
+  String get profile_saved_success;
+
+  /// No description provided for @profile_save_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật hồ sơ: {error}'**
+  String profile_save_failed(String error);
+
+  /// No description provided for @no_clubs_found.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy câu lạc bộ nào phù hợp'**
+  String get no_clubs_found;
+
+  /// No description provided for @create_club_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo CLB'**
+  String get create_club_btn;
+
+  /// No description provided for @explore_clubs_tab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá CLB'**
+  String get explore_clubs_tab;
+
+  /// No description provided for @my_club_requests_tab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu của tôi'**
+  String get my_club_requests_tab;
+
+  /// No description provided for @no_joined_clubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa tham gia câu lạc bộ nào'**
+  String get no_joined_clubs;
+
+  /// No description provided for @no_joined_clubs_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!'**
+  String get no_joined_clubs_desc;
+
+  /// No description provided for @explore_phenikaa_clubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá các CLB Phenikaa'**
+  String get explore_phenikaa_clubs;
+
+  /// No description provided for @no_club_requests.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa gửi yêu cầu thành lập CLB nào'**
+  String get no_club_requests;
+
+  /// No description provided for @no_club_requests_desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu bạn và các bạn cùng sở thích muốn thành lập câu lạc bộ mới tại Phenikaa, hãy gửi hồ sơ để Ban Quản Trị xem xét!'**
+  String get no_club_requests_desc;
+
+  /// No description provided for @register_new_club_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký thành lập CLB mới'**
+  String get register_new_club_btn;
+
+  /// No description provided for @status_approved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã phê duyệt'**
+  String get status_approved;
+
+  /// No description provided for @status_rejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị từ chối'**
+  String get status_rejected;
+
+  /// No description provided for @status_pending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get status_pending;
+
+  /// No description provided for @cancel_request_btn_text.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy yêu cầu'**
+  String get cancel_request_btn_text;
+
+  /// No description provided for @cancel_club_request_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy yêu cầu thành lập?'**
+  String get cancel_club_request_title;
+
+  /// No description provided for @cancel_club_request_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn hủy yêu cầu thành lập CLB \"{name}\" không?'**
+  String cancel_club_request_confirm(String name);
+
+  /// No description provided for @view_club_details.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết >'**
+  String get view_club_details;
+
+  /// No description provided for @club_president_badge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn là Chủ nhiệm Câu lạc bộ này'**
+  String get club_president_badge;
+
+  /// No description provided for @club_members_sheet_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh Sách Thành Viên'**
+  String get club_members_sheet_title;
+
+  /// No description provided for @confirm_leave_club_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời Câu Lạc Bộ'**
+  String get confirm_leave_club_title;
+
+  /// No description provided for @confirm_leave_club_body.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn rời khỏi \"{name}\" không? Bạn có thể tham gia lại bất kỳ lúc nào.'**
+  String confirm_leave_club_body(String name);
+
+  /// No description provided for @stay_in_club_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ở lại'**
+  String get stay_in_club_btn;
+
+  /// No description provided for @leave_club_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời CLB'**
+  String get leave_club_btn;
+
+  /// No description provided for @save_changes_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu Thay Đổi'**
+  String get save_changes_btn;
+
+  /// No description provided for @preview_club_proposal_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem Trước Đề Xuất Thành Lập CLB'**
+  String get preview_club_proposal_title;
+
+  /// No description provided for @confirm_submit_proposal_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận gửi hồ sơ'**
+  String get confirm_submit_proposal_btn;
+
+  /// No description provided for @edit_proposal_btn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa thêm'**
+  String get edit_proposal_btn;
+
+  /// No description provided for @club_president_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ nhiệm: {name}'**
+  String club_president_label(String name);
 }
 
 class _AppLocalizationsDelegate

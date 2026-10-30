@@ -1,6 +1,5 @@
 {
   "@@locale": "vi",
-
   "app_name": "PU Connection",
   "cancel": "Hủy",
   "confirm": "Xác nhận",
@@ -21,7 +20,6 @@
   "vietnamese": "Tiếng Việt",
   "english": "Tiếng Anh",
   "select_language": "Chọn ngôn ngữ",
-
   "skip": "Bỏ qua",
   "start_btn": "Bắt đầu",
   "intro1_badge": "CỘNG ĐỒNG PHENIKAA",
@@ -33,7 +31,6 @@
   "intro3_badge": "TRỢ LÝ AI & CÂU LẠC BỘ",
   "intro3_title": "PU Bot Campus & CLB Năng Động",
   "intro3_desc": "Trợ lý ảo giải đáp quy chế tín chỉ 24/7 cùng hàng chục câu lạc bộ học thuật, thể thao và nghệ thuật đang chờ bạn.",
-
   "setup_title": "Thiết Lập Cá Nhân",
   "setup_subtitle": "Tùy biến ngôn ngữ và giao diện hiển thị",
   "app_language_section": "Ngôn ngữ ứng dụng",
@@ -47,7 +44,6 @@
   "continue_to_login": "Tiếp tục đến Đăng nhập",
   "default_label": "Mặc định",
   "international_label": "Quốc tế",
-
   "login_tab": "Đăng nhập",
   "activate_tab": "Kích hoạt tài khoản",
   "login_welcome": "Chào mừng bạn trở lại!",
@@ -86,13 +82,11 @@
   "empty_field_err": "Vui lòng không để trống",
   "password_length_err": "Mật khẩu phải từ 6 ký tự trở lên",
   "password_mismatch_err": "Mật khẩu xác nhận không khớp",
-
   "nav_feed": "Bảng tin",
   "nav_docs": "Kho tài liệu",
   "nav_clubs": "Câu lạc bộ",
   "nav_bot": "PU Bot",
   "nav_profile": "Cá nhân",
-
   "feed_title": "Bảng tin Sinh viên",
   "search_posts_hint": "Tìm kiếm bài viết, tác giả...",
   "notifications": "Thông báo",
@@ -121,7 +115,6 @@
   "download_complete": "Tải xuống hoàn tất",
   "no_posts_found": "Không tìm thấy bài viết nào phù hợp",
   "no_posts_empty": "Chưa có bài viết nào trong mục này",
-
   "docs_title": "Kho Tài Liệu Học Phần",
   "search_docs_hint": "Tìm đề thi, slide, giáo trình...",
   "contribute_doc_btn": "Đóng góp tài liệu",
@@ -135,7 +128,6 @@
   "upload_success": "Đóng góp tài liệu thành công!",
   "all_courses": "Tất cả học phần",
   "downloads_count": "lượt tải",
-
   "clubs_title": "Cộng Đồng Câu Lạc Bộ",
   "search_clubs_hint": "Tìm kiếm câu lạc bộ...",
   "all_clubs": "Tất cả CLB",
@@ -150,7 +142,6 @@
   "club_contact": "Liên hệ CLB",
   "join_success": "Đã gửi yêu cầu tham gia câu lạc bộ!",
   "leave_club": "Rời câu lạc bộ",
-
   "bot_title": "Trợ Lý AI Campus",
   "bot_status_online": "Trực tuyến 24/7",
   "bot_welcome_msg": "Xin chào! Mình là PU Bot - Trợ lý ảo sinh viên Phenikaa. Bạn cần hỗ trợ gì về học phần, quy chế tín chỉ hay địa điểm trường không?",
@@ -159,7 +150,6 @@
   "bot_quick_scholarship": "Điều kiện xét học bổng khuyến khích",
   "bot_quick_library": "Giờ mở cửa thư viện & phòng tự học",
   "bot_quick_dorm": "Thủ tục đăng ký ký túc xá",
-
   "profile_title": "Hồ Sơ Sinh Viên",
   "student_card_qr": "Mã QR Sinh viên",
   "student_qr_desc": "Dùng để điểm danh sự kiện, ra vào thư viện và ký túc xá",
@@ -170,7 +160,6 @@
   "logout": "Đăng xuất",
   "logout_confirm_title": "Xác nhận đăng xuất",
   "logout_confirm_desc": "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?",
-
   "university_name": "ĐẠI HỌC PHENIKAA",
   "student_slogan": "Tôn trọng – Sáng tạo – Phản biện",
   "student_network": "Mạng xã hội sinh viên Phenikaa",
@@ -207,7 +196,6 @@
     }
   },
   "error_loading_pdf": "Không thể tải tài liệu PDF này.",
-  "retry": "Thử lại",
   "open_with_external": "Mở bằng ứng dụng ngoài",
   "file_selected": "Đã chọn tệp",
   "no_file_selected": "Chưa chọn tệp nào",
@@ -270,5 +258,254 @@
   "cancel_registration_confirm_title": "Hủy đăng ký",
   "cancel_registration_confirm_body": "Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện này không? Suất của bạn sẽ được giải phóng.",
   "cancel_registration_success": "Đã hủy đăng ký sự kiện thành công.",
-  "register_event_full": "Sự kiện đã hết chỗ"
+  "register_event_full": "Sự kiện đã hết chỗ",
+  "my_student_qr": "Mã QR sinh viên của tôi",
+  "scan_student_qr": "Quét mã QR sinh viên",
+  "share_profile": "Chia sẻ hồ sơ",
+  "copied_profile_link": "Đã sao chép liên kết hồ sơ của {name}!",
+  "@copied_profile_link": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cannot_chat_with_self": "Không thể tự nhắn tin cho chính mình!",
+  "cannot_open_chat": "Không thể mở cuộc trò chuyện: {error}",
+  "@cannot_open_chat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel_friend_request_title": "Hủy lời mời kết bạn?",
+  "cancel_friend_request_confirm": "Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến {name}?",
+  "@cancel_friend_request_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel_request_btn": "Hủy lời mời",
+  "friend_request_from": "Lời mời kết bạn từ {name}",
+  "@friend_request_from": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accept_friend_request": "Chấp nhận kết bạn",
+  "decline_friend_request": "Từ chối lời mời",
+  "unfriend_title": "Hủy kết bạn?",
+  "unfriend_confirm": "Bạn có chắc chắn muốn hủy kết bạn với {name}?",
+  "@unfriend_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unfriend_btn": "Hủy kết bạn",
+  "report_user": "Báo cáo người dùng",
+  "block_user": "Chặn người dùng này",
+  "block_user_title": "Chặn người dùng này?",
+  "block_user_confirm": "Bạn sẽ không còn nhìn thấy bài viết, bình luận và không thể nhắn tin với {name}.",
+  "@block_user_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "block_btn": "Chặn",
+  "student_badge": "SINH VIÊN",
+  "admin_badge": "QUẢN TRỊ VIÊN",
+  "student_id_short": "MSSV",
+  "not_updated": "Chưa cập nhật",
+  "posts_label": "Bài viết",
+  "friends_label": "Bạn bè",
+  "followers_label": "Follower",
+  "following_label": "Following",
+  "tab_posts": "Bài viết",
+  "tab_friends": "Bạn bè",
+  "tab_docs": "Tài liệu",
+  "tab_about": "Thông tin",
+  "add_friend": "Kết bạn",
+  "request_sent": "Đã gửi lời mời",
+  "respond_request": "Phản hồi",
+  "friends_status": "Bạn bè",
+  "following_status": "Đang theo dõi",
+  "follow_action": "Theo dõi",
+  "no_friends_yet": "Chưa có bạn bè nào",
+  "academic_info": "Thông tin học tập",
+  "cohort_label": "Khóa đào tạo",
+  "contact_email": "Email liên hệ",
+  "enrolled_courses": "Môn học đang theo học",
+  "error_deleting_post": "Lỗi khi xóa bài: {error}",
+  "@error_deleting_post": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "edit_profile_btn": "Chỉnh sửa thông tin cá nhân",
+  "edit_profile_title": "Chỉnh sửa hồ sơ",
+  "friends_list_btn": "Danh sách bạn bè ({count})",
+  "@friends_list_btn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "grade_excellent": "Xuất sắc",
+  "grade_very_good": "Giỏi",
+  "grade_good": "Khá",
+  "grade_average": "Trung bình",
+  "grade_drl_good": "Tốt",
+  "semester_courses": "Môn học kỳ này",
+  "subject_count": "{count} môn",
+  "@subject_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "joined_clubs_title": "Câu lạc bộ đã tham gia",
+  "joined_clubs_view_all": "{count} CLB • Xem tất cả >",
+  "@joined_clubs_view_all": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "club_category_members": "{category} • {count} thành viên",
+  "@club_category_members": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notification_center_title": "Trung tâm thông báo",
+  "notification_center_desc": "Xem và quản lý tất cả thông báo trường học",
+  "mark_all_read": "Đọc tất cả",
+  "no_notifications": "Không có thông báo nào",
+  "saved_posts_title": "Bài viết đã lưu",
+  "saved_posts_desc": "Xem lại bài viết và tài liệu ôn thi bạn đã lưu",
+  "study_groups_title": "Nhóm học tập & Bạn cùng tiến",
+  "study_groups_desc": "Tìm đồng đội ôn thi, giải bài tập và học nhóm",
+  "clubs_desc": "Khám phá hoạt động và câu lạc bộ Phenikaa",
+  "admin_portal_title": "Cổng Quản Trị Viên",
+  "admin_portal_desc": "Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn",
+  "change_password_title": "Đổi mật khẩu",
+  "change_password_desc": "Cập nhật mật khẩu bảo vệ tài khoản",
+  "blocked_users_title": "Người dùng đã chặn",
+  "blocked_users_desc": "Quản lý danh sách tài khoản bạn đã chặn",
+  "friend_requests_title": "Lời mời kết bạn",
+  "no_friend_requests": "Không có lời mời kết bạn nào",
+  "no_friend_requests_desc": "Khi có sinh viên khác gửi lời mời kết bạn, thông báo sẽ hiển thị tại đây.",
+  "accept_request_btn": "Chấp nhận",
+  "decline_request_btn": "Xóa",
+  "copy_qr_code": "Sao chép mã",
+  "copied_qr_code": "Đã sao chép mã định danh sinh viên vào khay nhớ tạm!",
+  "scan_other_qr": "Quét mã khác",
+  "qr_scan_instruction": "Quét mã để xem hồ sơ sinh viên, thông tin ngành học và kết nối trên PU Connection.",
+  "invalid_qr_title": "Mã QR không hợp lệ",
+  "invalid_qr_desc": "Mã QR này không thuộc định dạng thẻ sinh viên Đại học Phenikaa (PU Connection).",
+  "profile_not_found_title": "Không tìm thấy hồ sơ",
+  "profile_not_found_desc": "Không tìm thấy dữ liệu sinh viên tương ứng với mã \"{id}\" trên hệ thống trường.",
+  "@profile_not_found_desc": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "own_qr_title": "Mã QR của chính bạn",
+  "own_qr_desc": "Đây là mã thẻ sinh viên điện tử của tài khoản bạn đang đăng nhập.",
+  "basic_info": "Thông tin cơ bản",
+  "bio_label": "Tiểu sử (Bio)",
+  "bio_hint": "Giới thiệu ngắn về bản thân, chuyên môn hay phương châm học tập...",
+  "faculty_major_section": "Khoa & Ngành đào tạo",
+  "major_label": "Ngành học / Chuyên ngành",
+  "academic_results": "Kết quả học tập",
+  "academic_results_note": "Điểm GPA, tín chỉ và ĐRL được đồng bộ chính thức từ Cổng đào tạo Phenikaa (Chỉ xem).",
+  "gpa_label": "GPA (0.0 – 4.0)",
+  "credits_earned_label": "Tín chỉ tích lũy",
+  "training_points_label": "Điểm rèn luyện (ĐRL)",
+  "current_semester_subjects": "Môn học đang học trong kỳ",
+  "current_semester_subjects_desc": "Giúp bạn bè dễ dàng tìm kiếm bạn trong cùng lớp môn học để lập nhóm học tập.",
+  "enter_subject_hint": "Nhập tên môn học (vd: Nhập môn AI)...",
+  "popular_subjects_hint": "Gợi ý môn học phổ biến:",
+  "change_cover": "Đổi ảnh bìa",
+  "add_cover": "Thêm ảnh",
+  "add_cover_hint": "Nhấn để thêm ảnh bìa trang cá nhân",
+  "profile_saved_success": "Đã lưu thông tin hồ sơ thành công!",
+  "profile_save_failed": "Không thể cập nhật hồ sơ: {error}",
+  "@profile_save_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "no_clubs_found": "Không tìm thấy câu lạc bộ nào phù hợp",
+  "create_club_btn": "Tạo CLB",
+  "explore_clubs_tab": "Khám phá CLB",
+  "my_club_requests_tab": "Yêu cầu của tôi",
+  "no_joined_clubs": "Bạn chưa tham gia câu lạc bộ nào",
+  "no_joined_clubs_desc": "Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!",
+  "explore_phenikaa_clubs": "Khám phá các CLB Phenikaa",
+  "no_club_requests": "Bạn chưa gửi yêu cầu thành lập CLB nào",
+  "no_club_requests_desc": "Nếu bạn và các bạn cùng sở thích muốn thành lập câu lạc bộ mới tại Phenikaa, hãy gửi hồ sơ để Ban Quản Trị xem xét!",
+  "register_new_club_btn": "Đăng ký thành lập CLB mới",
+  "status_approved": "Đã phê duyệt",
+  "status_rejected": "Bị từ chối",
+  "status_pending": "Chờ duyệt",
+  "cancel_request_btn_text": "Hủy yêu cầu",
+  "cancel_club_request_title": "Hủy yêu cầu thành lập?",
+  "cancel_club_request_confirm": "Bạn có chắc chắn muốn hủy yêu cầu thành lập CLB \"{name}\" không?",
+  "@cancel_club_request_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "view_club_details": "Chi tiết >",
+  "club_president_badge": "Bạn là Chủ nhiệm Câu lạc bộ này",
+  "club_members_sheet_title": "Danh Sách Thành Viên",
+  "confirm_leave_club_title": "Rời Câu Lạc Bộ",
+  "confirm_leave_club_body": "Bạn có chắc chắn muốn rời khỏi \"{name}\" không? Bạn có thể tham gia lại bất kỳ lúc nào.",
+  "@confirm_leave_club_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stay_in_club_btn": "Ở lại",
+  "leave_club_btn": "Rời CLB",
+  "save_changes_btn": "Lưu Thay Đổi",
+  "preview_club_proposal_title": "Xem Trước Đề Xuất Thành Lập CLB",
+  "confirm_submit_proposal_btn": "Xác nhận gửi hồ sơ",
+  "edit_proposal_btn": "Chỉnh sửa thêm",
+  "club_president_label": "Chủ nhiệm: {name}",
+  "@club_president_label": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

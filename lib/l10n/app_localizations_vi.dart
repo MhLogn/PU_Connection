@@ -785,4 +785,452 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get register_event_full => 'Sự kiện đã hết chỗ';
+
+  @override
+  String get my_student_qr => 'Mã QR sinh viên của tôi';
+
+  @override
+  String get scan_student_qr => 'Quét mã QR sinh viên';
+
+  @override
+  String get share_profile => 'Chia sẻ hồ sơ';
+
+  @override
+  String copied_profile_link(String name) {
+    return 'Đã sao chép liên kết hồ sơ của $name!';
+  }
+
+  @override
+  String get cannot_chat_with_self => 'Không thể tự nhắn tin cho chính mình!';
+
+  @override
+  String cannot_open_chat(String error) {
+    return 'Không thể mở cuộc trò chuyện: $error';
+  }
+
+  @override
+  String get cancel_friend_request_title => 'Hủy lời mời kết bạn?';
+
+  @override
+  String cancel_friend_request_confirm(String name) {
+    return 'Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến $name?';
+  }
+
+  @override
+  String get cancel_request_btn => 'Hủy lời mời';
+
+  @override
+  String friend_request_from(String name) {
+    return 'Lời mời kết bạn từ $name';
+  }
+
+  @override
+  String get accept_friend_request => 'Chấp nhận kết bạn';
+
+  @override
+  String get decline_friend_request => 'Từ chối lời mời';
+
+  @override
+  String get unfriend_title => 'Hủy kết bạn?';
+
+  @override
+  String unfriend_confirm(String name) {
+    return 'Bạn có chắc chắn muốn hủy kết bạn với $name?';
+  }
+
+  @override
+  String get unfriend_btn => 'Hủy kết bạn';
+
+  @override
+  String get report_user => 'Báo cáo người dùng';
+
+  @override
+  String get block_user => 'Chặn người dùng này';
+
+  @override
+  String get block_user_title => 'Chặn người dùng này?';
+
+  @override
+  String block_user_confirm(String name) {
+    return 'Bạn sẽ không còn nhìn thấy bài viết, bình luận và không thể nhắn tin với $name.';
+  }
+
+  @override
+  String get block_btn => 'Chặn';
+
+  @override
+  String get student_badge => 'SINH VIÊN';
+
+  @override
+  String get admin_badge => 'QUẢN TRỊ VIÊN';
+
+  @override
+  String get student_id_short => 'MSSV';
+
+  @override
+  String get not_updated => 'Chưa cập nhật';
+
+  @override
+  String get posts_label => 'Bài viết';
+
+  @override
+  String get friends_label => 'Bạn bè';
+
+  @override
+  String get followers_label => 'Follower';
+
+  @override
+  String get following_label => 'Following';
+
+  @override
+  String get tab_posts => 'Bài viết';
+
+  @override
+  String get tab_friends => 'Bạn bè';
+
+  @override
+  String get tab_docs => 'Tài liệu';
+
+  @override
+  String get tab_about => 'Thông tin';
+
+  @override
+  String get add_friend => 'Kết bạn';
+
+  @override
+  String get request_sent => 'Đã gửi lời mời';
+
+  @override
+  String get respond_request => 'Phản hồi';
+
+  @override
+  String get friends_status => 'Bạn bè';
+
+  @override
+  String get following_status => 'Đang theo dõi';
+
+  @override
+  String get follow_action => 'Theo dõi';
+
+  @override
+  String get no_friends_yet => 'Chưa có bạn bè nào';
+
+  @override
+  String get academic_info => 'Thông tin học tập';
+
+  @override
+  String get cohort_label => 'Khóa đào tạo';
+
+  @override
+  String get contact_email => 'Email liên hệ';
+
+  @override
+  String get enrolled_courses => 'Môn học đang theo học';
+
+  @override
+  String error_deleting_post(String error) {
+    return 'Lỗi khi xóa bài: $error';
+  }
+
+  @override
+  String get edit_profile_btn => 'Chỉnh sửa thông tin cá nhân';
+
+  @override
+  String get edit_profile_title => 'Chỉnh sửa hồ sơ';
+
+  @override
+  String friends_list_btn(int count) {
+    return 'Danh sách bạn bè ($count)';
+  }
+
+  @override
+  String get grade_excellent => 'Xuất sắc';
+
+  @override
+  String get grade_very_good => 'Giỏi';
+
+  @override
+  String get grade_good => 'Khá';
+
+  @override
+  String get grade_average => 'Trung bình';
+
+  @override
+  String get grade_drl_good => 'Tốt';
+
+  @override
+  String get semester_courses => 'Môn học kỳ này';
+
+  @override
+  String subject_count(int count) {
+    return '$count môn';
+  }
+
+  @override
+  String get joined_clubs_title => 'Câu lạc bộ đã tham gia';
+
+  @override
+  String joined_clubs_view_all(int count) {
+    return '$count CLB • Xem tất cả >';
+  }
+
+  @override
+  String club_category_members(String category, int count) {
+    return '$category • $count thành viên';
+  }
+
+  @override
+  String get notification_center_title => 'Trung tâm thông báo';
+
+  @override
+  String get notification_center_desc =>
+      'Xem và quản lý tất cả thông báo trường học';
+
+  @override
+  String get mark_all_read => 'Đọc tất cả';
+
+  @override
+  String get no_notifications => 'Không có thông báo nào';
+
+  @override
+  String get saved_posts_title => 'Bài viết đã lưu';
+
+  @override
+  String get saved_posts_desc =>
+      'Xem lại bài viết và tài liệu ôn thi bạn đã lưu';
+
+  @override
+  String get study_groups_title => 'Nhóm học tập & Bạn cùng tiến';
+
+  @override
+  String get study_groups_desc =>
+      'Tìm đồng đội ôn thi, giải bài tập và học nhóm';
+
+  @override
+  String get clubs_desc => 'Khám phá hoạt động và câu lạc bộ Phenikaa';
+
+  @override
+  String get admin_portal_title => 'Cổng Quản Trị Viên';
+
+  @override
+  String get admin_portal_desc =>
+      'Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn';
+
+  @override
+  String get change_password_title => 'Đổi mật khẩu';
+
+  @override
+  String get change_password_desc => 'Cập nhật mật khẩu bảo vệ tài khoản';
+
+  @override
+  String get blocked_users_title => 'Người dùng đã chặn';
+
+  @override
+  String get blocked_users_desc => 'Quản lý danh sách tài khoản bạn đã chặn';
+
+  @override
+  String get friend_requests_title => 'Lời mời kết bạn';
+
+  @override
+  String get no_friend_requests => 'Không có lời mời kết bạn nào';
+
+  @override
+  String get no_friend_requests_desc =>
+      'Khi có sinh viên khác gửi lời mời kết bạn, thông báo sẽ hiển thị tại đây.';
+
+  @override
+  String get accept_request_btn => 'Chấp nhận';
+
+  @override
+  String get decline_request_btn => 'Xóa';
+
+  @override
+  String get copy_qr_code => 'Sao chép mã';
+
+  @override
+  String get copied_qr_code =>
+      'Đã sao chép mã định danh sinh viên vào khay nhớ tạm!';
+
+  @override
+  String get scan_other_qr => 'Quét mã khác';
+
+  @override
+  String get qr_scan_instruction =>
+      'Quét mã để xem hồ sơ sinh viên, thông tin ngành học và kết nối trên PU Connection.';
+
+  @override
+  String get invalid_qr_title => 'Mã QR không hợp lệ';
+
+  @override
+  String get invalid_qr_desc =>
+      'Mã QR này không thuộc định dạng thẻ sinh viên Đại học Phenikaa (PU Connection).';
+
+  @override
+  String get profile_not_found_title => 'Không tìm thấy hồ sơ';
+
+  @override
+  String profile_not_found_desc(String id) {
+    return 'Không tìm thấy dữ liệu sinh viên tương ứng với mã \"$id\" trên hệ thống trường.';
+  }
+
+  @override
+  String get own_qr_title => 'Mã QR của chính bạn';
+
+  @override
+  String get own_qr_desc =>
+      'Đây là mã thẻ sinh viên điện tử của tài khoản bạn đang đăng nhập.';
+
+  @override
+  String get basic_info => 'Thông tin cơ bản';
+
+  @override
+  String get bio_label => 'Tiểu sử (Bio)';
+
+  @override
+  String get bio_hint =>
+      'Giới thiệu ngắn về bản thân, chuyên môn hay phương châm học tập...';
+
+  @override
+  String get faculty_major_section => 'Khoa & Ngành đào tạo';
+
+  @override
+  String get major_label => 'Ngành học / Chuyên ngành';
+
+  @override
+  String get academic_results => 'Kết quả học tập';
+
+  @override
+  String get academic_results_note =>
+      'Điểm GPA, tín chỉ và ĐRL được đồng bộ chính thức từ Cổng đào tạo Phenikaa (Chỉ xem).';
+
+  @override
+  String get gpa_label => 'GPA (0.0 – 4.0)';
+
+  @override
+  String get credits_earned_label => 'Tín chỉ tích lũy';
+
+  @override
+  String get training_points_label => 'Điểm rèn luyện (ĐRL)';
+
+  @override
+  String get current_semester_subjects => 'Môn học đang học trong kỳ';
+
+  @override
+  String get current_semester_subjects_desc =>
+      'Giúp bạn bè dễ dàng tìm kiếm bạn trong cùng lớp môn học để lập nhóm học tập.';
+
+  @override
+  String get enter_subject_hint => 'Nhập tên môn học (vd: Nhập môn AI)...';
+
+  @override
+  String get popular_subjects_hint => 'Gợi ý môn học phổ biến:';
+
+  @override
+  String get change_cover => 'Đổi ảnh bìa';
+
+  @override
+  String get add_cover => 'Thêm ảnh';
+
+  @override
+  String get add_cover_hint => 'Nhấn để thêm ảnh bìa trang cá nhân';
+
+  @override
+  String get profile_saved_success => 'Đã lưu thông tin hồ sơ thành công!';
+
+  @override
+  String profile_save_failed(String error) {
+    return 'Không thể cập nhật hồ sơ: $error';
+  }
+
+  @override
+  String get no_clubs_found => 'Không tìm thấy câu lạc bộ nào phù hợp';
+
+  @override
+  String get create_club_btn => 'Tạo CLB';
+
+  @override
+  String get explore_clubs_tab => 'Khám phá CLB';
+
+  @override
+  String get my_club_requests_tab => 'Yêu cầu của tôi';
+
+  @override
+  String get no_joined_clubs => 'Bạn chưa tham gia câu lạc bộ nào';
+
+  @override
+  String get no_joined_clubs_desc =>
+      'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!';
+
+  @override
+  String get explore_phenikaa_clubs => 'Khám phá các CLB Phenikaa';
+
+  @override
+  String get no_club_requests => 'Bạn chưa gửi yêu cầu thành lập CLB nào';
+
+  @override
+  String get no_club_requests_desc =>
+      'Nếu bạn và các bạn cùng sở thích muốn thành lập câu lạc bộ mới tại Phenikaa, hãy gửi hồ sơ để Ban Quản Trị xem xét!';
+
+  @override
+  String get register_new_club_btn => 'Đăng ký thành lập CLB mới';
+
+  @override
+  String get status_approved => 'Đã phê duyệt';
+
+  @override
+  String get status_rejected => 'Bị từ chối';
+
+  @override
+  String get status_pending => 'Chờ duyệt';
+
+  @override
+  String get cancel_request_btn_text => 'Hủy yêu cầu';
+
+  @override
+  String get cancel_club_request_title => 'Hủy yêu cầu thành lập?';
+
+  @override
+  String cancel_club_request_confirm(String name) {
+    return 'Bạn có chắc chắn muốn hủy yêu cầu thành lập CLB \"$name\" không?';
+  }
+
+  @override
+  String get view_club_details => 'Chi tiết >';
+
+  @override
+  String get club_president_badge => 'Bạn là Chủ nhiệm Câu lạc bộ này';
+
+  @override
+  String get club_members_sheet_title => 'Danh Sách Thành Viên';
+
+  @override
+  String get confirm_leave_club_title => 'Rời Câu Lạc Bộ';
+
+  @override
+  String confirm_leave_club_body(String name) {
+    return 'Bạn có chắc chắn muốn rời khỏi \"$name\" không? Bạn có thể tham gia lại bất kỳ lúc nào.';
+  }
+
+  @override
+  String get stay_in_club_btn => 'Ở lại';
+
+  @override
+  String get leave_club_btn => 'Rời CLB';
+
+  @override
+  String get save_changes_btn => 'Lưu Thay Đổi';
+
+  @override
+  String get preview_club_proposal_title => 'Xem Trước Đề Xuất Thành Lập CLB';
+
+  @override
+  String get confirm_submit_proposal_btn => 'Xác nhận gửi hồ sơ';
+
+  @override
+  String get edit_proposal_btn => 'Chỉnh sửa thêm';
+
+  @override
+  String club_president_label(String name) {
+    return 'Chủ nhiệm: $name';
+  }
 }

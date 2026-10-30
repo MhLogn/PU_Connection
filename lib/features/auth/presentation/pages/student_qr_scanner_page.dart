@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/student_qr_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -52,11 +53,12 @@ class _StudentQrScannerPageState extends State<StudentQrScannerPage> {
 
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
+
     if (studentId == null || studentId.isEmpty) {
       _showErrorDialog(
-        title: 'Mã QR không hợp lệ',
-        message:
-            'Mã QR này không thuộc định dạng thẻ sinh viên Đại học Phenikaa (PU Connection).',
+        title: l10n.invalid_qr_title,
+        message: l10n.invalid_qr_desc,
         onRetry: _resumeScanning,
       );
       return;
@@ -86,9 +88,8 @@ class _StudentQrScannerPageState extends State<StudentQrScannerPage> {
 
       if (user == null) {
         _showErrorDialog(
-          title: 'Không tìm thấy hồ sơ',
-          message:
-              'Không tìm thấy dữ liệu sinh viên tương ứng với mã "$studentId" trên hệ thống trường.',
+          title: l10n.profile_not_found_title,
+          message: l10n.profile_not_found_desc(studentId),
           onRetry: _resumeScanning,
         );
         return;
@@ -141,41 +142,42 @@ class _StudentQrScannerPageState extends State<StudentQrScannerPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.info_outline_rounded,
-              color: AppTheme.primaryColor(context),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppTheme.primaryColor(context),
+              ),
+              const SizedBox(width: 8),
+              Text(l10n.own_qr_title),
+            ],
+          ),
+          content: Text(l10n.own_qr_desc),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _resumeScanning();
+              },
+              child: Text(l10n.cancel),
             ),
-            const SizedBox(width: 8),
-            const Text('Mã QR của bạn'),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor(context),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context); // Quay về Profile của chính mình
+              },
+              child: Text(l10n.confirm),
+            ),
           ],
-        ),
-        content: const Text(
-          'Đây là mã QR định danh của chính bạn. Bạn có muốn mở lại trang cá nhân của mình không?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _resumeScanning();
-            },
-            child: const Text('Tiếp tục quét'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor(context),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context); // Quay về Profile của chính mình
-            },
-            child: const Text('Xem hồ sơ của tôi'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -187,36 +189,39 @@ class _StudentQrScannerPageState extends State<StudentQrScannerPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.red),
-            const SizedBox(width: 8),
-            Flexible(child: Text(title)),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context); // Đóng trang quét
-            },
-            child: const Text('Đóng'),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.red),
+              const SizedBox(width: 8),
+              Flexible(child: Text(title)),
+            ],
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor(context),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context); // Đóng trang quét
+              },
+              child: Text(l10n.close),
             ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              onRetry();
-            },
-            child: const Text('Quét lại'),
-          ),
-        ],
-      ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor(context),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                onRetry();
+              },
+              child: Text(l10n.retry),
+            ),
+          ],
+        );
+      },
     );
   }
 

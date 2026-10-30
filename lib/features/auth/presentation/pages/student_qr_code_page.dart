@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/services/student_qr_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/user_entity.dart';
 import 'student_qr_scanner_page.dart';
 
@@ -23,16 +24,17 @@ class StudentQrCodePage extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final resolvedStudentId = user.studentId.isNotEmpty
         ? user.studentId
         : (user.email.contains('@') ? user.email.split('@').first : user.uid);
     final resolvedFaculty = user.faculty.isNotEmpty
         ? user.faculty
-        : 'Chưa cập nhật';
+        : l10n.not_updated;
     final resolvedMajor = user.major.isNotEmpty
         ? user.major
-        : 'Chưa cập nhật';
+        : l10n.not_updated;
     final resolvedCohort = user.cohort != 0 ? user.cohort : 0;
 
     final qrData = StudentQrService.generatePayload(
@@ -43,12 +45,12 @@ class StudentQrCodePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? colorScheme.surface : AppTheme.backgroundLight,
       appBar: AppBar(
-        title: const Text('Mã QR sinh viên'),
+        title: Text(l10n.student_card_qr),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner_rounded),
-            tooltip: 'Quét mã QR sinh viên khác',
+            tooltip: l10n.scan_student_qr,
             onPressed: () {
               Navigator.push(
                 context,
@@ -102,7 +104,7 @@ class StudentQrCodePage extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'ĐẠI HỌC PHENIKAA',
+                        l10n.university_name,
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w800,
@@ -122,9 +124,9 @@ class StudentQrCodePage extends StatelessWidget {
                       color: AppTheme.accentOrange.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
-                      'THẺ SINH VIÊN ĐIỆN TỬ',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.digital_student_card,
+                      style: const TextStyle(
                         color: AppTheme.accentOrange,
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
@@ -167,7 +169,7 @@ class StudentQrCodePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'MSSV: $resolvedStudentId',
+                          '${l10n.student_id_short}: $resolvedStudentId',
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
@@ -285,7 +287,7 @@ class StudentQrCodePage extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Quét mã để xem hồ sơ sinh viên, thông tin ngành học và kết nối trên PU Connection.',
+                      l10n.qr_scan_instruction,
                       style: TextStyle(
                         fontSize: 12.5,
                         color: isDark
@@ -306,7 +308,7 @@ class StudentQrCodePage extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.share_outlined, size: 18),
-                    label: const Text('Sao chép mã'),
+                    label: Text(l10n.copy_qr_code),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primaryColor(context),
                       padding: const EdgeInsets.symmetric(vertical: 13),
@@ -318,9 +320,7 @@ class StudentQrCodePage extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: qrData));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text(
-                            'Đã sao chép mã định danh sinh viên vào khay nhớ tạm!',
-                          ),
+                          content: Text(l10n.copied_qr_code),
                           backgroundColor: AppTheme.primaryColor(context),
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -332,7 +332,7 @@ class StudentQrCodePage extends StatelessWidget {
                 Expanded(
                   child: FilledButton.icon(
                     icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                    label: const Text('Quét mã khác'),
+                    label: Text(l10n.scan_other_qr),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor(context),
                       padding: const EdgeInsets.symmetric(vertical: 13),

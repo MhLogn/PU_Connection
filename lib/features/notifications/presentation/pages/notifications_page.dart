@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../events/presentation/pages/events_page.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -154,7 +155,7 @@ class NotificationsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Đóng'),
+            child: Text(AppLocalizations.of(context)?.close ?? 'Đóng'),
           ),
         ],
       ),
@@ -165,6 +166,7 @@ class NotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return BlocConsumer<InAppNotificationsCubit, InAppNotificationsState>(
       listener: (context, state) {
@@ -205,7 +207,7 @@ class NotificationsPage extends StatelessWidget {
             title: Row(
               children: [
                 Text(
-                  'Thông báo',
+                  l10n.notifications,
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
@@ -245,9 +247,9 @@ class NotificationsPage extends StatelessWidget {
                     context.read<InAppNotificationsCubit>().markAllAsRead();
                   },
                   icon: const Icon(Icons.done_all_rounded, size: 18),
-                  label: const Text(
-                    'Đọc tất cả',
-                    style: TextStyle(
+                  label: Text(
+                    l10n.mark_all_read,
+                    style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.bold,
                     ),
@@ -338,7 +340,7 @@ class NotificationsPage extends StatelessWidget {
             Text(
               isFiltered
                   ? 'Chưa có thông báo ${state.selectedFilter!.displayName.toLowerCase()}'
-                  : 'Không có thông báo nào',
+                  : (AppLocalizations.of(context)?.no_notifications ?? 'Không có thông báo nào'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

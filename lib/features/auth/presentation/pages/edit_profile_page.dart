@@ -6,6 +6,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/cloudinary_service.dart';
 import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/entities/user_entity.dart';
 import '../cubit/auth_cubit.dart';
@@ -580,10 +581,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await context.read<AuthCubit>().updateUserProfile(updatedUser);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã lưu thông tin hồ sơ thành công!'),
+            content: Text(l10n.profile_saved_success),
             backgroundColor: AppTheme.primaryColor(context),
           ),
         );
@@ -591,9 +593,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Không thể cập nhật hồ sơ: $e'),
+            content: Text(l10n.profile_save_failed(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -605,13 +608,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text(
-          'Chỉnh sửa hồ sơ',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.edit_profile_title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           TextButton(
@@ -622,9 +626,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'Lưu',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                : Text(
+                    l10n.save,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
           ),
         ],
@@ -643,20 +647,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Basic Info Card
               _buildSectionCard(
                 context,
-                title: 'Thông tin cơ bản',
+                title: l10n.basic_info,
                 icon: Icons.person_outline_rounded,
                 children: [
                   TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      labelText: 'Họ và tên',
+                      labelText: l10n.full_name,
                       prefixIcon: const Icon(Icons.badge_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     validator: (val) => val == null || val.trim().isEmpty
-                        ? 'Vui lòng nhập họ và tên'
+                        ? l10n.empty_field_err
                         : null,
                   ),
                   const SizedBox(height: 14),
@@ -664,9 +668,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     controller: _bioController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      labelText: 'Tiểu sử (Bio)',
-                      hintText:
-                          'Giới thiệu ngắn về bản thân, chuyên môn hay phương châm học tập...',
+                      labelText: l10n.bio_label,
+                      hintText: l10n.bio_hint,
                       prefixIcon: const Icon(Icons.edit_note_rounded),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -680,13 +683,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Academic Info Card
               _buildSectionCard(
                 context,
-                title: 'Khoa & Ngành đào tạo',
+                title: l10n.faculty_major_section,
                 icon: Icons.school_outlined,
                 children: [
                   TextFormField(
                     controller: _facultyController,
                     decoration: InputDecoration(
-                      labelText: 'Khoa / Viện',
+                      labelText: l10n.faculty,
                       prefixIcon: const Icon(Icons.account_balance_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -697,7 +700,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   TextFormField(
                     controller: _majorController,
                     decoration: InputDecoration(
-                      labelText: 'Ngành học / Chuyên ngành',
+                      labelText: l10n.major_label,
                       prefixIcon: const Icon(Icons.menu_book_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -711,7 +714,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Academic Results Card (GPA, Credits, Training Points - Read Only)
               _buildSectionCard(
                 context,
-                title: 'Kết quả học tập',
+                title: l10n.academic_results,
                 icon: Icons.auto_awesome_rounded,
                 children: [
                   Container(
@@ -734,7 +737,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Điểm GPA, tín chỉ và ĐRL được đồng bộ chính thức từ Cổng đào tạo Phenikaa (Chỉ xem).',
+                            l10n.academic_results_note,
                             style: TextStyle(
                               fontSize: 12,
                               color: colorScheme.onSurface.withValues(alpha: 0.75),
@@ -751,7 +754,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           controller: _gpaController,
                           readOnly: true,
                           decoration: InputDecoration(
-                            labelText: 'GPA (0.0 – 4.0)',
+                            labelText: l10n.gpa_label,
                             prefixIcon: const Icon(Icons.grade_outlined),
                             suffixIcon: const Icon(Icons.lock_outline, size: 16),
                             border: OutlineInputBorder(
@@ -766,7 +769,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           controller: _creditsController,
                           readOnly: true,
                           decoration: InputDecoration(
-                            labelText: 'Tín chỉ tích lũy',
+                            labelText: l10n.credits_earned_label,
                             prefixIcon: const Icon(Icons.menu_book_outlined),
                             suffixIcon: const Icon(Icons.lock_outline, size: 16),
                             border: OutlineInputBorder(
@@ -782,7 +785,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     controller: _trainingPointsController,
                     readOnly: true,
                     decoration: InputDecoration(
-                      labelText: 'Điểm rèn luyện (ĐRL)',
+                      labelText: l10n.training_points_label,
                       prefixIcon: const Icon(Icons.military_tech_outlined),
                       suffixIcon: const Icon(Icons.lock_outline, size: 16),
                       border: OutlineInputBorder(
@@ -801,9 +804,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _saveProfile,
                 icon: const Icon(Icons.check_rounded, color: Colors.white),
-                label: const Text(
-                  'Lưu thay đổi',
-                  style: TextStyle(
+                label: Text(
+                  l10n.save_changes,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Colors.white,
@@ -828,6 +831,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildCoverAndAvatar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SizedBox(
       height: 195,
@@ -887,7 +891,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Nhấn để thêm ảnh bìa trang cá nhân',
+                              l10n.add_cover_hint,
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
@@ -917,7 +921,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 )
                               : const Icon(Icons.camera_alt_outlined, size: 16),
                           label: Text(
-                            _coverUrl.isNotEmpty ? 'Đổi ảnh bìa' : 'Thêm ảnh',
+                            _coverUrl.isNotEmpty ? l10n.change_cover : l10n.add_cover,
                             style: const TextStyle(fontSize: 12),
                           ),
                           style: FilledButton.styleFrom(
@@ -1061,6 +1065,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Widget _buildSubjectsSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1092,15 +1097,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 color: AppTheme.accentColor(context),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'Môn học đang học trong kỳ',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                l10n.current_semester_subjects,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Giúp bạn bè dễ dàng tìm kiếm bạn trong cùng lớp môn học để lập nhóm học tập.',
+            l10n.current_semester_subjects_desc,
             style: TextStyle(
               fontSize: 12,
               color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -1115,7 +1120,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: TextField(
                   controller: _newSubjectController,
                   decoration: InputDecoration(
-                    hintText: 'Nhập tên môn học (vd: Nhập môn AI)...',
+                    hintText: l10n.enter_subject_hint,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 12,
@@ -1170,9 +1175,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ],
 
           // Quick Suggestions
-          const Text(
-            'Gợi ý môn học phổ biến:',
-            style: TextStyle(
+          Text(
+            l10n.popular_subjects_hint,
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: Colors.grey,

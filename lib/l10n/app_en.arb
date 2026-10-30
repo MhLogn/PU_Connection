@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "app_name": "PU Connection",
   "cancel": "Cancel",
   "confirm": "Confirm",
@@ -21,7 +20,6 @@
   "vietnamese": "Vietnamese",
   "english": "English",
   "select_language": "Select Language",
-
   "skip": "Skip",
   "start_btn": "Get Started",
   "intro1_badge": "PHENIKAA COMMUNITY",
@@ -33,7 +31,6 @@
   "intro3_badge": "AI ASSISTANT & CLUBS",
   "intro3_title": "PU Bot Campus & Dynamic Clubs",
   "intro3_desc": "24/7 virtual assistant for academic credit regulations and dozens of academic, sports, and arts clubs waiting for you.",
-
   "setup_title": "Personal Setup",
   "setup_subtitle": "Customize language and display appearance",
   "app_language_section": "App Language",
@@ -47,7 +44,6 @@
   "continue_to_login": "Continue to Sign In",
   "default_label": "Default",
   "international_label": "International",
-
   "login_tab": "Sign In",
   "activate_tab": "Activate Account",
   "login_welcome": "Welcome Back!",
@@ -86,13 +82,11 @@
   "empty_field_err": "Please do not leave blank",
   "password_length_err": "Password must be at least 6 characters",
   "password_mismatch_err": "Confirmation password does not match",
-
   "nav_feed": "Feed",
   "nav_docs": "Docs Hub",
   "nav_clubs": "Clubs",
   "nav_bot": "PU Bot",
   "nav_profile": "Profile",
-
   "feed_title": "Student Feed",
   "search_posts_hint": "Search posts, authors...",
   "notifications": "Notifications",
@@ -121,7 +115,6 @@
   "download_complete": "Download complete",
   "no_posts_found": "No matching posts found",
   "no_posts_empty": "No posts in this section yet",
-
   "docs_title": "Course Materials Hub",
   "search_docs_hint": "Search exams, slides, textbooks...",
   "contribute_doc_btn": "Contribute Material",
@@ -135,7 +128,6 @@
   "upload_success": "Material uploaded successfully!",
   "all_courses": "All Courses",
   "downloads_count": "downloads",
-
   "clubs_title": "Clubs Community",
   "search_clubs_hint": "Search clubs...",
   "all_clubs": "All Clubs",
@@ -150,7 +142,6 @@
   "club_contact": "Contact Club",
   "join_success": "Join request sent successfully!",
   "leave_club": "Leave Club",
-
   "bot_title": "AI Campus Assistant",
   "bot_status_online": "Online 24/7",
   "bot_welcome_msg": "Hello! I am PU Bot - Phenikaa Student AI Assistant. How can I assist you with courses, credits regulation, or campus life?",
@@ -159,7 +150,6 @@
   "bot_quick_scholarship": "Merit scholarship criteria",
   "bot_quick_library": "Library & study room operating hours",
   "bot_quick_dorm": "Dormitory registration procedure",
-
   "profile_title": "Student Profile",
   "student_card_qr": "Student QR Code",
   "student_qr_desc": "Used for event check-in, library and dormitory access",
@@ -170,7 +160,6 @@
   "logout": "Sign Out",
   "logout_confirm_title": "Sign Out Confirmation",
   "logout_confirm_desc": "Are you sure you want to sign out of your account?",
-
   "university_name": "PHENIKAA UNIVERSITY",
   "student_slogan": "Respect – Innovation – Critical Thinking",
   "student_network": "Phenikaa Student Social Network",
@@ -207,7 +196,6 @@
     }
   },
   "error_loading_pdf": "Unable to load this PDF document.",
-  "retry": "Retry",
   "open_with_external": "Open with external app",
   "file_selected": "File selected",
   "no_file_selected": "No file selected",
@@ -270,5 +258,254 @@
   "cancel_registration_confirm_title": "Cancel Registration",
   "cancel_registration_confirm_body": "Are you sure you want to cancel your registration for this event? Your spot will be released.",
   "cancel_registration_success": "Registration cancelled successfully.",
-  "register_event_full": "This event is full"
+  "register_event_full": "This event is full",
+  "my_student_qr": "My Student QR Code",
+  "scan_student_qr": "Scan Student QR Code",
+  "share_profile": "Share Profile",
+  "copied_profile_link": "Copied profile link for {name}!",
+  "@copied_profile_link": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cannot_chat_with_self": "You cannot message yourself!",
+  "cannot_open_chat": "Cannot open conversation: {error}",
+  "@cannot_open_chat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel_friend_request_title": "Cancel Friend Request?",
+  "cancel_friend_request_confirm": "Are you sure you want to cancel the friend request sent to {name}?",
+  "@cancel_friend_request_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel_request_btn": "Cancel Request",
+  "friend_request_from": "Friend request from {name}",
+  "@friend_request_from": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accept_friend_request": "Accept Friend Request",
+  "decline_friend_request": "Decline Request",
+  "unfriend_title": "Unfriend?",
+  "unfriend_confirm": "Are you sure you want to unfriend {name}?",
+  "@unfriend_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unfriend_btn": "Unfriend",
+  "report_user": "Report User",
+  "block_user": "Block User",
+  "block_user_title": "Block this user?",
+  "block_user_confirm": "You will no longer see posts, comments, or be able to message {name}.",
+  "@block_user_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "block_btn": "Block",
+  "student_badge": "STUDENT",
+  "admin_badge": "ADMINISTRATOR",
+  "student_id_short": "ID",
+  "not_updated": "Not updated",
+  "posts_label": "Posts",
+  "friends_label": "Friends",
+  "followers_label": "Followers",
+  "following_label": "Following",
+  "tab_posts": "Posts",
+  "tab_friends": "Friends",
+  "tab_docs": "Documents",
+  "tab_about": "About",
+  "add_friend": "Add Friend",
+  "request_sent": "Request Sent",
+  "respond_request": "Respond",
+  "friends_status": "Friends",
+  "following_status": "Following",
+  "follow_action": "Follow",
+  "no_friends_yet": "No friends yet",
+  "academic_info": "Academic Information",
+  "cohort_label": "Cohort",
+  "contact_email": "Contact Email",
+  "enrolled_courses": "Currently Enrolled Courses",
+  "error_deleting_post": "Error deleting post: {error}",
+  "@error_deleting_post": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "edit_profile_btn": "Edit Personal Profile",
+  "edit_profile_title": "Edit Profile",
+  "friends_list_btn": "Friends List ({count})",
+  "@friends_list_btn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "grade_excellent": "Excellent",
+  "grade_very_good": "Very Good",
+  "grade_good": "Good",
+  "grade_average": "Average",
+  "grade_drl_good": "Good",
+  "semester_courses": "Semester Courses",
+  "subject_count": "{count} subjects",
+  "@subject_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "joined_clubs_title": "Joined Clubs",
+  "joined_clubs_view_all": "{count} Clubs • View All >",
+  "@joined_clubs_view_all": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "club_category_members": "{category} • {count} members",
+  "@club_category_members": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notification_center_title": "Notification Center",
+  "notification_center_desc": "View and manage all campus notifications",
+  "mark_all_read": "Read All",
+  "no_notifications": "No notifications",
+  "saved_posts_title": "Saved Posts",
+  "saved_posts_desc": "Review saved posts and study materials",
+  "study_groups_title": "Study Groups & Peer Learning",
+  "study_groups_desc": "Find study buddies, solve assignments and group study",
+  "clubs_desc": "Explore Phenikaa clubs and activities",
+  "admin_portal_title": "Admin Portal",
+  "admin_portal_desc": "Moderate posts, manage students & broadcast emergency announcements",
+  "change_password_title": "Change Password",
+  "change_password_desc": "Update your account security password",
+  "blocked_users_title": "Blocked Users",
+  "blocked_users_desc": "Manage accounts you have blocked",
+  "friend_requests_title": "Friend Requests",
+  "no_friend_requests": "No friend requests",
+  "no_friend_requests_desc": "When other students send friend requests, they will appear here.",
+  "accept_request_btn": "Accept",
+  "decline_request_btn": "Delete",
+  "copy_qr_code": "Copy Code",
+  "copied_qr_code": "Copied student identifier to clipboard!",
+  "scan_other_qr": "Scan Another",
+  "qr_scan_instruction": "Scan code to view student profile, major details and connect on PU Connection.",
+  "invalid_qr_title": "Invalid QR Code",
+  "invalid_qr_desc": "This QR code does not belong to Phenikaa University student card format (PU Connection).",
+  "profile_not_found_title": "Profile Not Found",
+  "profile_not_found_desc": "No student record found corresponding to code \"{id}\" on the university system.",
+  "@profile_not_found_desc": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "own_qr_title": "Your Own QR Code",
+  "own_qr_desc": "This is the digital student card of the currently signed-in account.",
+  "basic_info": "Basic Information",
+  "bio_label": "Bio",
+  "bio_hint": "Brief intro about yourself, major or study motto...",
+  "faculty_major_section": "Faculty & Major",
+  "major_label": "Major / Field of Study",
+  "academic_results": "Academic Results",
+  "academic_results_note": "GPA, credits and training points are officially synced from Phenikaa Training Portal (View Only).",
+  "gpa_label": "GPA (0.0 – 4.0)",
+  "credits_earned_label": "Credits Earned",
+  "training_points_label": "Training Points",
+  "current_semester_subjects": "Current Semester Courses",
+  "current_semester_subjects_desc": "Helps friends easily find you in the same courses to form study groups.",
+  "enter_subject_hint": "Enter course name (e.g. Intro to AI)...",
+  "popular_subjects_hint": "Popular Course Suggestions:",
+  "change_cover": "Change Cover",
+  "add_cover": "Add Cover",
+  "add_cover_hint": "Tap to add profile cover image",
+  "profile_saved_success": "Profile details saved successfully!",
+  "profile_save_failed": "Cannot update profile: {error}",
+  "@profile_save_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "no_clubs_found": "No matching clubs found",
+  "create_club_btn": "Create Club",
+  "explore_clubs_tab": "Explore Clubs",
+  "my_club_requests_tab": "My Requests",
+  "no_joined_clubs": "You haven't joined any clubs yet",
+  "no_joined_clubs_desc": "Explore and join academic, sports, and arts clubs to improve your skills and earn training points!",
+  "explore_phenikaa_clubs": "Explore Phenikaa Clubs",
+  "no_club_requests": "You haven't submitted any club creation proposals",
+  "no_club_requests_desc": "If you and your peers want to establish a new club at Phenikaa, submit a proposal for Administrative review!",
+  "register_new_club_btn": "Propose a New Club",
+  "status_approved": "Approved",
+  "status_rejected": "Rejected",
+  "status_pending": "Pending",
+  "cancel_request_btn_text": "Cancel Request",
+  "cancel_club_request_title": "Cancel Club Proposal?",
+  "cancel_club_request_confirm": "Are you sure you want to cancel the creation proposal for club \"{name}\"?",
+  "@cancel_club_request_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "view_club_details": "Details >",
+  "club_president_badge": "You are the President of this Club",
+  "club_members_sheet_title": "Members List",
+  "confirm_leave_club_title": "Leave Club",
+  "confirm_leave_club_body": "Are you sure you want to leave \"{name}\"? You can rejoin at any time.",
+  "@confirm_leave_club_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stay_in_club_btn": "Stay",
+  "leave_club_btn": "Leave Club",
+  "save_changes_btn": "Save Changes",
+  "preview_club_proposal_title": "Preview Club Proposal",
+  "confirm_submit_proposal_btn": "Confirm & Submit Proposal",
+  "edit_proposal_btn": "Edit More",
+  "club_president_label": "President: {name}",
+  "@club_president_label": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

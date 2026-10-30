@@ -82,6 +82,7 @@ class _UserProfilePageState extends State<UserProfilePage>
   Future<void> _startChat() async {
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) return;
+    final l10n = AppLocalizations.of(context)!;
 
     final currentUserId = authState.user.uid;
     final currentUserName = authState.user.displayName.isNotEmpty
@@ -92,7 +93,7 @@ class _UserProfilePageState extends State<UserProfilePage>
 
     if (widget.userId == currentUserId) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể tự nhắn tin cho chính mình!')),
+        SnackBar(content: Text(l10n.cannot_chat_with_self)),
       );
       return;
     }
@@ -127,7 +128,7 @@ class _UserProfilePageState extends State<UserProfilePage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể mở cuộc trò chuyện: $e')),
+          SnackBar(content: Text(l10n.cannot_open_chat(e.toString()))),
         );
       }
     }
@@ -140,6 +141,7 @@ class _UserProfilePageState extends State<UserProfilePage>
     required UserEntity targetUser,
   }) {
     final cubit = context.read<FriendshipCubit>();
+    final l10n = AppLocalizations.of(context)!;
 
     switch (status) {
       case FriendshipStatus.none:
@@ -157,14 +159,14 @@ class _UserProfilePageState extends State<UserProfilePage>
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Hủy lời mời kết bạn?'),
+            title: Text(l10n.cancel_friend_request_title),
             content: Text(
-              'Bạn có chắc chắn muốn hủy lời mời kết bạn gửi đến ${targetUser.displayName}?',
+              l10n.cancel_friend_request_confirm(targetUser.displayName),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Bỏ qua'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () {
@@ -174,7 +176,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                     targetUserId: targetUser.uid,
                   );
                 },
-                child: const Text('Hủy lời mời'),
+                child: Text(l10n.cancel_request_btn),
               ),
             ],
           ),
@@ -194,7 +196,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Lời mời kết bạn từ ${targetUser.displayName}',
+                    l10n.friend_request_from(targetUser.displayName),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -206,9 +208,9 @@ class _UserProfilePageState extends State<UserProfilePage>
                       Icons.check_circle,
                       color: Colors.green,
                     ),
-                    title: const Text(
-                      'Chấp nhận kết bạn',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    title: Text(
+                      l10n.accept_friend_request,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onTap: () {
                       Navigator.pop(ctx);
@@ -226,7 +228,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                   ),
                   ListTile(
                     leading: const Icon(Icons.close_rounded, color: Colors.red),
-                    title: const Text('Từ chối lời mời'),
+                    title: Text(l10n.decline_friend_request),
                     onTap: () {
                       Navigator.pop(ctx);
                       cubit.declineFriendRequest(
@@ -246,14 +248,14 @@ class _UserProfilePageState extends State<UserProfilePage>
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Hủy kết bạn?'),
+            title: Text(l10n.unfriend_title),
             content: Text(
-              'Bạn có chắc chắn muốn hủy kết bạn với ${targetUser.displayName}?',
+              l10n.unfriend_confirm(targetUser.displayName),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Hủy bỏ'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -264,7 +266,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                     friendId: targetUser.uid,
                   );
                 },
-                child: const Text('Hủy kết bạn'),
+                child: Text(l10n.unfriend_btn),
               ),
             ],
           ),
@@ -277,6 +279,7 @@ class _UserProfilePageState extends State<UserProfilePage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final authState = context.watch<AuthCubit>().state;
     final currentUser = authState is Authenticated ? authState.user : null;
     final currentUid = currentUser?.uid ?? '';
@@ -356,13 +359,13 @@ class _UserProfilePageState extends State<UserProfilePage>
                 if (isSelf) ...[
                   IconButton(
                     icon: const Icon(Icons.qr_code_rounded),
-                    tooltip: 'Mã QR sinh viên của tôi',
+                    tooltip: l10n.my_student_qr,
                     onPressed: () =>
                         StudentQrCodePage.show(context, user: user),
                   ),
                   IconButton(
                     icon: const Icon(Icons.qr_code_scanner_rounded),
-                    tooltip: 'Quét mã QR sinh viên',
+                    tooltip: l10n.scan_student_qr,
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -380,7 +383,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                         label: Text('$reqCount'),
                         child: IconButton(
                           icon: const Icon(Icons.people_outline_rounded),
-                          tooltip: 'Lời mời kết bạn',
+                          tooltip: l10n.friend_requests_title,
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -396,18 +399,18 @@ class _UserProfilePageState extends State<UserProfilePage>
                 ] else ...[
                   IconButton(
                     icon: const Icon(Icons.qr_code_rounded),
-                    tooltip: 'Mã QR sinh viên',
+                    tooltip: l10n.student_card_qr,
                     onPressed: () =>
                         StudentQrCodePage.show(context, user: user),
                   ),
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
-                    tooltip: 'Chia sẻ hồ sơ',
+                    tooltip: l10n.share_profile,
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Đã sao chép liên kết hồ sơ của ${user.displayName}!',
+                            l10n.copied_profile_link(user.displayName),
                           ),
                         ),
                       );
@@ -431,14 +434,14 @@ class _UserProfilePageState extends State<UserProfilePage>
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Chặn người dùng này?'),
+                            title: Text(l10n.block_user_title),
                             content: Text(
-                              'Bạn sẽ không còn nhìn thấy bài viết, bình luận và không thể nhắn tin với ${user.displayName}.',
+                              l10n.block_user_confirm(user.displayName),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Hủy'),
+                                child: Text(l10n.cancel),
                               ),
                               FilledButton(
                                 style: FilledButton.styleFrom(
@@ -458,7 +461,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                                   );
                                   Navigator.pop(context);
                                 },
-                                child: const Text('Chặn'),
+                                child: Text(l10n.block_btn),
                               ),
                             ],
                           ),
@@ -466,33 +469,33 @@ class _UserProfilePageState extends State<UserProfilePage>
                       }
                     },
                     itemBuilder: (ctx) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'report',
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.report_problem_outlined,
                               color: Colors.orange,
                               size: 20,
                             ),
-                            SizedBox(width: 10),
-                            Text('Báo cáo người dùng'),
+                            const SizedBox(width: 10),
+                            Text(l10n.report_user),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'block',
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.block_rounded,
                               color: Colors.red,
                               size: 20,
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Text(
-                              'Chặn người dùng này',
-                              style: TextStyle(color: Colors.red),
+                              l10n.block_user,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ],
                         ),
@@ -537,22 +540,22 @@ class _UserProfilePageState extends State<UserProfilePage>
                       ),
                       indicatorColor: AppTheme.primaryColor(context),
                       indicatorWeight: 3,
-                      tabs: const [
+                      tabs: [
                         Tab(
-                          icon: Icon(Icons.article_outlined),
-                          text: 'Bài viết',
+                          icon: const Icon(Icons.article_outlined),
+                          text: l10n.tab_posts,
                         ),
                         Tab(
-                          icon: Icon(Icons.people_alt_outlined),
-                          text: 'Bạn bè',
+                          icon: const Icon(Icons.people_alt_outlined),
+                          text: l10n.tab_friends,
                         ),
                         Tab(
-                          icon: Icon(Icons.menu_book_outlined),
-                          text: 'Tài liệu',
+                          icon: const Icon(Icons.menu_book_outlined),
+                          text: l10n.tab_docs,
                         ),
                         Tab(
-                          icon: Icon(Icons.info_outline_rounded),
-                          text: 'Thông tin',
+                          icon: const Icon(Icons.info_outline_rounded),
+                          text: l10n.tab_about,
                         ),
                       ],
                     ),
@@ -581,6 +584,8 @@ class _UserProfilePageState extends State<UserProfilePage>
     UserEntity currentUser,
     UserEntity targetUser,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+
     return BlocBuilder<FriendshipCubit, FriendshipState>(
       builder: (context, fState) {
         final rel = fState.relationship;
@@ -594,22 +599,22 @@ class _UserProfilePageState extends State<UserProfilePage>
 
         switch (status) {
           case FriendshipStatus.none:
-            friendButtonText = 'Kết bạn';
+            friendButtonText = l10n.add_friend;
             friendButtonIcon = Icons.person_add_rounded;
             friendButtonColor = AppTheme.primaryColor(context);
             break;
           case FriendshipStatus.requestSent:
-            friendButtonText = 'Đã gửi lời mời';
+            friendButtonText = l10n.request_sent;
             friendButtonIcon = Icons.schedule_send_rounded;
             friendButtonColor = Colors.orange;
             break;
           case FriendshipStatus.requestReceived:
-            friendButtonText = 'Phản hồi';
+            friendButtonText = l10n.respond_request;
             friendButtonIcon = Icons.mark_email_unread_rounded;
             friendButtonColor = AppTheme.primaryColor(context);
             break;
           case FriendshipStatus.friends:
-            friendButtonText = 'Bạn bè';
+            friendButtonText = l10n.friends_status;
             friendButtonIcon = Icons.check_circle_rounded;
             friendButtonColor = AppTheme.primaryColor(context);
             break;
@@ -625,9 +630,9 @@ class _UserProfilePageState extends State<UserProfilePage>
                   child: ElevatedButton.icon(
                     onPressed: _startChat,
                     icon: const Icon(Icons.chat_bubble_rounded, size: 17),
-                    label: const Text(
-                      'Nhắn tin',
-                      style: TextStyle(
+                    label: Text(
+                      l10n.send_message,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -728,7 +733,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          isFollowing ? 'Đang theo dõi' : 'Theo dõi',
+                          isFollowing ? l10n.following_status : l10n.follow_action,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -810,9 +815,9 @@ class _UserProfilePageState extends State<UserProfilePage>
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'SINH VIÊN',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.student_badge,
+                      style: const TextStyle(
                         color: Color(0xFFFFB088),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -875,14 +880,14 @@ class _UserProfilePageState extends State<UserProfilePage>
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'MSSV: ${user.studentId.isNotEmpty ? user.studentId : '--'}${user.cohort != 0 ? ' • K${user.cohort}' : ''}',
+                      '${l10n.student_id_short}: ${user.studentId.isNotEmpty ? user.studentId : '--'}${user.cohort != 0 ? ' • K${user.cohort}' : ''}',
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: Colors.white70,
                       ),
                     ),
                     Text(
-                      'Khoa: ${user.faculty.isNotEmpty ? user.faculty : 'Chưa cập nhật'}',
+                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : l10n.not_updated}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.white70,
@@ -919,6 +924,7 @@ class _UserProfilePageState extends State<UserProfilePage>
   }
 
   Widget _buildMetricsRow(BuildContext context, UserEntity user) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<FriendshipCubit, FriendshipState>(
       builder: (context, fState) {
         final rel = fState.relationship;
@@ -933,7 +939,7 @@ class _UserProfilePageState extends State<UserProfilePage>
             Expanded(
               child: _buildSingleMetric(
                 context,
-                title: 'Bài viết',
+                title: l10n.posts_label,
                 value: '${user.postsCount}',
                 icon: Icons.article_rounded,
                 color: AppTheme.primaryColor(context),
@@ -943,7 +949,7 @@ class _UserProfilePageState extends State<UserProfilePage>
             Expanded(
               child: _buildSingleMetric(
                 context,
-                title: 'Bạn bè',
+                title: l10n.friends_label,
                 value: '$friendsCount',
                 icon: Icons.people_rounded,
                 color: AppTheme.primaryColor(context),
@@ -953,7 +959,7 @@ class _UserProfilePageState extends State<UserProfilePage>
             Expanded(
               child: _buildSingleMetric(
                 context,
-                title: 'Follower',
+                title: l10n.followers_label,
                 value: '$followersCount',
                 icon: Icons.groups_rounded,
                 color: AppTheme.accentColor(context),
@@ -963,7 +969,7 @@ class _UserProfilePageState extends State<UserProfilePage>
             Expanded(
               child: _buildSingleMetric(
                 context,
-                title: 'Following',
+                title: l10n.following_label,
                 value: '$followingCount',
                 icon: Icons.person_pin_rounded,
                 color: Colors.purple,
@@ -1142,7 +1148,11 @@ class _UserProfilePageState extends State<UserProfilePage>
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Lỗi khi xóa bài: $e'),
+                              content: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.error_deleting_post(e.toString()),
+                              ),
                               backgroundColor: Colors.red.shade700,
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -1160,6 +1170,7 @@ class _UserProfilePageState extends State<UserProfilePage>
 
   Widget _buildFriendsTab(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return BlocBuilder<FriendshipCubit, FriendshipState>(
       builder: (context, fState) {
@@ -1177,7 +1188,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Chưa có bạn bè nào',
+                  l10n.no_friends_yet,
                   style: TextStyle(color: colorScheme.outline),
                 ),
               ],
@@ -1320,6 +1331,7 @@ class _UserProfilePageState extends State<UserProfilePage>
 
   Widget _buildAboutTab(BuildContext context, UserEntity user) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -1335,41 +1347,41 @@ class _UserProfilePageState extends State<UserProfilePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Thông tin học tập',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Text(
+                l10n.academic_info,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 12),
               _buildInfoTile(
                 Icons.badge_outlined,
-                'Mã số sinh viên',
+                l10n.student_id,
                 user.studentId.isNotEmpty ? user.studentId : '--',
               ),
               _buildInfoTile(
                 Icons.school_outlined,
-                'Khoa / Viện',
+                l10n.faculty,
                 user.faculty.isNotEmpty
                     ? user.faculty
-                    : 'Chưa cập nhật',
+                    : l10n.not_updated,
               ),
               _buildInfoTile(
                 Icons.book_outlined,
-                'Chuyên ngành',
-                user.major.isNotEmpty ? user.major : 'Chưa cập nhật',
+                l10n.major,
+                user.major.isNotEmpty ? user.major : l10n.not_updated,
               ),
               _buildInfoTile(
                 Icons.calendar_today_outlined,
-                'Khóa đào tạo',
+                l10n.cohort_label,
                 'K${user.cohort != 0 ? user.cohort : 17} (2023 - 2027)',
               ),
-              _buildInfoTile(Icons.email_outlined, 'Email liên hệ', user.email),
+              _buildInfoTile(Icons.email_outlined, l10n.contact_email, user.email),
               if (user.currentSubjects.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Divider(height: 1),
                 const SizedBox(height: 14),
-                const Text(
-                  'Môn học đang theo học',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                Text(
+                  l10n.enrolled_courses,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 10),
                 Wrap(

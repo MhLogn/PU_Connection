@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
@@ -28,15 +29,16 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final authState = context.watch<AuthCubit>().state;
     final currentUser = authState is Authenticated ? authState.user : null;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text(
-          'Lời mời kết bạn',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.friend_requests_title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: BlocConsumer<FriendshipCubit, FriendshipState>(
@@ -79,14 +81,14 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Không có lời mời kết bạn nào',
+                      l10n.no_friend_requests,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Khi có sinh viên khác gửi lời mời kết bạn, thông báo sẽ hiển thị tại đây.',
+                      l10n.no_friend_requests_desc,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -225,9 +227,9 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: const Text(
-                                    'Chấp nhận',
-                                    style: TextStyle(
+                                  child: Text(
+                                    l10n.accept_request_btn,
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -255,9 +257,9 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Xóa',
-                                    style: TextStyle(
+                                  child: Text(
+                                    l10n.decline_request_btn,
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),

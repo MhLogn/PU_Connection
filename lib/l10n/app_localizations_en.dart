@@ -786,4 +786,450 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register_event_full => 'This event is full';
+
+  @override
+  String get my_student_qr => 'My Student QR Code';
+
+  @override
+  String get scan_student_qr => 'Scan Student QR Code';
+
+  @override
+  String get share_profile => 'Share Profile';
+
+  @override
+  String copied_profile_link(String name) {
+    return 'Copied profile link for $name!';
+  }
+
+  @override
+  String get cannot_chat_with_self => 'You cannot message yourself!';
+
+  @override
+  String cannot_open_chat(String error) {
+    return 'Cannot open conversation: $error';
+  }
+
+  @override
+  String get cancel_friend_request_title => 'Cancel Friend Request?';
+
+  @override
+  String cancel_friend_request_confirm(String name) {
+    return 'Are you sure you want to cancel the friend request sent to $name?';
+  }
+
+  @override
+  String get cancel_request_btn => 'Cancel Request';
+
+  @override
+  String friend_request_from(String name) {
+    return 'Friend request from $name';
+  }
+
+  @override
+  String get accept_friend_request => 'Accept Friend Request';
+
+  @override
+  String get decline_friend_request => 'Decline Request';
+
+  @override
+  String get unfriend_title => 'Unfriend?';
+
+  @override
+  String unfriend_confirm(String name) {
+    return 'Are you sure you want to unfriend $name?';
+  }
+
+  @override
+  String get unfriend_btn => 'Unfriend';
+
+  @override
+  String get report_user => 'Report User';
+
+  @override
+  String get block_user => 'Block User';
+
+  @override
+  String get block_user_title => 'Block this user?';
+
+  @override
+  String block_user_confirm(String name) {
+    return 'You will no longer see posts, comments, or be able to message $name.';
+  }
+
+  @override
+  String get block_btn => 'Block';
+
+  @override
+  String get student_badge => 'STUDENT';
+
+  @override
+  String get admin_badge => 'ADMINISTRATOR';
+
+  @override
+  String get student_id_short => 'ID';
+
+  @override
+  String get not_updated => 'Not updated';
+
+  @override
+  String get posts_label => 'Posts';
+
+  @override
+  String get friends_label => 'Friends';
+
+  @override
+  String get followers_label => 'Followers';
+
+  @override
+  String get following_label => 'Following';
+
+  @override
+  String get tab_posts => 'Posts';
+
+  @override
+  String get tab_friends => 'Friends';
+
+  @override
+  String get tab_docs => 'Documents';
+
+  @override
+  String get tab_about => 'About';
+
+  @override
+  String get add_friend => 'Add Friend';
+
+  @override
+  String get request_sent => 'Request Sent';
+
+  @override
+  String get respond_request => 'Respond';
+
+  @override
+  String get friends_status => 'Friends';
+
+  @override
+  String get following_status => 'Following';
+
+  @override
+  String get follow_action => 'Follow';
+
+  @override
+  String get no_friends_yet => 'No friends yet';
+
+  @override
+  String get academic_info => 'Academic Information';
+
+  @override
+  String get cohort_label => 'Cohort';
+
+  @override
+  String get contact_email => 'Contact Email';
+
+  @override
+  String get enrolled_courses => 'Currently Enrolled Courses';
+
+  @override
+  String error_deleting_post(String error) {
+    return 'Error deleting post: $error';
+  }
+
+  @override
+  String get edit_profile_btn => 'Edit Personal Profile';
+
+  @override
+  String get edit_profile_title => 'Edit Profile';
+
+  @override
+  String friends_list_btn(int count) {
+    return 'Friends List ($count)';
+  }
+
+  @override
+  String get grade_excellent => 'Excellent';
+
+  @override
+  String get grade_very_good => 'Very Good';
+
+  @override
+  String get grade_good => 'Good';
+
+  @override
+  String get grade_average => 'Average';
+
+  @override
+  String get grade_drl_good => 'Good';
+
+  @override
+  String get semester_courses => 'Semester Courses';
+
+  @override
+  String subject_count(int count) {
+    return '$count subjects';
+  }
+
+  @override
+  String get joined_clubs_title => 'Joined Clubs';
+
+  @override
+  String joined_clubs_view_all(int count) {
+    return '$count Clubs • View All >';
+  }
+
+  @override
+  String club_category_members(String category, int count) {
+    return '$category • $count members';
+  }
+
+  @override
+  String get notification_center_title => 'Notification Center';
+
+  @override
+  String get notification_center_desc =>
+      'View and manage all campus notifications';
+
+  @override
+  String get mark_all_read => 'Read All';
+
+  @override
+  String get no_notifications => 'No notifications';
+
+  @override
+  String get saved_posts_title => 'Saved Posts';
+
+  @override
+  String get saved_posts_desc => 'Review saved posts and study materials';
+
+  @override
+  String get study_groups_title => 'Study Groups & Peer Learning';
+
+  @override
+  String get study_groups_desc =>
+      'Find study buddies, solve assignments and group study';
+
+  @override
+  String get clubs_desc => 'Explore Phenikaa clubs and activities';
+
+  @override
+  String get admin_portal_title => 'Admin Portal';
+
+  @override
+  String get admin_portal_desc =>
+      'Moderate posts, manage students & broadcast emergency announcements';
+
+  @override
+  String get change_password_title => 'Change Password';
+
+  @override
+  String get change_password_desc => 'Update your account security password';
+
+  @override
+  String get blocked_users_title => 'Blocked Users';
+
+  @override
+  String get blocked_users_desc => 'Manage accounts you have blocked';
+
+  @override
+  String get friend_requests_title => 'Friend Requests';
+
+  @override
+  String get no_friend_requests => 'No friend requests';
+
+  @override
+  String get no_friend_requests_desc =>
+      'When other students send friend requests, they will appear here.';
+
+  @override
+  String get accept_request_btn => 'Accept';
+
+  @override
+  String get decline_request_btn => 'Delete';
+
+  @override
+  String get copy_qr_code => 'Copy Code';
+
+  @override
+  String get copied_qr_code => 'Copied student identifier to clipboard!';
+
+  @override
+  String get scan_other_qr => 'Scan Another';
+
+  @override
+  String get qr_scan_instruction =>
+      'Scan code to view student profile, major details and connect on PU Connection.';
+
+  @override
+  String get invalid_qr_title => 'Invalid QR Code';
+
+  @override
+  String get invalid_qr_desc =>
+      'This QR code does not belong to Phenikaa University student card format (PU Connection).';
+
+  @override
+  String get profile_not_found_title => 'Profile Not Found';
+
+  @override
+  String profile_not_found_desc(String id) {
+    return 'No student record found corresponding to code \"$id\" on the university system.';
+  }
+
+  @override
+  String get own_qr_title => 'Your Own QR Code';
+
+  @override
+  String get own_qr_desc =>
+      'This is the digital student card of the currently signed-in account.';
+
+  @override
+  String get basic_info => 'Basic Information';
+
+  @override
+  String get bio_label => 'Bio';
+
+  @override
+  String get bio_hint => 'Brief intro about yourself, major or study motto...';
+
+  @override
+  String get faculty_major_section => 'Faculty & Major';
+
+  @override
+  String get major_label => 'Major / Field of Study';
+
+  @override
+  String get academic_results => 'Academic Results';
+
+  @override
+  String get academic_results_note =>
+      'GPA, credits and training points are officially synced from Phenikaa Training Portal (View Only).';
+
+  @override
+  String get gpa_label => 'GPA (0.0 – 4.0)';
+
+  @override
+  String get credits_earned_label => 'Credits Earned';
+
+  @override
+  String get training_points_label => 'Training Points';
+
+  @override
+  String get current_semester_subjects => 'Current Semester Courses';
+
+  @override
+  String get current_semester_subjects_desc =>
+      'Helps friends easily find you in the same courses to form study groups.';
+
+  @override
+  String get enter_subject_hint => 'Enter course name (e.g. Intro to AI)...';
+
+  @override
+  String get popular_subjects_hint => 'Popular Course Suggestions:';
+
+  @override
+  String get change_cover => 'Change Cover';
+
+  @override
+  String get add_cover => 'Add Cover';
+
+  @override
+  String get add_cover_hint => 'Tap to add profile cover image';
+
+  @override
+  String get profile_saved_success => 'Profile details saved successfully!';
+
+  @override
+  String profile_save_failed(String error) {
+    return 'Cannot update profile: $error';
+  }
+
+  @override
+  String get no_clubs_found => 'No matching clubs found';
+
+  @override
+  String get create_club_btn => 'Create Club';
+
+  @override
+  String get explore_clubs_tab => 'Explore Clubs';
+
+  @override
+  String get my_club_requests_tab => 'My Requests';
+
+  @override
+  String get no_joined_clubs => 'You haven\'t joined any clubs yet';
+
+  @override
+  String get no_joined_clubs_desc =>
+      'Explore and join academic, sports, and arts clubs to improve your skills and earn training points!';
+
+  @override
+  String get explore_phenikaa_clubs => 'Explore Phenikaa Clubs';
+
+  @override
+  String get no_club_requests =>
+      'You haven\'t submitted any club creation proposals';
+
+  @override
+  String get no_club_requests_desc =>
+      'If you and your peers want to establish a new club at Phenikaa, submit a proposal for Administrative review!';
+
+  @override
+  String get register_new_club_btn => 'Propose a New Club';
+
+  @override
+  String get status_approved => 'Approved';
+
+  @override
+  String get status_rejected => 'Rejected';
+
+  @override
+  String get status_pending => 'Pending';
+
+  @override
+  String get cancel_request_btn_text => 'Cancel Request';
+
+  @override
+  String get cancel_club_request_title => 'Cancel Club Proposal?';
+
+  @override
+  String cancel_club_request_confirm(String name) {
+    return 'Are you sure you want to cancel the creation proposal for club \"$name\"?';
+  }
+
+  @override
+  String get view_club_details => 'Details >';
+
+  @override
+  String get club_president_badge => 'You are the President of this Club';
+
+  @override
+  String get club_members_sheet_title => 'Members List';
+
+  @override
+  String get confirm_leave_club_title => 'Leave Club';
+
+  @override
+  String confirm_leave_club_body(String name) {
+    return 'Are you sure you want to leave \"$name\"? You can rejoin at any time.';
+  }
+
+  @override
+  String get stay_in_club_btn => 'Stay';
+
+  @override
+  String get leave_club_btn => 'Leave Club';
+
+  @override
+  String get save_changes_btn => 'Save Changes';
+
+  @override
+  String get preview_club_proposal_title => 'Preview Club Proposal';
+
+  @override
+  String get confirm_submit_proposal_btn => 'Confirm & Submit Proposal';
+
+  @override
+  String get edit_proposal_btn => 'Edit More';
+
+  @override
+  String club_president_label(String name) {
+    return 'President: $name';
+  }
 }
