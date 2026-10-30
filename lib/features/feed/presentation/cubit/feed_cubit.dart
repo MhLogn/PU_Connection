@@ -310,17 +310,24 @@ class FeedCubit extends Cubit<FeedState> {
             ? '${content.substring(0, 70)}...'
             : content;
 
+        final isReply = replyToAuthorId != null &&
+            replyToAuthorId.isNotEmpty &&
+            replyToAuthorId != authorId;
+
         // 1. Gửi thông báo cho tác giả bài viết
+        // Chỉ gửi thông báo bình luận nếu tác giả bài viết khác với người bình luận,
+        // VÀ khác với người được trả lời (tránh gửi 2 thông báo cho cùng 1 người khi chủ post được reply)
         if (state is FeedLoaded) {
           final post = (state as FeedLoaded).posts
               .where((p) => p.postId == postId)
               .firstOrNull;
           if (post != null &&
               post.authorId.isNotEmpty &&
-              post.authorId != authorId) {
+              post.authorId != authorId &&
+              (!isReply || post.authorId != replyToAuthorId)) {
             await notifRepo.sendNotification(
               NotificationEntity(
-                id: 'notif_cmt_$effectiveCommentId',
+                id: 'notif_cmt_${postId}_$effectiveCommentId',
                 userId: post.authorId,
                 title: '$authorName đã bình luận về bài viết của bạn',
                 content: contentSnippet,
@@ -336,12 +343,10 @@ class FeedCubit extends Cubit<FeedState> {
         }
 
         // 2. Gửi thông báo cho người được trả lời
-        if (replyToAuthorId != null &&
-            replyToAuthorId.isNotEmpty &&
-            replyToAuthorId != authorId) {
+        if (isReply) {
           await notifRepo.sendNotification(
             NotificationEntity(
-              id: 'notif_reply_$effectiveCommentId',
+              id: 'notif_reply_${postId}_$effectiveCommentId',
               userId: replyToAuthorId,
               title: '$authorName đã trả lời bình luận của bạn',
               content: contentSnippet,

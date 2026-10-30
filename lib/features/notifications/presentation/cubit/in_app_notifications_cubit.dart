@@ -55,10 +55,22 @@ class InAppNotificationsCubit extends Cubit<InAppNotificationsState> {
     final userId = _currentUserId;
     if (userId == null || userId.isEmpty) return;
 
+    final previous = state.notifications;
+    final updated = state.notifications.map((n) {
+      if (n.id == notificationId) {
+        return n.copyWith(isRead: true);
+      }
+      return n;
+    }).toList();
+    emit(state.copyWith(notifications: updated));
+
     try {
       await _repository.markAsRead(userId, notificationId);
     } catch (e) {
-      emit(state.copyWith(errorMessage: 'Không thể đánh dấu đã đọc: $e'));
+      emit(state.copyWith(
+        notifications: previous,
+        errorMessage: 'Không thể đánh dấu đã đọc: $e',
+      ));
     }
   }
 
@@ -66,11 +78,18 @@ class InAppNotificationsCubit extends Cubit<InAppNotificationsState> {
     final userId = _currentUserId;
     if (userId == null || userId.isEmpty) return;
 
+    final previous = state.notifications;
+    final updated = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
+    emit(state.copyWith(notifications: updated));
+
     try {
       await _repository.markAllAsRead(userId);
       emit(state.copyWith(successMessage: 'Đã đánh dấu tất cả là đã đọc'));
     } catch (e) {
-      emit(state.copyWith(errorMessage: 'Không thể cập nhật thông báo: $e'));
+      emit(state.copyWith(
+        notifications: previous,
+        errorMessage: 'Không thể cập nhật thông báo: $e',
+      ));
     }
   }
 
@@ -78,11 +97,18 @@ class InAppNotificationsCubit extends Cubit<InAppNotificationsState> {
     final userId = _currentUserId;
     if (userId == null || userId.isEmpty) return;
 
+    final previous = state.notifications;
+    final updated = state.notifications.where((n) => n.id != notificationId).toList();
+    emit(state.copyWith(notifications: updated));
+
     try {
       await _repository.deleteNotification(userId, notificationId);
       emit(state.copyWith(successMessage: 'Đã xóa thông báo'));
     } catch (e) {
-      emit(state.copyWith(errorMessage: 'Không thể xóa thông báo: $e'));
+      emit(state.copyWith(
+        notifications: previous,
+        errorMessage: 'Không thể xóa thông báo: $e',
+      ));
     }
   }
 

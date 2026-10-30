@@ -354,12 +354,28 @@ void main() {
       expect(cubit.state.selectedFilter, isNull);
     });
 
-    test('markAllAsRead sets success message', () async {
+    test('markAllAsRead sets success message and optimistically marks all as read', () async {
       cubit.init('cubit_read_user');
       await Future.delayed(const Duration(milliseconds: 100));
 
+      expect(cubit.state.unreadCount, greaterThan(0));
+
       await cubit.markAllAsRead();
       expect(cubit.state.successMessage, isNotNull);
+      expect(cubit.state.unreadCount, equals(0));
+      expect(cubit.state.notifications.every((n) => n.isRead), isTrue);
+    });
+
+    test('markAsRead updates specific notification and unreadCount', () async {
+      cubit.init('cubit_mark_one_user');
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final unreadNotif = cubit.state.notifications.firstWhere((n) => !n.isRead);
+      final initialUnread = cubit.state.unreadCount;
+
+      await cubit.markAsRead(unreadNotif.id);
+      expect(cubit.state.notifications.firstWhere((n) => n.id == unreadNotif.id).isRead, isTrue);
+      expect(cubit.state.unreadCount, equals(initialUnread - 1));
     });
 
     test('deleteNotification removes notification', () async {

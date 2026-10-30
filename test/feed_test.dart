@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:pu_connection/core/models/paginated_result.dart';
 import 'package:pu_connection/core/services/cloudinary_service.dart';
 import 'package:pu_connection/features/feed/data/models/post_model.dart';
@@ -7,6 +8,8 @@ import 'package:pu_connection/features/feed/domain/entities/post_entity.dart';
 import 'package:pu_connection/features/feed/domain/repositories/post_repository.dart';
 import 'package:pu_connection/features/feed/presentation/cubit/feed_cubit.dart';
 import 'package:pu_connection/features/feed/presentation/cubit/feed_state.dart';
+import 'package:pu_connection/features/notifications/domain/entities/notification_entity.dart';
+import 'package:pu_connection/features/notifications/domain/repositories/in_app_notification_repository.dart';
 
 void main() {
   group('PostAttachment Tests', () {
@@ -173,7 +176,64 @@ void main() {
       final updatedPost = (feedCubit.state as FeedLoaded).posts.first;
       expect(updatedPost.commentCount, 1);
     });
+
+    test('addComment avoids double notification when replying to post author', () async {
+      final fakeNotifRepo = _FakeInAppNotificationRepository();
+      final getIt = GetIt.instance;
+      if (getIt.isRegistered<InAppNotificationRepository>()) {
+        getIt.unregister<InAppNotificationRepository>();
+      }
+      getIt.registerSingleton<InAppNotificationRepository>(fakeNotifRepo);
+
+      await feedCubit.loadFeed();
+      final targetPost = (feedCubit.state as FeedLoaded).posts.first;
+      // targetPost authorId is 'author_0'
+
+      // Reply directly to post author 'author_0'
+      await feedCubit.addComment(
+        postId: targetPost.postId,
+        authorId: 'user_replier',
+        authorName: 'Replier',
+        authorAvatar: '',
+        authorStudentId: '23010304',
+        authorFaculty: 'CNTT',
+        content: 'Trả lời bình luận của bạn',
+        replyToAuthorId: targetPost.authorId,
+        replyToAuthorName: targetPost.authorName,
+      );
+
+      // Only ONE notification should be sent (the reply notification), NOT two!
+      expect(fakeNotifRepo.sentNotifications.length, 1);
+      expect(fakeNotifRepo.sentNotifications.first.userId, targetPost.authorId);
+      expect(fakeNotifRepo.sentNotifications.first.title, contains('đã trả lời bình luận'));
+
+      getIt.unregister<InAppNotificationRepository>();
+    });
   });
+}
+
+class _FakeInAppNotificationRepository implements InAppNotificationRepository {
+  final List<NotificationEntity> sentNotifications = [];
+
+  @override
+  Future<void> sendNotification(NotificationEntity notification) async {
+    sentNotifications.add(notification);
+  }
+
+  @override
+  Future<void> deleteNotification(String userId, String notificationId) async {}
+
+  @override
+  Future<List<NotificationEntity>> getNotifications(String userId) async => [];
+
+  @override
+  Future<void> markAllAsRead(String userId) async {}
+
+  @override
+  Future<void> markAsRead(String userId, String notificationId) async {}
+
+  @override
+  Stream<List<NotificationEntity>> watchNotifications(String userId) => Stream.value([]);
 }
 
 class _MockPostRepository implements PostRepository {

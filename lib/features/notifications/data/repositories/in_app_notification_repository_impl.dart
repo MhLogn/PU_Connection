@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/firebase_constants.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -194,8 +195,14 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
             .doc(userId)
             .collection(FirebaseConstants.notificationsSubcollection)
             .doc(notificationId)
-            .update({'isRead': true});
-      } catch (_) {}
+            .update({
+              'isRead': true,
+              'readAt': FieldValue.serverTimestamp(),
+            });
+      } catch (e) {
+        debugPrint('Error marking notification as read in Firestore: $e');
+        rethrow;
+      }
     }
   }
 
@@ -221,12 +228,25 @@ class InAppNotificationRepositoryImpl implements InAppNotificationRepository {
             .where('isRead', isEqualTo: false)
             .get();
 
-        final batch = db.batch();
-        for (final doc in unreadQuery.docs) {
-          batch.update(doc.reference, {'isRead': true});
+        if (unreadQuery.docs.isEmpty) return;
+
+        // Phân tách batch theo chunk 450 items (dưới giới hạn 500 của Firestore)
+        final docs = unreadQuery.docs;
+        for (var i = 0; i < docs.length; i += 450) {
+          final batch = db.batch();
+          final end = (i + 450 < docs.length) ? i + 450 : docs.length;
+          for (var j = i; j < end; j++) {
+            batch.update(docs[j].reference, {
+              'isRead': true,
+              'readAt': FieldValue.serverTimestamp(),
+            });
+          }
+          await batch.commit();
         }
-        await batch.commit();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error marking all notifications as read in Firestore: $e');
+        rethrow;
+      }
     }
   }
 
