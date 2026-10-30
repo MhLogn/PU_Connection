@@ -5,6 +5,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/cloudinary_service.dart';
 import '../../../../core/services/bad_words_filter_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/club_creation_request_entity.dart';
@@ -77,6 +78,33 @@ class _CreateClubPageState extends State<CreateClubPage> {
       );
 
       if (picked == null) return;
+
+      final name = picked.name.toLowerCase();
+      final ext = name.split('.').last;
+      if (!['jpg', 'jpeg', 'png', 'webp'].contains(ext)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Định dạng ảnh không hợp lệ (chỉ hỗ trợ JPG, PNG, WEBP)'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      final bytesLength = await picked.length();
+      if (bytesLength > 5 * 1024 * 1024) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Dung lượng ảnh vượt quá giới hạn cho phép (tối đa 5MB)'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
 
       setState(() {
         if (isLogo) {
@@ -234,13 +262,185 @@ class _CreateClubPageState extends State<CreateClubPage> {
       status: 'pending',
     );
 
-    final success = await context
-        .read<ClubCubit>()
-        .submitClubCreationRequest(request);
+    _showPreviewAndConfirmDialog(request);
+  }
 
-    if (success && mounted) {
-      Navigator.of(context).pop(true);
-    }
+  void _showPreviewAndConfirmDialog(ClubCreationRequestEntity request) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = AppTheme.isDark(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(ctx).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.preview_club_proposal_title,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppTheme.oceanBlue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.oceanBlue.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 26,
+                              backgroundColor: AppTheme.primaryColor(ctx),
+                              backgroundImage: request.avatarUrl.isNotEmpty
+                                  ? NetworkImage(request.avatarUrl)
+                                  : null,
+                              child: request.avatarUrl.isEmpty
+                                  ? const Icon(Icons.groups_rounded, color: Colors.white, size: 28)
+                                  : null,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    request.clubName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.accentColor(ctx),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      request.category,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildPreviewItem('Người sáng lập / Trưởng ban vận động', '${request.founderName} (${request.founderStudentId})'),
+                      _buildPreviewItem('Email & Số điện thoại', '${request.founderEmail} • ${request.contactPhone.isNotEmpty ? request.contactPhone : "Chưa cung cấp"}'),
+                      _buildPreviewItem('Mô tả tôn chỉ & Hoạt động', request.description),
+                      _buildPreviewItem('Lý do thành lập & Kế hoạch 3 tháng', request.reason),
+                      _buildPreviewItem('Lịch sinh hoạt dự kiến', request.schedule),
+                      _buildPreviewItem('Địa điểm sinh hoạt dự kiến', request.location),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.edit_proposal_btn),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        final success = await context.read<ClubCubit>().submitClubCreationRequest(request);
+                        if (success && mounted) {
+                          Navigator.of(context).pop(true);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor(ctx),
+                        foregroundColor: isDark ? Colors.black87 : Colors.white,
+                      ),
+                      child: Text(
+                        l10n.confirm_submit_proposal_btn,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPreviewItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13.5, height: 1.35),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -503,7 +703,7 @@ class _CreateClubPageState extends State<CreateClubPage> {
                       label: Text(
                         state.isSubmitting
                             ? 'Đang gửi hồ sơ...'
-                            : 'Gửi Hồ Sơ Thành Lập CLB',
+                            : 'Xem Trước & Gửi Đề Xuất CLB',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,

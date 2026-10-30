@@ -209,13 +209,16 @@ service cloud.firestore {
     // =========================================================================
     match /clubs/{clubId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin() || (
-        isAuthenticated() && 
-        request.resource.data.leaderId == request.auth.uid
-      );
+      // Chỉ Quản trị viên mới có quyền tạo CLB chính thức (sau khi thẩm định và phê duyệt đề xuất)
+      allow create: if isAdmin();
+      // Trưởng CLB được cập nhật thông tin giới thiệu, lịch sinh hoạt, địa điểm (không được đổi leaderId hay status)
+      // Sinh viên được tham gia / rời CLB (cập nhật danh sách thành viên và số lượng)
       allow update: if isAuthenticated() && (
-        resource.data.leaderId == request.auth.uid ||
         isAdmin() ||
+        (
+          resource.data.leaderId == request.auth.uid &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leaderId', 'status', 'id'])
+        ) ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'memberIds',
           'members',
@@ -236,10 +239,20 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
         request.resource.data.founderId == request.auth.uid &&
         request.resource.data.status == 'pending';
+      // Chỉ Admin mới được phê duyệt / từ chối (thay đổi status và thông tin thẩm định)
+      // Sinh viên người sáng lập chỉ được cập nhật thông tin khi đơn đang pending và TUYỆT ĐỐI không được tự duyệt
       allow update: if isAuthenticated() && (
         isAdmin() || (
           resource.data.founderId == request.auth.uid &&
-          resource.data.status == 'pending'
+          resource.data.status == 'pending' &&
+          request.resource.data.status == 'pending' &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'status',
+            'reviewedBy',
+            'reviewedByName',
+            'reviewedAt',
+            'adminFeedback'
+          ])
         )
       );
       allow delete: if isAdmin() || (
@@ -289,7 +302,13 @@ service cloud.firestore {
       );
       allow update: if isAuthenticated() && (
         request.auth.uid in resource.data.participantIds ||
-        isAdmin()
+        isAdmin() ||
+        // Cho phép sinh viên cập nhật participantIds khi tham gia / rời nhóm chat CLB
+        (
+          resource.data.isGroup == true &&
+          ('clubId' in resource.data) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantIds'])
+        )
       );
       allow delete: if isAuthenticated() && (
         request.auth.uid in resource.data.participantIds ||

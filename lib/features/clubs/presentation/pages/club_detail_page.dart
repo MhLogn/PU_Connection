@@ -170,6 +170,16 @@ class ClubDetailPage extends StatelessWidget {
                       color: isDark
                           ? const Color(0xFF1E293B)
                           : AppTheme.deepBlue,
+                      image: currentClub.coverUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(currentClub.coverUrl),
+                              fit: BoxFit.cover,
+                              colorFilter: ColorFilter.mode(
+                                Colors.black.withValues(alpha: 0.55),
+                                BlendMode.darken,
+                              ),
+                            )
+                          : null,
                     ),
                     child: SafeArea(
                       child: Padding(
@@ -260,14 +270,28 @@ class ClubDetailPage extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Text(
-                              currentClub.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold,
-                                height: 1.25,
-                              ),
+                            Row(
+                              children: [
+                                if (currentClub.avatarUrl.isNotEmpty) ...[
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: NetworkImage(currentClub.avatarUrl),
+                                    backgroundColor: Colors.white24,
+                                  ),
+                                  const SizedBox(width: 10),
+                                ],
+                                Expanded(
+                                  child: Text(
+                                    currentClub.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 21,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -280,7 +304,7 @@ class ClubDetailPage extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'Đại học Phenikaa • Chủ nhiệm: ${currentClub.leaderName}',
+                                    'Đại học Phenikaa • ${l10n.club_president_label(currentClub.leaderName)}',
                                     style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 12.5,
@@ -642,7 +666,7 @@ class ClubDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Bạn là Chủ nhiệm Câu lạc bộ này',
+                              l10n.club_president_badge,
                               style: TextStyle(
                                 color: AppTheme.primaryColor(context),
                                 fontWeight: FontWeight.bold,
@@ -805,9 +829,9 @@ class ClubDetailPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'Lưu Thay Đổi',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(ctx)!.save_changes_btn,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
@@ -854,6 +878,11 @@ class ClubDetailPage extends StatelessWidget {
   }
 
   void _showMembersBottomSheet(BuildContext context, ClubEntity club) {
+    final authState = context.read<AuthCubit>().state;
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final currentUserId = currentUser?.uid ?? '';
+    final currentStudentId = currentUser?.studentId ?? '';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -878,9 +907,9 @@ class ClubDetailPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Danh Sách Thành Viên',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(ctx)!.club_members_sheet_title,
+                        style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1006,6 +1035,9 @@ class ClubDetailPage extends StatelessWidget {
                             const Divider(height: 1),
                         itemBuilder: (ctx, index) {
                           final memberId = club.memberIds[index];
+                          final isCurrent = memberId == currentUserId || (currentStudentId.isNotEmpty && memberId == currentStudentId);
+                          final isClubLeader = memberId == club.leaderId;
+
                           return ListTile(
                             dense: true,
                             contentPadding: EdgeInsets.zero,
@@ -1022,10 +1054,12 @@ class ClubDetailPage extends StatelessWidget {
                               ),
                             ),
                             title: Text(
-                              'Sinh viên Phenikaa ($memberId)',
-                              style: const TextStyle(
+                              isCurrent
+                                  ? '${currentUser?.displayName.isNotEmpty == true ? currentUser!.displayName : "Bạn"} ($memberId)'
+                                  : 'Sinh viên Phenikaa ($memberId)',
+                              style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
                               ),
                             ),
                             trailing: Container(
@@ -1034,13 +1068,23 @@ class ClubDetailPage extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1),
+                                color: isClubLeader
+                                    ? AppTheme.accentColor(ctx).withValues(alpha: 0.15)
+                                    : (isCurrent
+                                        ? AppTheme.primaryColor(ctx).withValues(alpha: 0.15)
+                                        : Colors.green.withValues(alpha: 0.1)),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                'Thành viên',
+                              child: Text(
+                                isClubLeader
+                                    ? 'Chủ nhiệm'
+                                    : (isCurrent ? 'Bạn' : 'Thành viên'),
                                 style: TextStyle(
-                                  color: Colors.green,
+                                  color: isClubLeader
+                                      ? AppTheme.accentColor(ctx)
+                                      : (isCurrent
+                                          ? AppTheme.primaryColor(ctx)
+                                          : Colors.green),
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1063,27 +1107,28 @@ class ClubDetailPage extends StatelessWidget {
     String userId,
     String secondaryId,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-            SizedBox(width: 8),
-            Text('Rời Câu Lạc Bộ'),
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+            const SizedBox(width: 8),
+            Text(l10n.confirm_leave_club_title),
           ],
         ),
         content: Text(
-          'Bạn có chắc chắn muốn rời khỏi "${club.name}" không? Bạn có thể tham gia lại bất kỳ lúc nào.',
+          l10n.confirm_leave_club_body(club.name),
           style: const TextStyle(fontSize: 14, height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
-              'Ở lại',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              l10n.stay_in_club_btn,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           ElevatedButton(
@@ -1102,7 +1147,7 @@ class ClubDetailPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Rời CLB'),
+            child: Text(l10n.leave_club_btn),
           ),
         ],
       ),

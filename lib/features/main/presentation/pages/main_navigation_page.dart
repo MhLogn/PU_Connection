@@ -922,9 +922,9 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                   );
                 },
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text(
-                  'Tạo CLB',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                label: Text(
+                  l10n.create_club_btn,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 style: FilledButton.styleFrom(
                   visualDensity: VisualDensity.compact,
@@ -962,13 +962,13 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: _activeSubTab == 0
-                                  ? AppTheme.primaryColor(context)
-                                  : Colors.transparent,
+                                   ? AppTheme.primaryColor(context)
+                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              'Khám phá CLB',
+                              l10n.explore_clubs_tab,
                               style: TextStyle(
                                 fontWeight: _activeSubTab == 0
                                     ? FontWeight.bold
@@ -1000,7 +1000,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Yêu cầu của tôi',
+                                  l10n.my_club_requests_tab,
                                   style: TextStyle(
                                     fontWeight: _activeSubTab == 1
                                         ? FontWeight.bold
@@ -1105,7 +1105,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               fontSize: 13.5,
             ),
             decoration: InputDecoration(
-              hintText: 'Tìm kiếm câu lạc bộ, chủ nhiệm...',
+              hintText: l10n.search_clubs_hint,
               hintStyle: TextStyle(
                 color: colorScheme.onSurface.withValues(alpha: 0.45),
                 fontSize: 13,
@@ -1225,8 +1225,8 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                         const SizedBox(height: 14),
                         Text(
                           state.selectedCategory == 'Đã tham gia'
-                              ? 'Bạn chưa tham gia câu lạc bộ nào'
-                              : 'Không tìm thấy câu lạc bộ nào phù hợp',
+                              ? l10n.no_joined_clubs
+                              : l10n.no_clubs_found,
                           style: TextStyle(
                             color: colorScheme.onSurface.withValues(alpha: 0.8),
                             fontSize: 15,
@@ -1237,8 +1237,8 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                         const SizedBox(height: 8),
                         Text(
                           state.selectedCategory == 'Đã tham gia'
-                              ? 'Khám phá và tham gia các CLB học thuật, thể thao, nghệ thuật để rèn luyện kỹ năng và tích lũy điểm rèn luyện (ĐRL)!'
-                              : 'Thử tìm với từ khóa khác hoặc chuyển sang danh mục câu lạc bộ khác.',
+                              ? l10n.no_joined_clubs_desc
+                              : l10n.no_posts_found,
                           style: TextStyle(
                             color: colorScheme.onSurface.withValues(
                               alpha: 0.55,
@@ -1260,7 +1260,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                               Icons.explore_outlined,
                               size: 18,
                             ),
-                            label: const Text('Khám phá các CLB Phenikaa'),
+                            label: Text(l10n.explore_phenikaa_clubs),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor(context),
                               foregroundColor: isDark
@@ -1547,7 +1547,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Chi tiết >',
+                                      l10n.view_club_details,
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -1575,6 +1575,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     if (state.myRequests.isEmpty) {
       return Center(
         child: Padding(
@@ -1589,7 +1590,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Bạn chưa gửi yêu cầu thành lập CLB nào',
+                l10n.no_club_requests,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1599,7 +1600,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Nếu bạn và các bạn cùng sở thích muốn thành lập câu lạc bộ mới tại Phenikaa, hãy gửi hồ sơ để Ban Quản Trị xem xét!',
+                l10n.no_club_requests_desc,
                 style: TextStyle(
                   fontSize: 13,
                   color: colorScheme.onSurface.withValues(alpha: 0.55),
@@ -1615,7 +1616,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                   );
                 },
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Đăng ký thành lập CLB mới'),
+                label: Text(l10n.register_new_club_btn),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor(context),
                   foregroundColor: isDark ? Colors.black87 : Colors.white,
@@ -1646,15 +1647,15 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
 
         if (isApproved) {
           statusColor = const Color(0xFF10B981);
-          statusText = 'Đã phê duyệt';
+          statusText = l10n.status_approved;
           statusIcon = Icons.check_circle_rounded;
         } else if (isRejected) {
           statusColor = Colors.redAccent;
-          statusText = 'Bị từ chối';
+          statusText = l10n.status_rejected;
           statusIcon = Icons.cancel_rounded;
         } else {
           statusColor = Colors.orange;
-          statusText = 'Chờ duyệt';
+          statusText = l10n.status_pending;
           statusIcon = Icons.hourglass_top_rounded;
         }
 
@@ -1846,9 +1847,9 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
                       size: 16,
                       color: Colors.redAccent,
                     ),
-                    label: const Text(
-                      'Hủy yêu cầu',
-                      style: TextStyle(
+                    label: Text(
+                      l10n.cancel_request_btn_text,
+                      style: const TextStyle(
                         color: Colors.redAccent,
                         fontSize: 12,
                       ),
@@ -1875,18 +1876,17 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
     BuildContext context,
     ClubCreationRequestEntity req,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Hủy yêu cầu thành lập?'),
-        content: Text(
-          'Bạn có chắc chắn muốn hủy yêu cầu thành lập CLB "${req.clubName}" không?',
-        ),
+        title: Text(l10n.cancel_club_request_title),
+        content: Text(l10n.cancel_club_request_confirm(req.clubName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Đóng'),
+            child: Text(l10n.close),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1897,7 +1897,7 @@ class _ClubsCommunityViewState extends State<_ClubsCommunityView> {
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Xác nhận hủy'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -1932,13 +1932,13 @@ class _StudentProfileView extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.qr_code_rounded),
-                      tooltip: 'Mã QR sinh viên của tôi',
+                      tooltip: l10n.my_student_qr,
                       onPressed: () =>
                           StudentQrCodePage.show(context, user: user),
                     ),
                     IconButton(
                       icon: const Icon(Icons.qr_code_scanner_rounded),
-                      tooltip: 'Quét mã QR sinh viên',
+                      tooltip: l10n.scan_student_qr,
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -1982,7 +1982,7 @@ class _StudentProfileView extends StatelessWidget {
                         color: AppTheme.primaryColor(context),
                       ),
                       label: Text(
-                        'Chỉnh sửa thông tin cá nhân',
+                        l10n.edit_profile_btn,
                         style: TextStyle(
                           color: AppTheme.primaryColor(context),
                           fontWeight: FontWeight.w600,
@@ -2010,7 +2010,7 @@ class _StudentProfileView extends StatelessWidget {
                         color: AppTheme.accentColor(context),
                       ),
                       label: Text(
-                        'Danh sách bạn bè (${user.friendsCount})',
+                        l10n.friends_list_btn(user.friendsCount),
                         style: TextStyle(
                           color: AppTheme.accentColor(context),
                           fontWeight: FontWeight.w600,
@@ -2239,7 +2239,7 @@ class _StudentProfileView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : 'Chưa cập nhật'}',
+                      '${l10n.faculty}: ${user.faculty.isNotEmpty ? user.faculty : l10n.not_updated}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.white70,
@@ -2289,7 +2289,7 @@ class _StudentProfileView extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     user.isAdmin
-                        ? 'QUẢN TRỊ VIÊN'
+                        ? l10n.admin_badge
                         : l10n.student_verified_badge.toUpperCase(),
                     style: TextStyle(
                       color: AppTheme.accentColor(context),
@@ -2312,13 +2312,13 @@ class _StudentProfileView extends StatelessWidget {
     // Compute GPA badge label
     String gpaBadge;
     if (user.gpa >= 3.6) {
-      gpaBadge = 'Xuất sắc';
+      gpaBadge = l10n.grade_excellent;
     } else if (user.gpa >= 3.2) {
-      gpaBadge = 'Giỏi';
+      gpaBadge = l10n.grade_very_good;
     } else if (user.gpa >= 2.5) {
-      gpaBadge = 'Khá';
+      gpaBadge = l10n.grade_good;
     } else if (user.gpa > 0) {
-      gpaBadge = 'Trung bình';
+      gpaBadge = l10n.grade_average;
     } else {
       gpaBadge = '--';
     }
@@ -2328,11 +2328,11 @@ class _StudentProfileView extends StatelessWidget {
     if (user.trainingPoints >= 90) {
       drlBadge = l10n.training_excellent;
     } else if (user.trainingPoints >= 80) {
-      drlBadge = 'Tốt';
+      drlBadge = l10n.grade_drl_good;
     } else if (user.trainingPoints >= 65) {
-      drlBadge = 'Khá';
+      drlBadge = l10n.grade_good;
     } else if (user.trainingPoints > 0) {
-      drlBadge = 'Trung bình';
+      drlBadge = l10n.grade_average;
     } else {
       drlBadge = '--';
     }
@@ -2380,6 +2380,7 @@ class _StudentProfileView extends StatelessWidget {
 
   Widget _buildCurrentSubjectsCard(BuildContext context, UserEntity user) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2410,13 +2411,13 @@ class _StudentProfileView extends StatelessWidget {
                 color: AppTheme.accentColor(context),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'Môn học kỳ này',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              Text(
+                l10n.semester_courses,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const Spacer(),
               Text(
-                '${user.currentSubjects.length} môn',
+                l10n.subject_count(user.currentSubjects.length),
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -2462,6 +2463,7 @@ class _StudentProfileView extends StatelessWidget {
 
   Widget _buildJoinedClubsCard(BuildContext context, UserEntity user) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<ClubCubit, ClubState>(
       builder: (context, state) {
         final joinedClubs = state.getJoinedClubs(user.uid, user.studentId);
@@ -2499,10 +2501,10 @@ class _StudentProfileView extends StatelessWidget {
                     color: AppTheme.accentColor(context),
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Câu lạc bộ đã tham gia',
-                      style: TextStyle(
+                      l10n.joined_clubs_title,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -2514,7 +2516,7 @@ class _StudentProfileView extends StatelessWidget {
                     onTap: () =>
                         MainNavigationPage.of(context)?.navigateToTab(3),
                     child: Text(
-                      '${joinedClubs.length} CLB • Xem tất cả >',
+                      l10n.joined_clubs_view_all(joinedClubs.length),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2594,7 +2596,7 @@ class _StudentProfileView extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${club.category} • ${club.membersCount} thành viên',
+                                    l10n.club_category_members(club.category, club.membersCount),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: colorScheme.onSurface.withValues(
@@ -2963,12 +2965,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Trung tâm thông báo',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.notification_center_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Xem và quản lý tất cả thông báo trường học',
+              l10n.notification_center_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3029,12 +3031,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Bài viết đã lưu',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.saved_posts_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Xem lại bài viết và tài liệu ôn thi bạn đã lưu',
+              l10n.saved_posts_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3094,12 +3096,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Nhóm học tập & Bạn cùng tiến',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.study_groups_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Tìm đồng đội ôn thi, giải bài tập và học nhóm',
+              l10n.study_groups_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3135,12 +3137,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Câu lạc bộ sinh viên',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.clubs_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Khám phá hoạt động và câu lạc bộ Phenikaa',
+              l10n.clubs_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3205,10 +3207,10 @@ class _StudentProfileView extends StatelessWidget {
               ),
               title: Row(
                 children: [
-                  const Flexible(
+                  Flexible(
                     child: Text(
-                      'Cổng Quản Trị Viên',
-                      style: TextStyle(
+                      l10n.admin_portal_title,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -3238,7 +3240,7 @@ class _StudentProfileView extends StatelessWidget {
                 ],
               ),
               subtitle: Text(
-                'Kiểm duyệt bài viết, quản lý sinh viên & phát thông báo khẩn',
+                l10n.admin_portal_desc,
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3272,12 +3274,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Đổi mật khẩu',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.change_password_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Cập nhật mật khẩu bảo vệ tài khoản',
+              l10n.change_password_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -3306,12 +3308,12 @@ class _StudentProfileView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'Người dùng đã chặn',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              l10n.blocked_users_title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Quản lý danh sách tài khoản bạn đã chặn',
+              l10n.blocked_users_desc,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),

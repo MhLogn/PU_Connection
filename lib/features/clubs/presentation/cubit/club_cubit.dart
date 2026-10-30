@@ -83,10 +83,11 @@ class ClubCubit extends Cubit<ClubState> {
 
     try {
       if (isCurrentlyMember) {
-        await _clubRepository.leaveClub(clubId: club.id, userId: userId);
-        if (secondaryId != null && secondaryId.isNotEmpty) {
-          await _clubRepository.leaveClub(clubId: club.id, userId: secondaryId);
-        }
+        await _clubRepository.leaveClub(
+          clubId: club.id,
+          userId: userId,
+          secondaryId: secondaryId,
+        );
         emit(
           state.copyWith(
             actionSuccessMessage: 'Đã rời câu lạc bộ "${club.name}"',

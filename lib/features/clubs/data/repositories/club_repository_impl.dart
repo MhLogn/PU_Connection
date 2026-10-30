@@ -259,9 +259,32 @@ class ClubRepositoryImpl implements ClubRepository {
                 });
           } catch (_) {}
 
+          // Gửi thông báo đến Chủ nhiệm CLB nếu có thành viên mới gia nhập
+          try {
+            final leaderId = data['leaderId'] as String? ?? '';
+            if (leaderId.isNotEmpty && leaderId != userId) {
+              await firestore
+                  .collection(FirebaseConstants.usersCollection)
+                  .doc(leaderId)
+                  .collection(FirebaseConstants.notificationsSubcollection)
+                  .add({
+                    'title': 'Thành viên mới gia nhập CLB 🎉',
+                    'content': 'Có một sinh viên vừa tham gia câu lạc bộ "${data['name'] ?? 'của bạn'}".',
+                    'body': 'Có một sinh viên vừa tham gia câu lạc bộ "${data['name'] ?? 'của bạn'}".',
+                    'type': 'club_member_joined',
+                    'targetId': clubId,
+                    'createdAt': FieldValue.serverTimestamp(),
+                    'isRead': false,
+                  });
+            }
+          } catch (_) {}
+
           return;
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error joining club on firestore: $e');
+        rethrow;
+      }
     }
 
     // In-memory fallback
@@ -281,6 +304,7 @@ class ClubRepositoryImpl implements ClubRepository {
   Future<void> leaveClub({
     required String clubId,
     required String userId,
+    String? secondaryId,
   }) async {
     if (clubId.isEmpty || userId.isEmpty) return;
 
@@ -295,35 +319,50 @@ class ClubRepositoryImpl implements ClubRepository {
         if (doc.exists) {
           final data = doc.data() ?? {};
           final currentMemberIds = List<String>.from(data['memberIds'] ?? data['members'] ?? []);
-          if (!currentMemberIds.contains(userId)) {
+          final toRemove = <String>[userId];
+          if (secondaryId != null && secondaryId.isNotEmpty && secondaryId != userId) {
+            toRemove.add(secondaryId);
+          }
+          final isAnyMember = currentMemberIds.any((id) => toRemove.contains(id));
+          if (!isAnyMember) {
             return; // Chưa là thành viên, không trừ âm
           }
+          await docRef.update({
+            'members': FieldValue.arrayRemove(toRemove),
+            'memberIds': FieldValue.arrayRemove(toRemove),
+            'membersCount': FieldValue.increment(-1),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+          // Tự động đồng bộ xóa thành viên khỏi nhóm chat CLB
+          try {
+            await firestore
+                .collection(FirebaseConstants.chatsCollection)
+                .doc('chat_club_$clubId')
+                .update({
+                  'participantIds': FieldValue.arrayRemove(toRemove),
+                });
+          } catch (_) {}
         }
-        await docRef.update({
-          'members': FieldValue.arrayRemove([userId]),
-          'memberIds': FieldValue.arrayRemove([userId]),
-          'membersCount': FieldValue.increment(-1),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Tự động đồng bộ xóa thành viên khỏi nhóm chat CLB
-        try {
-          await firestore
-              .collection(FirebaseConstants.chatsCollection)
-              .doc('chat_club_$clubId')
-              .update({
-                'participantIds': FieldValue.arrayRemove([userId]),
-              });
-        } catch (_) {}
-
         return;
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error leaving club on firestore: $e');
+        rethrow;
+      }
     }
 
     for (int i = 0; i < _memoryClubs.length; i++) {
       final club = _memoryClubs[i];
       if (club.id == clubId) {
-        final updated = List<String>.from(club.memberIds)..remove(userId);
+        final toRemove = <String>[userId];
+        if (secondaryId != null && secondaryId.isNotEmpty && secondaryId != userId) {
+          toRemove.add(secondaryId);
+        }
+        final isAnyMember = club.memberIds.any((id) => toRemove.contains(id));
+        if (!isAnyMember) return;
+
+        final updated = List<String>.from(club.memberIds)
+          ..removeWhere((id) => toRemove.contains(id));
         _memoryClubs[i] = club.copyWith(
           memberIds: updated,
           membersCount: club.effectiveMembersCount > 0
@@ -432,11 +471,34 @@ class ClubRepositoryImpl implements ClubRepository {
     if (trimmedName.isEmpty) {
       throw Exception('Tên câu lạc bộ không được để trống.');
     }
+    if (trimmedName.length < 4) {
+      throw Exception('Tên câu lạc bộ phải có ít nhất 4 ký tự.');
+    }
+    final trimmedDesc = request.description.trim();
+    if (trimmedDesc.isEmpty) {
+      throw Exception('Mô tả câu lạc bộ không được để trống.');
+    }
+    if (trimmedDesc.length < 20) {
+      throw Exception('Mô tả câu lạc bộ cần chi tiết hơn (ít nhất 20 ký tự).');
+    }
+    final trimmedReason = request.reason.trim();
+    if (trimmedReason.isEmpty) {
+      throw Exception('Lý do thành lập CLB không được để trống.');
+    }
+    if (trimmedReason.length < 15) {
+      throw Exception('Lý do thành lập CLB cần cụ thể hơn (ít nhất 15 ký tự).');
+    }
     if (request.founderId.isEmpty) {
       throw Exception('Vui lòng đăng nhập để gửi yêu cầu thành lập CLB.');
     }
 
     final firestore = _firestore;
+    final docId = request.id.isNotEmpty
+        ? request.id
+        : (firestore != null
+            ? firestore.collection(FirebaseConstants.clubRequestsCollection).doc().id
+            : 'req_${DateTime.now().millisecondsSinceEpoch}');
+
     if (firestore != null) {
       // 1. Kiểm tra trùng tên với CLB chính thức đang hoạt động
       final existingClubSnap = await firestore
@@ -463,29 +525,27 @@ class ClubRepositoryImpl implements ClubRepository {
         );
       }
 
-      final model = request is ClubCreationRequestModel
-          ? request
-          : ClubCreationRequestModel(
-              id: request.id,
-              clubName: trimmedName,
-              category: request.category,
-              description: request.description.trim(),
-              reason: request.reason.trim(),
-              founderId: request.founderId,
-              founderName: request.founderName,
-              founderEmail: request.founderEmail,
-              founderStudentId: request.founderStudentId,
-              founderFaculty: request.founderFaculty,
-              avatarUrl: request.avatarUrl,
-              coverUrl: request.coverUrl,
-              schedule: request.schedule,
-              location: request.location,
-              benefits: request.benefits,
-              contactEmail: request.contactEmail,
-              contactPhone: request.contactPhone,
-              status: 'pending',
-              createdAt: DateTime.now(),
-            );
+      final model = ClubCreationRequestModel(
+        id: docId,
+        clubName: trimmedName,
+        category: request.category,
+        description: trimmedDesc,
+        reason: trimmedReason,
+        founderId: request.founderId,
+        founderName: request.founderName,
+        founderEmail: request.founderEmail,
+        founderStudentId: request.founderStudentId,
+        founderFaculty: request.founderFaculty,
+        avatarUrl: request.avatarUrl,
+        coverUrl: request.coverUrl,
+        schedule: request.schedule.trim(),
+        location: request.location.trim(),
+        benefits: request.benefits,
+        contactEmail: request.contactEmail.trim(),
+        contactPhone: request.contactPhone.trim(),
+        status: 'pending',
+        createdAt: DateTime.now(),
+      );
 
       final docMap = model.toMap();
       docMap['createdAt'] = FieldValue.serverTimestamp();
@@ -493,7 +553,7 @@ class ClubRepositoryImpl implements ClubRepository {
 
       await firestore
           .collection(FirebaseConstants.clubRequestsCollection)
-          .doc(request.id)
+          .doc(docId)
           .set(docMap);
     }
 
@@ -513,7 +573,14 @@ class ClubRepositoryImpl implements ClubRepository {
 
     _memoryClubRequests.insert(
       0,
-      request.copyWith(createdAt: DateTime.now(), status: 'pending'),
+      request.copyWith(
+        id: docId,
+        clubName: trimmedName,
+        description: trimmedDesc,
+        reason: trimmedReason,
+        createdAt: DateTime.now(),
+        status: 'pending',
+      ),
     );
     _memoryRequestsController.add(List.from(_memoryClubRequests));
   }
@@ -552,7 +619,9 @@ class ClubRepositoryImpl implements ClubRepository {
         });
 
         // 2. Create official Club document in clubs
-        final clubId = 'club_${reqModel.id.replaceAll('req_', '')}';
+        final clubId = reqModel.id.startsWith('req_')
+            ? 'club_${reqModel.id.substring(4)}'
+            : 'club_${reqModel.id}';
         final newClub = ClubModel(
           id: clubId,
           name: reqModel.clubName,
@@ -638,6 +707,22 @@ class ClubRepositoryImpl implements ClubRepository {
                 'isRead': false,
               });
         } catch (_) {}
+
+        // 4. Record Admin Audit Log
+        try {
+          await firestore
+              .collection(FirebaseConstants.auditLogsCollection)
+              .add({
+                'adminId': adminId,
+                'adminEmail': adminName,
+                'action': 'approve_club_proposal',
+                'targetType': 'club_proposal',
+                'targetId': requestId,
+                'details':
+                    'Phê duyệt thành lập CLB "${reqModel.clubName}" (Chủ nhiệm: ${reqModel.founderName})',
+                'createdAt': FieldValue.serverTimestamp(),
+              });
+        } catch (_) {}
       } else {
         // Reject: Update request status -> rejected with reason
         await reqRef.update({
@@ -665,6 +750,22 @@ class ClubRepositoryImpl implements ClubRepository {
                 'targetId': requestId,
                 'createdAt': FieldValue.serverTimestamp(),
                 'isRead': false,
+              });
+        } catch (_) {}
+
+        // Record Admin Audit Log
+        try {
+          await firestore
+              .collection(FirebaseConstants.auditLogsCollection)
+              .add({
+                'adminId': adminId,
+                'adminEmail': adminName,
+                'action': 'reject_club_proposal',
+                'targetType': 'club_proposal',
+                'targetId': requestId,
+                'details':
+                    'Từ chối thành lập CLB "${reqModel.clubName}". Lý do: ${rejectionReason ?? "Chưa đáp ứng tiêu chí"}',
+                'createdAt': FieldValue.serverTimestamp(),
               });
         } catch (_) {}
       }

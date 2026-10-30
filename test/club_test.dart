@@ -140,7 +140,7 @@ void main() {
       expect(cubit.state.filteredClubs.length, cubit.state.clubs.length);
     });
 
-    test('searchClubs filters correctly by keyword', () async {
+    test('searchClubs filters correctly by keyword and handles unaccented Vietnamese', () async {
       await Future.delayed(const Duration(milliseconds: 100));
       cubit.searchClubs('Basketball');
       expect(
@@ -148,32 +148,61 @@ void main() {
         isTrue,
       );
 
+      // Search without diacritics: 'tin hoc' -> matches 'CLB Tin Học Phenikaa PRO'
+      cubit.searchClubs('tin hoc');
+      expect(
+        cubit.state.filteredClubs.any((c) => c.name.contains('Tin Học')),
+        isTrue,
+      );
+
       cubit.searchClubs('');
       expect(cubit.state.filteredClubs.length, cubit.state.clubs.length);
     });
 
-    test('toggleJoinClub handles join and leave', () async {
+    test('toggleJoinClub handles join and leave without double decrement', () async {
       await Future.delayed(const Duration(milliseconds: 100));
       final firstClub = cubit.state.clubs.first;
+      final initialCount = firstClub.effectiveMembersCount;
 
-      await cubit.toggleJoinClub(club: firstClub, userId: 'test_user_temp');
+      // Join
+      await cubit.toggleJoinClub(
+        club: firstClub,
+        userId: 'test_user_temp',
+        secondaryId: '23019999',
+      );
+      await Future.delayed(const Duration(milliseconds: 100));
       expect(cubit.state.actionSuccessMessage, isNotNull);
 
+      final joinedClub = cubit.state.clubs.firstWhere((c) => c.id == firstClub.id);
+      expect(joinedClub.effectiveMembersCount, initialCount + 1);
+      expect(joinedClub.isMember('test_user_temp'), isTrue);
+
+      // Double join attempt: does not double count
+      await repository.joinClub(clubId: firstClub.id, userId: 'test_user_temp');
+      await Future.delayed(const Duration(milliseconds: 100));
+      final doubleJoinClub = cubit.state.clubs.firstWhere((c) => c.id == firstClub.id);
+      expect(doubleJoinClub.effectiveMembersCount, initialCount + 1);
+
+      // Leave with both userId and secondaryId
       await cubit.toggleJoinClub(
-        club: firstClub.copyWith(
-          memberIds: [...firstClub.memberIds, 'test_user_temp'],
-        ),
+        club: joinedClub,
         userId: 'test_user_temp',
+        secondaryId: '23019999',
       );
+      await Future.delayed(const Duration(milliseconds: 100));
       expect(cubit.state.actionSuccessMessage, contains('Đã rời'));
+
+      final leftClub = cubit.state.clubs.firstWhere((c) => c.id == firstClub.id);
+      expect(leftClub.effectiveMembersCount, initialCount);
+      expect(leftClub.isMember('test_user_temp'), isFalse);
     });
 
-    test('Student submits club creation request successfully', () async {
+    test('Student submits club creation request successfully with auto ID generation', () async {
       cubit.initMyRequestsStream('student_123');
       cubit.initPendingRequestsStream();
 
       const newRequest = ClubCreationRequestEntity(
-        id: 'req_unique_1',
+        id: '', // empty ID to test automatic ID generation
         clubName: 'CLB Tranh Biện Phenikaa Debate',
         category: 'Kỹ năng',
         description: 'Môi trường rèn luyện tư duy phản biện và diễn thuyết',
@@ -190,8 +219,26 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 100));
       expect(cubit.state.myRequests.length, 1);
+      expect(cubit.state.myRequests.first.id.isNotEmpty, isTrue);
       expect(cubit.state.myRequests.first.clubName, 'CLB Tranh Biện Phenikaa Debate');
       expect(cubit.state.pendingRequests.length, 1);
+    });
+
+    test('Validation rejects request with short description or reason', () async {
+      const shortRequest = ClubCreationRequestEntity(
+        id: '',
+        clubName: 'CLB Ngắn',
+        category: 'Học thuật',
+        description: 'Ngắn',
+        reason: 'Ngắn',
+        founderId: 'student_short',
+        founderName: 'Nguyễn Văn S',
+        founderEmail: 's.nv@phenikaa.vn',
+      );
+
+      final success = await cubit.submitClubCreationRequest(shortRequest);
+      expect(success, isFalse);
+      expect(cubit.state.errorMessage, contains('chi tiết hơn'));
     });
 
     test('Submitting request with duplicate club name is rejected', () async {
@@ -201,8 +248,8 @@ void main() {
         id: 'req_dup',
         clubName: 'CLB Tin Học Phenikaa PRO',
         category: 'Học thuật',
-        description: 'Tên trùng lặp',
-        reason: 'Thử nghiệm trùng lặp',
+        description: 'Tên trùng lặp với câu lạc bộ chính thức',
+        reason: 'Thử nghiệm kiểm tra trùng lặp tên CLB',
         founderId: 'student_999',
         founderName: 'Hacker',
         founderEmail: 'test@phenikaa.vn',
@@ -268,8 +315,8 @@ void main() {
         id: 'req_bad',
         clubName: 'CLB Không Hợp Lệ',
         category: 'Khác',
-        description: 'Nội dung sơ sài',
-        reason: 'Thích thì lập',
+        description: 'Mô tả nội dung sơ sài không có định hướng hoạt động',
+        reason: 'Thích thì lập câu lạc bộ để chơi',
         founderId: 'student_bad',
         founderName: 'Nguyễn Văn C',
         founderEmail: 'c.nv@phenikaa.vn',
@@ -313,8 +360,8 @@ void main() {
         id: 'req_cancel_me',
         clubName: 'CLB Tạm Thời',
         category: 'Học thuật',
-        description: 'Sắp hủy',
-        reason: 'Sắp hủy',
+        description: 'Câu lạc bộ tạm thời chuẩn bị hủy theo yêu cầu',
+        reason: 'Lý do thành lập tạm thời để kiểm thử',
         founderId: 'student_cancel',
         founderName: 'Người Hủy',
         founderEmail: 'cancel@phenikaa.vn',

@@ -27,7 +27,23 @@ class ClubState extends Equatable {
     this.isSubmitting = false,
   });
 
+  static String _removeDiacritics(String str) {
+    const withDiacritics =
+        'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ'
+        'ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ';
+    const withoutDiacritics =
+        'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd'
+        'AAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD';
+    var result = str;
+    for (int i = 0; i < withDiacritics.length; i++) {
+      result = result.replaceAll(withDiacritics[i], withoutDiacritics[i]);
+    }
+    return result;
+  }
+
   List<ClubEntity> getFilteredClubs([String? userId, String? studentId]) {
+    final normalizedQuery = _removeDiacritics(searchQuery.toLowerCase().trim());
+
     return clubs.where((club) {
       if (club.status != 'approved') return false;
       final matchesCategory =
@@ -35,12 +51,19 @@ class ClubState extends Equatable {
           (selectedCategory == 'Đã tham gia'
               ? club.isMember(userId ?? '', studentId)
               : club.category == selectedCategory);
-      final matchesQuery =
-          searchQuery.isEmpty ||
-          club.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          club.description.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          club.leaderName.toLowerCase().contains(searchQuery.toLowerCase());
-      return matchesCategory && matchesQuery;
+
+      if (!matchesCategory) return false;
+      if (normalizedQuery.isEmpty) return true;
+
+      final normalizedName = _removeDiacritics(club.name.toLowerCase());
+      final normalizedDesc = _removeDiacritics(club.description.toLowerCase());
+      final normalizedLeader = _removeDiacritics(club.leaderName.toLowerCase());
+      final normalizedCategory = _removeDiacritics(club.category.toLowerCase());
+
+      return normalizedName.contains(normalizedQuery) ||
+          normalizedDesc.contains(normalizedQuery) ||
+          normalizedLeader.contains(normalizedQuery) ||
+          normalizedCategory.contains(normalizedQuery);
     }).toList();
   }
 

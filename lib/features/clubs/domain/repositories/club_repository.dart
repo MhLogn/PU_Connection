@@ -5,7 +5,11 @@ abstract class ClubRepository {
   Stream<List<ClubEntity>> getClubsStream();
   Future<ClubEntity?> getClubById(String clubId);
   Future<void> joinClub({required String clubId, required String userId});
-  Future<void> leaveClub({required String clubId, required String userId});
+  Future<void> leaveClub({
+    required String clubId,
+    required String userId,
+    String? secondaryId,
+  });
   Future<void> updateClub(ClubEntity club);
 
   /// Đề xuất thành lập CLB & xét duyệt
