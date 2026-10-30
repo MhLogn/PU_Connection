@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -15,9 +14,9 @@ import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../../domain/entities/conversation_entity.dart';
-import '../../domain/entities/message_entity.dart';
 import '../cubit/chat_cubit.dart';
 import '../cubit/chat_state.dart';
+import '../widgets/chat_message_bubble.dart';
 import '../widgets/group_info_bottom_sheet.dart';
 
 class ChatDetailPage extends StatefulWidget {
@@ -165,35 +164,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  void _viewFullImage(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(12),
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(imageUrl, fit: BoxFit.contain),
-              ),
-            ),
-            IconButton(
-              icon: const CircleAvatar(
-                backgroundColor: Colors.black54,
-                child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
-              ),
-              onPressed: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _openHeaderTarget() {
     if (widget.isGroup) {
@@ -635,12 +605,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   itemBuilder: (context, index) {
                     final message = messages[index];
                     final isMe = message.senderId == currentUserId;
-                    return _buildMessageRow(
-                      context,
-                      message,
-                      isMe,
-                      isDark,
-                      colorScheme,
+                    return ChatMessageBubble(
+                      message: message,
+                      isMe: isMe,
+                      isGroup: widget.isGroup,
                     );
                   },
                 );
@@ -721,6 +689,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         ? fileName.split('.').last.toUpperCase()
         : 'FILE';
     final isPdf = ext == 'PDF';
+    final isDoc = ext == 'DOC' || ext == 'DOCX';
+    final isXls = ext == 'XLS' || ext == 'XLSX';
+    final isPpt = ext == 'PPT' || ext == 'PPTX';
+    final isTxt = ext == 'TXT';
+
+    Color badgeColor = Colors.orange;
+    IconData badgeIcon = Icons.insert_drive_file_rounded;
+    if (isPdf) {
+      badgeColor = Colors.red.shade600;
+      badgeIcon = Icons.picture_as_pdf_rounded;
+    } else if (isDoc) {
+      badgeColor = const Color(0xFF2563EB);
+      badgeIcon = Icons.description_rounded;
+    } else if (isXls) {
+      badgeColor = const Color(0xFF16A34A);
+      badgeIcon = Icons.table_chart_rounded;
+    } else if (isPpt) {
+      badgeColor = const Color(0xFFEA580C);
+      badgeIcon = Icons.slideshow_rounded;
+    } else if (isTxt) {
+      badgeColor = const Color(0xFF64748B);
+      badgeIcon = Icons.text_snippet_rounded;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -730,14 +721,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isPdf
-                  ? Colors.red.withValues(alpha: 0.15)
-                  : Colors.blue.withValues(alpha: 0.15),
+              color: badgeColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-              color: isPdf ? Colors.red : Colors.blue,
+              badgeIcon,
+              color: badgeColor,
               size: 24,
             ),
           ),
@@ -823,213 +812,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessageRow(
-    BuildContext context,
-    MessageEntity message,
-    bool isMe,
-    bool isDark,
-    ColorScheme colorScheme,
-  ) {
-    if (widget.isGroup && !isMe) {
-      final senderInitials = message.senderName.isNotEmpty
-          ? message.senderName.trim().split(' ').last[0].toUpperCase()
-          : 'P';
-
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: AppTheme.blueContainer(context),
-            child: Text(
-              senderInitials,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.primaryColor(context),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 2),
-                  child: Text(
-                    message.senderName,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor(context),
-                    ),
-                  ),
-                ),
-                _buildMessageBubble(
-                  context,
-                  message,
-                  isMe,
-                  isDark,
-                  colorScheme,
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: _buildMessageBubble(context, message, isMe, isDark, colorScheme),
-    );
-  }
-
-  Widget _buildMessageBubble(
-    BuildContext context,
-    MessageEntity message,
-    bool isMe,
-    bool isDark,
-    ColorScheme colorScheme,
-  ) {
-    final timeStr = DateFormat('HH:mm').format(message.createdAt);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.76,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isMe
-              ? AppTheme.primaryColor(context)
-              : (isDark
-                    ? colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.35,
-                      )
-                    : Colors.white),
-          border: isMe
-              ? null
-              : Border.all(
-                  color: isDark ? Colors.white12 : AppTheme.borderLight,
-                  width: 0.8,
-                ),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(12),
-            topRight: const Radius.circular(12),
-            bottomLeft: isMe
-                ? const Radius.circular(12)
-                : const Radius.circular(2),
-            bottomRight: isMe
-                ? const Radius.circular(2)
-                : const Radius.circular(12),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: isMe
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (message.imageUrl != null && message.imageUrl!.isNotEmpty) ...[
-              GestureDetector(
-                onTap: () => _viewFullImage(message.imageUrl!),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    message.imageUrl!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 180,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Container(
-                        height: 180,
-                        alignment: Alignment.center,
-                        color: Colors.black12,
-                        child: const CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 120,
-                      alignment: Alignment.center,
-                      color: Colors.black12,
-                      child: const Icon(
-                        Icons.broken_image_rounded,
-                        size: 36,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (message.content.isNotEmpty) const SizedBox(height: 8),
-            ],
-            if (message.content.isNotEmpty)
-              Text(
-                message.content,
-                style: TextStyle(
-                  color: isMe ? Colors.white : colorScheme.onSurface,
-                  fontSize: 14,
-                  height: 1.35,
-                ),
-              ),
-            const SizedBox(height: 3),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  timeStr,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isMe
-                        ? Colors.white70
-                        : colorScheme.onSurface.withValues(alpha: 0.45),
-                  ),
-                ),
-                if (isMe) ...[
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (context) {
-                      final hasBeenRead = message.isRead ||
-                          message.readBy
-                              .where((id) => id != message.senderId)
-                              .isNotEmpty;
-                      final readersCount = message.readBy
-                          .where((id) => id != message.senderId)
-                          .length;
-                      final tooltipText = message.isRead
-                          ? 'Đã xem'
-                          : (readersCount > 0
-                              ? 'Đã xem ($readersCount)'
-                              : 'Đã gửi');
-                      return Tooltip(
-                        message: tooltipText,
-                        child: Icon(
-                          Icons.done_all_rounded,
-                          size: 13,
-                          color: hasBeenRead
-                              ? const Color(0xFF22C55E) // Xanh lục sáng khi người nhận đã xem
-                              : Colors.white60,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildInputBar(
     BuildContext context,

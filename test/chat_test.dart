@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pu_connection/core/services/cloudinary_service.dart';
 import 'package:pu_connection/features/chat/domain/entities/conversation_entity.dart';
@@ -8,6 +9,7 @@ import 'package:pu_connection/features/chat/data/models/message_model.dart';
 import 'package:pu_connection/features/chat/domain/repositories/chat_repository.dart';
 import 'package:pu_connection/features/chat/presentation/cubit/chat_cubit.dart';
 import 'package:pu_connection/features/chat/presentation/cubit/chat_state.dart';
+import 'package:pu_connection/features/chat/presentation/widgets/chat_message_bubble.dart';
 
 class MockCloudinaryService extends CloudinaryService {
   @override
@@ -446,6 +448,118 @@ void main() {
 
       expect(cubit.state.isSending, false);
       expect(cubit.state.errorMessage, isNull);
+    });
+  });
+
+  group('ChatMessageBubble Widget Tests', () {
+    Widget buildTestableBubble(Widget child) {
+      return MaterialApp(
+        home: Scaffold(
+          body: child,
+        ),
+      );
+    }
+
+    testWidgets('renders text-only message correctly', (tester) async {
+      final message = MessageEntity(
+        messageId: 'msg_text',
+        senderId: 'user_1',
+        senderName: 'Nguyễn Văn A',
+        content: 'Xin chào mọi người',
+        createdAt: DateTime(2026, 1, 1, 10, 30),
+      );
+
+      await tester.pumpWidget(
+        buildTestableBubble(
+          ChatMessageBubble(
+            message: message,
+            isMe: false,
+          ),
+        ),
+      );
+
+      expect(find.text('Xin chào mọi người'), findsOneWidget);
+      expect(find.byIcon(Icons.insert_drive_file_rounded), findsNothing);
+    });
+
+    testWidgets('renders file attachment card for PDF message', (tester) async {
+      final message = MessageEntity(
+        messageId: 'msg_pdf',
+        senderId: 'user_2',
+        senderName: 'Trần Thị B',
+        content: '',
+        fileUrl: 'https://cloudinary.com/sample_lecture.pdf',
+        fileName: 'sample_lecture.pdf',
+        fileType: 'pdf',
+        fileSize: '3.4 MB',
+        createdAt: DateTime(2026, 1, 1, 11, 0),
+      );
+
+      await tester.pumpWidget(
+        buildTestableBubble(
+          ChatMessageBubble(
+            message: message,
+            isMe: true,
+          ),
+        ),
+      );
+
+      expect(find.text('sample_lecture.pdf'), findsOneWidget);
+      expect(find.text('PDF • 3.4 MB'), findsOneWidget);
+      expect(find.byIcon(Icons.picture_as_pdf_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.visibility_rounded), findsOneWidget);
+    });
+
+    testWidgets('renders file attachment card for Word DOCX and Excel XLSX', (tester) async {
+      final docMessage = MessageEntity(
+        messageId: 'msg_doc',
+        senderId: 'user_2',
+        senderName: 'Trần Thị B',
+        content: 'Đây là file đề cương',
+        fileUrl: 'https://cloudinary.com/de_cuong.docx',
+        fileName: 'de_cuong.docx',
+        fileType: 'docx',
+        fileSize: '512 KB',
+        createdAt: DateTime(2026, 1, 1, 11, 5),
+      );
+
+      await tester.pumpWidget(
+        buildTestableBubble(
+          ChatMessageBubble(
+            message: docMessage,
+            isMe: false,
+          ),
+        ),
+      );
+
+      expect(find.text('Đây là file đề cương'), findsOneWidget);
+      expect(find.text('de_cuong.docx'), findsOneWidget);
+      expect(find.text('DOCX • 512 KB'), findsOneWidget);
+      expect(find.byIcon(Icons.description_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.download_rounded), findsOneWidget);
+    });
+
+    testWidgets('renders sender name in group chat mode when not me', (tester) async {
+      final message = MessageEntity(
+        messageId: 'msg_group',
+        senderId: 'user_friend',
+        senderName: 'Lê Hoàng Nam',
+        content: 'Các bạn có file slide không?',
+        createdAt: DateTime(2026, 1, 1, 12, 0),
+      );
+
+      await tester.pumpWidget(
+        buildTestableBubble(
+          ChatMessageBubble(
+            message: message,
+            isMe: false,
+            isGroup: true,
+          ),
+        ),
+      );
+
+      expect(find.text('Lê Hoàng Nam'), findsOneWidget);
+      expect(find.text('Các bạn có file slide không?'), findsOneWidget);
     });
   });
 }

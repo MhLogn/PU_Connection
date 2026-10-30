@@ -54,7 +54,13 @@ class ChatMessageBubble extends StatelessWidget {
     final fileUrl = message.fileUrl;
     if (fileUrl == null || fileUrl.isEmpty) return;
 
-    final fileName = message.fileName ?? 'document';
+    var fileName = message.fileName;
+    if (fileName == null || fileName.isEmpty) {
+      final extSuffix = (message.fileType != null && message.fileType!.isNotEmpty)
+          ? '.${message.fileType!.toLowerCase()}'
+          : '';
+      fileName = 'document$extSuffix';
+    }
     final isPdf =
         fileName.toLowerCase().endsWith('.pdf') ||
         (message.fileType != null && message.fileType!.toLowerCase() == 'pdf');
@@ -171,10 +177,14 @@ class ChatMessageBubble extends StatelessWidget {
     final fileName = message.fileName ?? 'Tài liệu đính kèm';
     final ext = fileName.contains('.')
         ? fileName.split('.').last.toUpperCase()
-        : 'FILE';
+        : (message.fileType != null && message.fileType!.isNotEmpty
+            ? message.fileType!.toUpperCase()
+            : 'FILE');
     final isPdf = ext == 'PDF';
     final isDoc = ext == 'DOC' || ext == 'DOCX';
     final isXls = ext == 'XLS' || ext == 'XLSX';
+    final isPpt = ext == 'PPT' || ext == 'PPTX';
+    final isTxt = ext == 'TXT';
 
     Color badgeColor = Colors.orange;
     IconData badgeIcon = Icons.insert_drive_file_rounded;
@@ -187,13 +197,19 @@ class ChatMessageBubble extends StatelessWidget {
     } else if (isXls) {
       badgeColor = const Color(0xFF16A34A);
       badgeIcon = Icons.table_chart_rounded;
+    } else if (isPpt) {
+      badgeColor = const Color(0xFFEA580C);
+      badgeIcon = Icons.slideshow_rounded;
+    } else if (isTxt) {
+      badgeColor = const Color(0xFF64748B);
+      badgeIcon = Icons.text_snippet_rounded;
     }
 
     return InkWell(
       onTap: () => _openAttachedFile(context),
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: EdgeInsets.only(bottom: message.content.isNotEmpty ? 6 : 2),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isMe
