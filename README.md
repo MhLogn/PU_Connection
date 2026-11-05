@@ -333,6 +333,20 @@ Khởi chạy ứng dụng ở chế độ Debug:
 flutter run
 ```
 
+Một số tài khoản test cho ứng dụng:
+
+```bash
+id: admin, pass: 12345678
+```
+
+```bash
+id: 23010390, pass: 220605
+```
+
+```bash
+id: 23010304, pass: 101605
+```
+
 ---
 
 ## 7. Cấu hình Firebase và Dịch vụ bên ngoài
